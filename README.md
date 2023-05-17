@@ -1,6 +1,6 @@
 # Poodle e-Learning Platform
 
-
+![Alt text](Schema_Model.png)
 
 ## Getting started
 
