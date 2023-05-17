@@ -60,7 +60,7 @@ def try_login(user: User, password: str) -> User | None:
     if user and pass_match:
         return user
 
-def generate_token(user: User):
+def generate_token(user: User) -> str:
     expiry = datetime.utcnow() + expiration_time
 
     payload = {
@@ -75,6 +75,9 @@ def generate_token(user: User):
 
 
 def validate_token(token):
+    if token is None:
+        return None
+    
     try:
         payload = jwt.decode(token, secret_key, algorithms=["HS256"])
         user_id = payload.get("user_id")
@@ -95,3 +98,15 @@ def validate_token(token):
     except jwt.InvalidTokenError:
         # Handle invalid token error
         return None
+
+def subscribe_to_course(user_id: int, course_id:int):
+    sql = "INSERT INTO users_have_courses (users_id, courses_id, status) VALUES (?, ?, ?)"
+    sql_params = (user_id, course_id, 0)
+
+    return update_query(sql, sql_params)
+
+def unsubscribe_from_course(user_id: int, course_id:int):
+    sql = "Update INTO users_have_courses WHERE(users_id, courses_id, status) VALUES (?, ?, ?)"
+    sql_params = (user_id, course_id)
+
+    return update_query(sql, sql_params, 2)
