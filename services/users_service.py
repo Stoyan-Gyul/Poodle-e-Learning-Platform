@@ -106,7 +106,7 @@ def subscribe_to_course(user_id: int, course_id:int):
     return update_query(sql, sql_params)
 
 def unsubscribe_from_course(user_id: int, course_id:int):
-    sql = "Update INTO users_have_courses WHERE(users_id, courses_id, status) VALUES (?, ?, ?)"
-    sql_params = (user_id, course_id)
+    sql = "UPDATE users_have_courses SET status = ? WHERE users_id = ? AND courses_id = ?"
+    sql_params = (2, user_id, course_id)
 
-    return update_query(sql, sql_params, 2)
+    return update_query(sql, sql_params)

@@ -72,3 +72,29 @@ def subscribe_to_course(user_id: int, course_id: int, authorization: str = Heade
     
     users_service.subscribe_to_course(user_id, course_id)
     return Response(content = "You have subscribed to this course", status_code=200,)
+
+@user_router.put('/{user_id}/courses/{course_id}/unsubscribe')
+def unsubscribe_from_course(user_id: int, course_id: int, authorization: str = Header(None)):
+    
+    if authorization is None:
+        raise HTTPException(status_code=403)
+    
+    token = authorization.split(" ")[1] if authorization.startswith("Bearer ") else None
+
+    user_info = users_service.validate_token(token)
+    if not user_info:
+        raise HTTPException(status_code=403)
+    
+    if not user_info[0] == user_id:
+        raise HTTPException(status_code=403)
+    
+    user = users_service.find_by_id(user_id)
+    if user is None:
+        raise HTTPException(status_code=404, detail=f"User {user_id} does not exist")
+
+    course = courses_service.find_by_id(course_id)
+    # if course is None:
+    #     raise HTTPException(status_code=404, detail=f"Course {course_id} does not exist")
+
+    users_service.unsubscribe_from_course(user_id, course_id)
+    return Response(content="You have been unsubscribed from this course.", status_code=200)
