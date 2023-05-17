@@ -2,11 +2,14 @@ from data.models import User
 from data.database import read_query, insert_query, update_query
 import bcrypt
 from fastapi import HTTPException, status
+from datetime import datetime, timedelta
 import jwt
 import secrets
 
 
 main_salt = bcrypt.gensalt()
+secret_key = secrets.token_hex(32)
+expiration_time = timedelta(minutes=300)
 
 def find_by_id(id: int) -> User | None:
     if id is None:
@@ -58,15 +61,37 @@ def try_login(user: User, password: str) -> User | None:
         return user
 
 def generate_token(user: User):
+    expiry = datetime.utcnow() + expiration_time
 
     payload = {
-    "user_id": user.id,
-    "email": user.email,
-    "role": user.role
+        "user_id": user.id,
+        "email": user.email,
+        "role": user.role,
+        "exp": expiry 
     }
-
-    # Generate a secure random key with 32 bytes (256 bits)
-    secret_key = secrets.token_hex(32)
 
     token = jwt.encode(payload, secret_key, algorithm="HS256")
     return token
+
+
+def validate_token(token):
+    try:
+        payload = jwt.decode(token, secret_key, algorithms=["HS256"])
+        user_id = payload.get("user_id")
+        email = payload.get("email")
+        role = payload.get("role")
+        expiration = payload.get("exp")
+
+        if expiration is not None and datetime.utcnow() < datetime.fromtimestamp(expiration):
+            # Token is not expired, return the decoded user information
+            return [user_id, email, role]
+
+        # Token has expired
+        return None
+    
+    except jwt.ExpiredSignatureError:
+        # Handle token expiration error
+        return None
+    except jwt.InvalidTokenError:
+        # Handle invalid token error
+        return None
