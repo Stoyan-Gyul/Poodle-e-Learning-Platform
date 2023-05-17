@@ -23,10 +23,6 @@ class LoginData(BaseModel):
     password: str | None
 
 
-class StatusLevelMaps:
-    INT_TO_STR = {0: 'unsubscribed', 1: 'pending', 2: 'subscribed'}
-    STR_TO_INT = {'unsubscribed': 0, 'pending': 1, 'subscribed': 2}
-
 class Course(BaseModel):
     id: int | None
     title: constr(min_length=1)
@@ -35,12 +31,11 @@ class Course(BaseModel):
     is_active: constr(regex='^active|hidden$')
 
     @classmethod
-    def from_query_result(cls, id, title, description, status, owner_id, is_active):
+    def from_query_result(cls, id, title, description, owner_id, is_active):
         return cls(
             id=id,
             title=title,
             description=description,
-            status=StatusLevelMaps.INT_TO_STR[status],
             owner_id=owner_id,
             is_active='active' if is_active else 'hidden'
             )
@@ -89,6 +84,9 @@ class Tag(BaseModel):
             expertise_area=expertise_area
             )
 
+class StatusLevelMaps:
+    INT_TO_STR = {0: 'unsubscribed', 1: 'pending', 2: 'subscribed'}
+    STR_TO_INT = {'unsubscribed': 0, 'pending': 1, 'subscribed': 2}
 
 class Report(BaseModel):
     user: User
@@ -96,3 +94,13 @@ class Report(BaseModel):
     status: constr(regex='^unsubscribed|pending|subscribed$')
     rating: condecimal(decimal_places=1, ge=1, le=10)
     progress: condecimal(decimal_places=0, ge=0, le=100)
+
+    @classmethod
+    def from_query_result(cls, user, course, status, rating, progress):
+        return cls(
+            user=user,
+            course=course,
+            status=StatusLevelMaps.INT_TO_STR[status],
+            rating=rating,
+            progress=progress
+            )
