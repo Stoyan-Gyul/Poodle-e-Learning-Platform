@@ -17,3 +17,7 @@ class User(BaseModel):
             first_name=first_name,
             last_name=last_name,
             role=role)
+
+class LoginData(BaseModel):
+    email: str | None
+    password: str | None
