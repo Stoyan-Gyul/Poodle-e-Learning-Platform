@@ -1,4 +1,4 @@
-from pydantic import BaseModel, constr
+from pydantic import BaseModel, constr, condecimal
 
 class User(BaseModel):
     id: int | None
@@ -31,7 +31,6 @@ class Course(BaseModel):
     id: int | None
     title: constr(min_length=1)
     description: constr(min_length=1)
-    status: constr(regex='^unsubscribed|pending|subscribed$')
     owner_id: int
     is_active: constr(regex='^active|hidden$')
 
@@ -89,3 +88,11 @@ class Tag(BaseModel):
             id=id,
             expertise_area=expertise_area
             )
+
+
+class Report(BaseModel):
+    user: User
+    course: Course
+    status: constr(regex='^unsubscribed|pending|subscribed$')
+    rating: condecimal(decimal_places=1, ge=1, le=10)
+    progress: condecimal(decimal_places=0, ge=0, le=100)
