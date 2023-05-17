@@ -156,6 +156,7 @@ CREATE TABLE IF NOT EXISTS `e-learning`.`users_have_courses` (
   `courses_id` INT(11) NOT NULL,
   `status` TINYINT(3) NULL DEFAULT NULL,
   `rating` INT(11) NULL DEFAULT NULL,
+  `progress` DECIMAL(5,2) NULL DEFAULT NULL,
   PRIMARY KEY (`users_id`, `courses_id`),
   INDEX `fk_users_has_Courses_Courses1_idx` (`courses_id` ASC) VISIBLE,
   INDEX `fk_users_has_Courses_users1_idx` (`users_id` ASC) VISIBLE,
