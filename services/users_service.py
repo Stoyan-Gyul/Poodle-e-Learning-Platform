@@ -116,7 +116,7 @@ def unsubscribe_from_course(user_id: int, course_id:int):
     return update_query(sql, sql_params)
 
 
-def view_teacher(user: User):
+def view_teacher(user: User)-> User | Teacher:
     id=user.id
     sql = "SELECT phone_number, linked_in_account FROM teachers WHERE users_id = ?;"
     sql_params = (id,)

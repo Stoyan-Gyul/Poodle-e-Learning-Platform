@@ -2,6 +2,7 @@ from fastapi import APIRouter, HTTPException, Header, Response, status, Header
 from fastapi.responses import JSONResponse
 from data.models import User, LoginData
 from services import users_service, courses_service
+from data.common.auth import get_user_params_or_raise_error
 
 
 user_router = APIRouter(prefix="/users")
@@ -102,17 +103,18 @@ def unsubscribe_from_course(user_id: int, course_id: int, authorization: str = H
 
 @user_router.get('/', tags=['Users'])
 def view_user(token: str =Header()):
-    token_params=users_service.validate_token(token)
-    if token_params:
-        id=token_params[0]
-        role=token_params[2]
-    else:
-        return JSONResponse(status_code=500, content={'detail': 'Problem with the authentication. Try Again!'} )
-
+    token_params=get_user_params_or_raise_error(token)
+    
+    id=token_params[0]
+    role=token_params[2]
     user=users_service.find_by_id(id)
     
     if role == 'student':
         return user
     elif role == 'teacher':
         return users_service.view_teacher(user) 
+    
+@user_router.put('/', tags=['Users'])
+def update_user(token: str =Header()):
+    pass
        
