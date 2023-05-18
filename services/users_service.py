@@ -117,6 +117,8 @@ def unsubscribe_from_course(user_id: int, course_id:int):
 
 
 def view_teacher(user: User)-> User | Teacher:
+    ''' View account information as per the role - student or teacher'''
+
     id=user.id
     sql = "SELECT phone_number, linked_in_account FROM teachers WHERE users_id = ?;"
     sql_params = (id,)
@@ -128,6 +130,8 @@ def view_teacher(user: User)-> User | Teacher:
         return user
     
 def update_user(old: User, new: User) -> User:
+    ''' Edit basic account information'''
+
     hashed_password=''
     if new.password:
         passwd = new.password.encode("utf-8")
@@ -148,6 +152,8 @@ def update_user(old: User, new: User) -> User:
     return merged
 
 def update_teacher(old: User, new: User, adds: TeacherAdds)-> Teacher:
+    ''' Edit teacher account information '''
+    
     old_adds=view_teacher(old).teacher_adds
     updated_user=update_user(old, new)
     merged_adds=TeacherAdds(
