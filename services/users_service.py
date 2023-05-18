@@ -1,4 +1,5 @@
-from data.models import User
+from data.models import User, TeacherAdds
+from pydantic import BaseModel
 from data.database import read_query, insert_query, update_query
 import bcrypt
 from fastapi import HTTPException, status
@@ -6,6 +7,9 @@ from datetime import datetime, timedelta
 import jwt
 import secrets
 
+class Teacher(BaseModel):
+    user: User
+    teacher_adds: TeacherAdds
 
 main_salt = bcrypt.gensalt()
 secret_key = secrets.token_hex(32)
@@ -95,3 +99,14 @@ def validate_token(token):
     except jwt.InvalidTokenError:
         # Handle invalid token error
         return None
+
+def view_teacher(user: User):
+    id=user.id
+    sql = "SELECT phone_number, linked_in_account FROM teachers WHERE users_id = ?;"
+    sql_params = (id,)
+    data = read_query(sql, sql_params)
+    if data:
+        teacher_adds=TeacherAdds.from_query_result(*data[0])
+        return Teacher(user=user, teacher_adds=teacher_adds)
+    else:
+        return user

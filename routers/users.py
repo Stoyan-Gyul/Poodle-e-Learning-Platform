@@ -1,4 +1,4 @@
-from fastapi import APIRouter, HTTPException, status
+from fastapi import APIRouter, HTTPException, status, Header
 from fastapi.responses import JSONResponse
 from data.models import User, LoginData
 from services import users_service
@@ -45,3 +45,20 @@ def login(data: LoginData):
     else:
         return JSONResponse(status_code=400, content={'message': 'Invalid login data'})
     
+
+@user_router.get('/', tags=['Users'])
+def view_user(token: str =Header()):
+    token_params=users_service.validate_token(token)
+    if token_params:
+        id=token_params[0]
+        role=token_params[2]
+    else:
+        return JSONResponse(status_code=500, content={'detail': 'Problem with the authentication. Try Again!'} )
+
+    user=users_service.find_by_id(id)
+    
+    if role == 'student':
+        return user
+    elif role == 'teacher':
+        return users_service.view_teacher(user) 
+       
