@@ -126,3 +126,36 @@ def view_teacher(user: User)-> User | Teacher:
         return Teacher(user=user, teacher_adds=teacher_adds)
     else:
         return user
+    
+def update_user(old: User, new: User) -> User:
+    hashed_password=''
+    if new.password:
+        passwd = new.password.encode("utf-8")
+        hashed_password = bcrypt.hashpw(passwd, main_salt)
+
+    merged=User(
+        id=old.id,
+        email=old.email,
+        password=hashed_password or old.password,
+        first_name=new.first_name or old.first_name,
+        last_name=new.last_name or old.last_name,
+        role=old.role)
+    
+    update_query('''UPDATE users SET
+                    email = ?, password = ?, first_name = ?, last_name = ?, role = ?
+                    WHERE id = ?''',
+                    (merged.email, merged.password, merged.first_name, merged.last_name, merged.role, merged.id ))
+    return merged
+
+def update_teacher(old: User, new: User, adds: TeacherAdds)-> Teacher:
+    old_adds=view_teacher(old).teacher_adds
+    updated_user=update_user(old, new)
+    merged_adds=TeacherAdds(
+        phone_number=adds.phone_number if adds.phone_number else old_adds.phone_number,
+        linked_in_account=adds.linked_in_account if adds.linked_in_account else old_adds.linked_in_account)
+    update_query('''UPDATE teachers SET
+                    phone_number = ?, linked_in_account = ?
+                    WHERE users_id = ?''',
+                    (merged_adds.phone_number,merged_adds.linked_in_account, updated_user.id))
+
+    return Teacher(user=updated_user, teacher_adds=merged_adds)
