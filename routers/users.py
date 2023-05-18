@@ -101,7 +101,7 @@ def unsubscribe_from_course(user_id: int, course_id: int, authorization: str = H
     return Response(content="You have been unsubscribed from this course.", status_code=200)
 
 
-@user_router.get('/', tags=['Users'])
+@user_router.get('/', tags=['Users'], response_model=User)
 def view_user(token: str =Header()):
     token_params=get_user_params_or_raise_error(token)
     
@@ -114,7 +114,7 @@ def view_user(token: str =Header()):
     elif role == 'teacher':
         return users_service.view_teacher(user) 
     
-@user_router.put('/', tags=['Users'])
+@user_router.put('/', tags=['Users'], response_model=User)
 def update_user(user: User, teacher_adds: TeacherAdds = None, token: str =Header()):
     token_params=get_user_params_or_raise_error(token)
     
