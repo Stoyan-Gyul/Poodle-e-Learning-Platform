@@ -1,4 +1,11 @@
 from pydantic import BaseModel, constr, condecimal
+from data.database import read_query
+
+class Role:
+    ADMIN = 'admin'
+    TEACHER = 'teacher'
+    STUDENT = 'student'
+
 
 class User(BaseModel):
     id: int | None
@@ -7,6 +14,15 @@ class User(BaseModel):
     first_name: str | None
     last_name: str | None
     role: str | None
+
+    def is_admin(self):
+        return self.role == Role.ADMIN
+
+    def is_teacher(self):
+        return self.role == Role.TEACHER
+
+    def is_student(self):
+        return self.role == Role.STUDENT
 
     @classmethod
     def from_query_result(cls, id, email, password, first_name, last_name, role):
@@ -27,15 +43,17 @@ class Course(BaseModel):
     id: int | None
     title: constr(min_length=1)
     description: constr(min_length=1)
+    home_page_pic: None
     owner_id: int
     is_active: constr(regex='^active|hidden$')
 
     @classmethod
-    def from_query_result(cls, id, title, description, owner_id, is_active):
+    def from_query_result(cls, id, title, description, home_page_pic, owner_id, is_active):
         return cls(
             id=id,
             title=title,
             description=description,
+            home_page_pic=home_page_pic,
             owner_id=owner_id,
             is_active='active' if is_active else 'hidden'
             )
@@ -84,25 +102,26 @@ class Tag(BaseModel):
             expertise_area=expertise_area
             )
 
+
 class StatusLevelMaps:
     INT_TO_STR = {0: 'unsubscribed', 1: 'pending', 2: 'subscribed'}
     STR_TO_INT = {'unsubscribed': 0, 'pending': 1, 'subscribed': 2}
 
 class Report(BaseModel):
-    user: User
-    course: Course
+    user_id: int
+    course_id: int
     status: constr(regex='^unsubscribed|pending|subscribed$')
-    rating: condecimal(decimal_places=1, ge=1, le=10)
-    progress: condecimal(decimal_places=0, ge=0, le=100)
+    rating: condecimal(decimal_places=1, ge=1, le=10) | None
+    progress: condecimal(decimal_places=0, ge=0, le=100) | None
 
     @classmethod
-    def from_query_result(cls, user, course, status, rating, progress):
+    def from_query_result(cls, user_id, course_id, status, rating, progress):
         return cls(
-            user=user,
-            course=course,
+            user_id=user_id,
+            course_id=course_id,
             status=StatusLevelMaps.INT_TO_STR[status],
             rating=rating,
-            progress=progress
+            progress=progress if progress is not None else 0
             )
 
 class TeacherAdds(BaseModel):
