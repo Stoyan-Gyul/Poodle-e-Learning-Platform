@@ -165,3 +165,9 @@ def update_teacher(old: User, new: User, adds: TeacherAdds)-> Teacher:
                     (merged_adds.phone_number,merged_adds.linked_in_account, updated_user.id))
 
     return Teacher(user=updated_user, teacher_adds=merged_adds)
+
+
+def is_course_owner(user_id, course_id: int):
+        owner_id = read_query('''SELECT owner_id FROM courses
+WHERE id = ?''', (course_id,))
+        return user_id == owner_id
