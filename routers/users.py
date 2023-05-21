@@ -155,7 +155,9 @@ def view_enrolled_courses(token: str =Header()) -> list[Course]:
     
 
 @user_router.get('/courses', tags=['Users'])
-def view_all_courses(token: str =Header()):
+def view_all_courses(title: str | None = None,
+                     tag: str | None = None,
+                     token: str =Header()):
     ''' View all courses depending on role - anonymous, student, teacher'''
     if not token:
         return courses_service.view_public_courses()
@@ -167,8 +169,8 @@ def view_all_courses(token: str =Header()):
     role=token_params[2]
     
     if role == 'student':
-        # return public_and_enrolled_courses(id)
-        return JSONResponse(status_code=200,content={'message': 'This for test ONLY! Students'} )
+        return courses_service.view_public_and_enrolled_courses(id, title, tag)
+        # return JSONResponse(status_code=200,content={'message': 'This for test ONLY! Students'} )
     elif role == 'teacher':
         # return all_courses_and_sections(id)
         return JSONResponse(status_code=200,content={'message': 'This for test ONLY! Teachers'})

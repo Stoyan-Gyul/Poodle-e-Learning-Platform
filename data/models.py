@@ -147,4 +147,19 @@ class ViewPublicCourse(BaseModel):
             title=title,
             description=description,
             expertise_area=expertise_area
-            ) 
+            )
+    
+class ViewStudentCourse(BaseModel):
+    title: str
+    description: str
+    home_page_pic: None
+    expertise_area: str
+    
+    @classmethod
+    def from_query_result(cls, title, description, home_page_pic, expertise_area):
+        return cls(
+            title=title,
+            description=description,
+            home_page_pic=home_page_pic,
+            expertise_area=expertise_area
+            )
