@@ -136,7 +136,7 @@ def update_user(user: User, teacher_adds: TeacherAdds = None, token: str =Header
         else:
             return users_service.update_user(existing_user, user)
 
-        
+
 @user_router.get('/enrolled_courses', tags=['Users'], response_model=list[Course])
 def view_enrolled_courses(token: str =Header()) -> list[Course]:
     ''' View enrolled courses by students only'''
@@ -148,18 +148,18 @@ def view_enrolled_courses(token: str =Header()) -> list[Course]:
     
 
     if role == 'student':
-        return JSONResponse(status_code=200,content={'message': 'This for test ONLY!'} )
+        return JSONResponse(status_code=200,content={'message': 'This for test ONLY!Students Enrolled Courses.'} )
         # return users_service.enrolled_courses(id)
     else:
         return JSONResponse(status_code=409,content={'detail': 'Only students can view their enrolled courses!'} )
     
 
-@user_router.get('/courses', tags=['Users'], response_model=list[Course])
-def view_all_courses(token: str =Header()) -> list[Course]:
+@user_router.get('/courses', tags=['Users'])
+def view_all_courses(token: str =Header()):
     ''' View all courses depending on role - anonymous, student, teacher'''
     if not token:
-        # return get_brief_public_courses()
-        return JSONResponse(status_code=200,content={'message': 'This for test ONLY Anonymous users!'})
+        return courses_service.view_public_courses()
+        # return JSONResponse(status_code=200,content={'message': 'This for test ONLY Anonymous users!'})
     
     token_params=get_user_params_or_raise_error(token)
     
@@ -184,10 +184,10 @@ def course_rating(token: str =Header()):
     
 
     if role == 'student':
-        return JSONResponse(status_code=200,content={'message': 'This for test ONLY!'} )
+        return JSONResponse(status_code=200,content={'message': 'This for test ONLY!Students rate courses'} )
         # return users_service.rating_course(id)
     else:
-        return JSONResponse(status_code=409,content={'detail': 'Only students can view their enrolled courses!'} )
+        return JSONResponse(status_code=409,content={'detail': 'Only students can rate their enrolled courses!'} )
 
 
 

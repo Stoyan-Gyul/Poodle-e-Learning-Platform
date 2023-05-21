@@ -117,7 +117,7 @@ def unsubscribe_from_course(user_id: int, course_id:int):
 
 
 def view_teacher(user: User)-> User | Teacher:
-    ''' View account information as per the role - student or teacher'''
+    ''' View account information as per the role -  teacher'''
 
     id=user.id
     sql = "SELECT phone_number, linked_in_account FROM teachers WHERE users_id = ?;"

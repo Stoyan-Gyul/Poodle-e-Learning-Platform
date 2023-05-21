@@ -134,4 +134,17 @@ class TeacherAdds(BaseModel):
         return cls(
             phone_number=phone_number,
             linked_in_account=linked_in_account
+            )
+
+class ViewPublicCourse(BaseModel):
+    title: str
+    description: str
+    expertise_area: str
+
+    @classmethod
+    def from_query_result(cls, title, description, expertise_area):
+        return cls(
+            title=title,
+            description=description,
+            expertise_area=expertise_area
             ) 
