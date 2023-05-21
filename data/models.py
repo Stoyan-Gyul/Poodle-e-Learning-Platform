@@ -154,12 +154,14 @@ class ViewStudentCourse(BaseModel):
     description: str
     home_page_pic: None
     expertise_area: str
+    objective: str
     
     @classmethod
-    def from_query_result(cls, title, description, home_page_pic, expertise_area):
+    def from_query_result(cls, title, description, home_page_pic, expertise_area, objective):
         return cls(
             title=title,
             description=description,
             home_page_pic=home_page_pic,
-            expertise_area=expertise_area
+            expertise_area=expertise_area,
+            objective=objective
             )

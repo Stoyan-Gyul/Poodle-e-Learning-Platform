@@ -14,20 +14,19 @@ def view_public_courses() -> list[ViewPublicCourse] :
     
     return (ViewPublicCourse.from_query_result(*obj) for obj in read_query(sql))
 
-def view_public_and_enrolled_courses(id: int, 
-                                     title: str = None,
-                                     tag: str  = None):
+def view_enrolled_courses(id: int, 
+                          title: str = None,
+                          tag: str  = None) -> list[ViewStudentCourse]:
     '''View public and enrolled courses of student and search them by title and tag'''
-    
-    sql='''SELECT c.title, c.description, c.home_page_pic, t.expertise_area 
-           FROM courses as c 
-           JOIN courses_have_tags as ct 
-           ON c.id=ct.courses_id 
-           JOIN tags as t 
-           ON t.id=ct.tags_id 
-           JOIN users_have_courses as uc 
-           ON c.id = uc.courses_id 
-           WHERE c.is_active=1 AND uc.users_id=?'''
+
+    sql='''SELECT c.title, c.description, c.home_page_pic, t.expertise_area, o.description as objectiv 
+           FROM courses AS c
+           JOIN courses_have_tags AS ct ON c.id = ct.courses_id
+           JOIN tags AS t ON t.id = ct.tags_id
+		   JOIN courses_have_objectives as co ON c.id=co.courses_id
+		   JOIN objectives as o ON o.id=co.objectives_id
+           JOIN users_have_courses AS uc ON c.id = uc.courses_id
+           WHERE c.is_active = 1 AND uc.users_id = ?'''
     
     where_clauses=[]
     if title:

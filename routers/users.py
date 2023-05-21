@@ -1,6 +1,6 @@
 from fastapi import APIRouter, HTTPException, Header, Response, status, Header
 from fastapi.responses import JSONResponse
-from data.models import User, LoginData, TeacherAdds, Course
+from data.models import User, LoginData, TeacherAdds, Course, ViewStudentCourse
 from services import users_service, courses_service
 from services.users_service import Teacher
 from data.common.auth import get_user_params_or_raise_error
@@ -137,9 +137,11 @@ def update_user(user: User, teacher_adds: TeacherAdds = None, token: str =Header
             return users_service.update_user(existing_user, user)
 
 
-@user_router.get('/enrolled_courses', tags=['Users'], response_model=list[Course])
-def view_enrolled_courses(token: str =Header()) -> list[Course]:
-    ''' View enrolled courses by students only'''
+@user_router.get('/enrolled_courses', tags=['Users'], response_model=list[ViewStudentCourse])
+def view_enrolled_courses(title: str | None = None,
+                          tag: str | None = None, 
+                          token: str =Header()) -> list[ViewStudentCourse]:
+    ''' View public and enrolled courses by students only'''
 
     token_params=get_user_params_or_raise_error(token)
     
@@ -148,8 +150,9 @@ def view_enrolled_courses(token: str =Header()) -> list[Course]:
     
 
     if role == 'student':
-        return JSONResponse(status_code=200,content={'message': 'This for test ONLY!Students Enrolled Courses.'} )
-        # return users_service.enrolled_courses(id)
+        return courses_service.view_enrolled_courses(id, title, tag)
+        # return JSONResponse(status_code=200,content={'message': 'This for test ONLY!Students Enrolled Courses.'} )
+        
     else:
         return JSONResponse(status_code=409,content={'detail': 'Only students can view their enrolled courses!'} )
     
@@ -169,8 +172,7 @@ def view_all_courses(title: str | None = None,
     role=token_params[2]
     
     if role == 'student':
-        return courses_service.view_public_and_enrolled_courses(id, title, tag)
-        # return JSONResponse(status_code=200,content={'message': 'This for test ONLY! Students'} )
+        return JSONResponse(status_code=200,content={'message': 'This for test ONLY! Students'} )
     elif role == 'teacher':
         # return all_courses_and_sections(id)
         return JSONResponse(status_code=200,content={'message': 'This for test ONLY! Teachers'})
