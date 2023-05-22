@@ -14,6 +14,10 @@ class User(BaseModel):
     first_name: str | None
     last_name: str | None
     role: str | None
+    phone: str = None
+    linked_in_account: str = None
+    verification_token: str | None
+    is_verified: str | None
 
     def is_admin(self):
         return self.role == Role.ADMIN
