@@ -1,10 +1,10 @@
 from fastapi import APIRouter, HTTPException, Header, Response, status, Header
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse, FileResponse
 from data.models import User, LoginData, TeacherAdds, Course, ViewStudentCourse
 from services import users_service, courses_service
 from services.users_service import Teacher
 from data.common.auth import get_user_params_or_raise_error
-
+import uuid
 
 user_router = APIRouter(prefix="/users")
 
@@ -23,10 +23,27 @@ def register_user(user: User):
         user.role = 'user'
 
     try:
-        created_user_id = users_service.create_new_user(user)
-        return JSONResponse(status_code=201, content={'message': f'User with id {created_user_id} created'})
+
+        verification_token = str(uuid.uuid4())
+        user.verification_token = verification_token
+
+        verification_link =f"http://localhost:8000/users/{user.email}/verification/{verification_token}"
+
+        users_service.create_new_user(user)
+        
+        users_service.send_verification_email(user.email, verification_link)
+
+        return JSONResponse(status_code=201, content={'message': 'You registered successfully. Check your email for verification.'})
     except Exception:
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Something went wrong!")
+    
+@user_router.get("/{email}/verification/{token}")
+def verify_email(email:str, token: str):
+
+    if users_service.verify_email(email, token):
+        return JSONResponse(status_code=200, content={'message': 'User verified successfully.'})
+    else:
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Invalid verification token.")
     
 
 @user_router.post('/login')
@@ -71,8 +88,9 @@ def subscribe_to_course(user_id: int, course_id: int, authorization: str = Heade
     # if course is None:
     #     raise HTTPException(status_code=404, detail=f"Course {course_id} does not exist")
     
-    
     users_service.subscribe_to_course(user_id, course_id)
+
+    #send email to teacher that this student has been subscibed 
     return Response(content = "You have subscribed to this course", status_code=200,)
 
 @user_router.put('/{user_id}/courses/{course_id}/unsubscribe')
@@ -193,7 +211,3 @@ def course_rating(token: str =Header()):
     else:
         return JSONResponse(status_code=409,content={'detail': 'Only students can rate their enrolled courses!'} )
 
-
-
-    
-       
