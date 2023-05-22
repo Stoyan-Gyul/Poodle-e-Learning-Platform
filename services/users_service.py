@@ -6,6 +6,9 @@ from fastapi import HTTPException, status
 from datetime import datetime, timedelta
 import jwt
 import secrets
+import smtplib
+from email.mime.multipart import MIMEMultipart
+from email.mime.text import MIMEText
 
 class Teacher(BaseModel):
     user: User
@@ -19,7 +22,7 @@ def find_by_id(id: int) -> User | None:
     if id is None:
         return None
     
-    sql = "SELECT * FROM users WHERE id = ?;"
+    sql = "SELECT id, email, password, first_name, last_name, role FROM users WHERE id = ?;"
     sql_params = (id,)
     data = read_query(sql, sql_params)
 
@@ -33,7 +36,7 @@ def find_by_email(username: str) -> User | None:
     if username is None:
         return None
     
-    sql = "SELECT * FROM users WHERE email = ?;"
+    sql = "SELECT id, email, password, first_name, last_name, role FROM users WHERE email = ?;"
     sql_params = (username,)
     data = read_query(sql, sql_params)
 
@@ -48,11 +51,20 @@ def create_new_user(user: User):
     
     passwd = user.password.encode("utf-8")
     hashed_password = bcrypt.hashpw(passwd, main_salt)
+    is_verified = 0
 
-    sql = "INSERT INTO users (email, password, role, first_name, last_name) VALUES (?, ?, ?, ?, ?);"
-    sql_params = (user.email, hashed_password, user.role, user.first_name, user.last_name)
+    sql_user = "INSERT INTO users (email, password, role, first_name, last_name, verification_token, is_verified) VALUES (?, ?, ?, ?, ?, ?, ?);"
+    sql_params_user = (user.email, hashed_password, user.role, user.first_name, user.last_name, user.verification_token, is_verified)
         
-    user_id = insert_query(sql, sql_params)
+    user_id = insert_query(sql_user, sql_params_user)
+
+    if user.phone or user.linked_in_account:
+    
+        sql_teacher = "INSERT INTO teachers (users_id, phone, linked_in_account) VALUES (?, ?, ?)"
+        sql_params_teacher = (user_id, user.phone, user.linked_in_account)
+        
+        insert_query(sql_teacher, sql_params_teacher)
+        
     return user_id
 
 def try_login(user: User, password: str) -> User | None:
@@ -171,3 +183,40 @@ def is_course_owner(user_id, course_id: int):
         owner_id = read_query('''SELECT owner_id FROM courses
 WHERE id = ?''', (course_id,))
         return user_id == owner_id
+
+
+def send_verification_email(email: str, verification_link: str):
+    smtp_host = "smtp.office365.com"
+    smtp_port = 587
+    smtp_username = "poodle.learning@outlook.com"
+    smtp_password = "1234@alpha"  # Use your Outlook.com account password
+
+    message = MIMEMultipart()
+    message["From"] = "poodle.learning@outlook.com"
+    message["To"] = email
+    message["Subject"] = "Account Verification"
+
+    body = f"Please click the following link to verify your account: {verification_link}"
+    message.attach(MIMEText(body, "plain"))
+
+    with smtplib.SMTP(smtp_host, smtp_port) as server:
+        server.starttls()
+        server.login(smtp_username, smtp_password)
+        server.sendmail(message["From"], message["To"], message.as_string())
+
+        return("Verification email sent successfully.")
+
+def verify_email(email:str, token:str):
+    sql = "SELECT verification_token FROM users WHERE email = ?"
+    sql_params = (email,)
+
+    actual_token_tuple = read_query(sql, sql_params)[0]
+    actual_token = actual_token_tuple[0]
+
+    if actual_token == token:
+        sql = "UPDATE users SET is_verified = ? WHERE email = ?"
+        sql_params = (1, email)
+
+        return update_query(sql, sql_params)
+    
+        
