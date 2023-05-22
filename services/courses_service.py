@@ -1,5 +1,5 @@
 from data.database import read_query
-from data.models import ViewPublicCourse, ViewStudentCourse
+from data.models import ViewPublicCourse, ViewStudentCourse, ViewTeacherCourse
 
 def view_public_courses() -> list[ViewPublicCourse] :
     ''' View only title, description and tag of public course'''
@@ -17,9 +17,9 @@ def view_public_courses() -> list[ViewPublicCourse] :
 def view_enrolled_courses(id: int, 
                           title: str = None,
                           tag: str  = None) -> list[ViewStudentCourse]:
-    '''View public and enrolled courses of student and search them by title and tag'''
+    '''View public and enrolled courses of logged student and search them by title and tag'''
 
-    sql='''SELECT c.title, c.description, c.home_page_pic, t.expertise_area, o.description as objectiv 
+    sql='''SELECT c.id, c.title, c.description, c.home_page_pic, t.expertise_area, o.description as objectiv 
            FROM courses AS c
            JOIN courses_have_tags AS ct ON c.id = ct.courses_id
            JOIN tags AS t ON t.id = ct.tags_id
@@ -39,3 +39,54 @@ def view_enrolled_courses(id: int,
 
     data=read_query(sql, (id,))
     return (ViewStudentCourse.from_query_result(*obj) for obj in data)
+
+
+def view_students_courses( title: str = None,
+                           tag: str  = None) -> list[ViewStudentCourse]:
+    '''View all public and premium courses available for students and search them by title and tag'''
+
+    sql='''SELECT c.id, c.title, c.description, c.home_page_pic, t.expertise_area, o.description as objectiv 
+           FROM courses AS c
+           JOIN courses_have_tags AS ct ON c.id = ct.courses_id
+           JOIN tags AS t ON t.id = ct.tags_id
+		   JOIN courses_have_objectives as co ON c.id=co.courses_id
+		   JOIN objectives as o ON o.id=co.objectives_id
+           WHERE c.is_active = 1'''
+    
+    where_clauses=[]
+    if title:
+        where_clauses.append(f"c.title like '%{title}%'")
+    if tag:
+        where_clauses.append(f"t.expertise_area like '%{tag}%'")
+    
+    if where_clauses:
+        sql+= ' AND ' + ' AND '.join(where_clauses)
+
+    data=read_query(sql)
+    return (ViewStudentCourse.from_query_result(*obj) for obj in data)
+
+
+def view_teacher_course(id: int, 
+                          title: str = None,
+                          tag: str  = None) -> list[ViewTeacherCourse]:
+    '''View all public and premium courses of logged teacher and search them by title and tag'''
+    
+    sql='''SELECT c.id, c.title, c.description, c.home_page_pic, c.is_active, c.is_premium, t.expertise_area, o.description as objectiv 
+           FROM courses AS c
+           JOIN courses_have_tags AS ct ON c.id = ct.courses_id
+           JOIN tags AS t ON t.id = ct.tags_id
+		   JOIN courses_have_objectives as co ON c.id=co.courses_id
+		   JOIN objectives as o ON o.id=co.objectives_id
+           WHERE c.owner_id = ?'''
+    
+    where_clauses=[]
+    if title:
+        where_clauses.append(f"c.title like '%{title}%'")
+    if tag:
+        where_clauses.append(f"t.expertise_area like '%{tag}%'")
+    
+    if where_clauses:
+        sql+= ' AND ' + ' AND '.join(where_clauses)
+
+    data=read_query(sql, (id,))
+    return (ViewTeacherCourse.from_query_result(*obj) for obj in data)

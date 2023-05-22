@@ -150,6 +150,7 @@ class ViewPublicCourse(BaseModel):
             )
     
 class ViewStudentCourse(BaseModel):
+    id: int
     title: str
     description: str
     home_page_pic: None
@@ -157,11 +158,34 @@ class ViewStudentCourse(BaseModel):
     objective: str
     
     @classmethod
-    def from_query_result(cls, title, description, home_page_pic, expertise_area, objective):
+    def from_query_result(cls, id, title, description, home_page_pic, expertise_area, objective):
         return cls(
+            id=id,
             title=title,
             description=description,
             home_page_pic=home_page_pic,
+            expertise_area=expertise_area,
+            objective=objective
+            )
+class ViewTeacherCourse(BaseModel):
+    id: int
+    title: str
+    description: str
+    home_page_pic: None
+    is_active: str
+    is_premium: str
+    expertise_area: str
+    objective: str
+    
+    @classmethod
+    def from_query_result(cls, id, title, description, home_page_pic, is_active, is_premium, expertise_area, objective):
+        return cls(
+            id=id,
+            title=title,
+            description=description,
+            home_page_pic=home_page_pic,
+            is_active='active' if is_active else 'hidden',
+            is_premium='premium' if is_premium else 'public',
             expertise_area=expertise_area,
             objective=objective
             )
