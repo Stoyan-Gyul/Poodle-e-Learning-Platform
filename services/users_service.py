@@ -77,6 +77,9 @@ def try_login(user: User, password: str) -> User | None:
         return user
 
 def generate_token(user: User) -> str:
+    if user is None:
+        return None
+    
     expiry = datetime.utcnow() + expiration_time
 
     payload = {
@@ -116,12 +119,18 @@ def validate_token(token):
         return None
 
 def subscribe_to_course(user_id: int, course_id:int):
+    if user_id is None or course_id is None:
+        return None
+    
     sql = "INSERT INTO users_have_courses (users_id, courses_id, status) VALUES (?, ?, ?)"
     sql_params = (user_id, course_id, 0)
 
     return update_query(sql, sql_params)
 
 def unsubscribe_from_course(user_id: int, course_id:int):
+    if user_id is None or course_id is None:
+        return None
+    
     sql = "UPDATE users_have_courses SET status = ? WHERE users_id = ? AND courses_id = ?"
     sql_params = (2, user_id, course_id)
 
@@ -206,7 +215,10 @@ def send_verification_email(email: str, verification_link: str):
 
         return("Verification email sent successfully.")
 
-def verify_email(email:str, token:str):
+def verify_email(email:str, token:str) -> bool:
+    if email is None or token is None:
+        return None
+    
     sql = "SELECT verification_token FROM users WHERE email = ?"
     sql_params = (email,)
 
@@ -218,5 +230,6 @@ def verify_email(email:str, token:str):
         sql_params = (1, email)
 
         return update_query(sql, sql_params)
-    
+    else:
+        return False
         
