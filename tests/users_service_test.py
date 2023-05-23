@@ -1,7 +1,7 @@
 import time
 from unittest import TestCase
 from unittest import mock
-from unittest.mock import patch, ANY
+from unittest.mock import MagicMock, patch, ANY
 
 import jwt
 
@@ -349,3 +349,17 @@ class UserService_Should(TestCase):
         self.assertIsNone(result)
 
         mock_update_query.assert_not_called()
+    
+    @patch('services.users_service.smtplib.SMTP', autospec=True)
+    def test_send_verification_email(self, mock_smtp):
+        
+        mock_server = MagicMock()
+        mock_smtp.return_value = mock_server
+
+        mock_server.starttls = MagicMock()
+
+        result = users_service.send_verification_email("test@example.com", "http://example.com/verification")
+
+        self.assertEqual(result, "Verification email sent successfully.")
+
+    
