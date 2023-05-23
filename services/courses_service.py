@@ -1,4 +1,4 @@
-from data.database import read_query
+from data.database import read_query, update_query
 from data.models import ViewPublicCourse, ViewStudentCourse, ViewTeacherCourse
 
 def view_public_courses() -> list[ViewPublicCourse] :
@@ -90,3 +90,24 @@ def view_teacher_course(id: int,
 
     data=read_query(sql, (id,))
     return (ViewTeacherCourse.from_query_result(*obj) for obj in data)
+
+
+def course_rating(rating: float , course_id: int, student_id: int)-> bool:
+    ''' Student can rate his enrolled course only one time'''
+    try:
+        sql='''SELECT rating 
+            FROM users_have_courses 
+            WHERE courses_id=? AND users_id=?'''
+        data=read_query(sql, (course_id, student_id))
+        if data[0][0]:
+            return None # student can rate a course only once
+        else:
+            sql='''UPDATE users_have_courses 
+                SET rating = ? 
+                WHERE (users_id = ?) and (courses_id = ?)'''
+                
+            result=update_query(sql,(rating, student_id, course_id))
+            if result>0:
+                return True
+    except:
+        return None # student is not enrolled in this course

@@ -1,4 +1,4 @@
-from pydantic import BaseModel, constr, condecimal
+from pydantic import BaseModel, constr, condecimal, validator
 from data.database import read_query
 
 class Role:
@@ -193,3 +193,4 @@ class ViewTeacherCourse(BaseModel):
             expertise_area=expertise_area,
             objective=objective
             )
+    
