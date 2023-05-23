@@ -327,4 +327,25 @@ class UserService_Should(TestCase):
 
         mock_update_query.assert_not_called()
     
-   
+    @patch('services.users_service.update_query', autospec=True)
+    def test_unsubscribe_to_course_with_valid_parameters(self, mock_update_query):
+        expected = 1
+        mock_update_query.return_value = 1
+
+        result = users_service.unsubscribe_from_course(123, 456)
+
+        self.assertEqual(expected, result)
+
+        mock_update_query.assert_called_once_with(
+            "UPDATE users_have_courses SET status = ? WHERE users_id = ? AND courses_id = ?",
+            (2, 123, 456)
+        )
+
+    @patch('services.users_service.update_query', autospec=True)
+    def test_unsubscribe_to_course_with_none_parameters(self, mock_update_query):
+        
+        result = users_service.unsubscribe_from_course(None, None)
+
+        self.assertIsNone(result)
+
+        mock_update_query.assert_not_called()
