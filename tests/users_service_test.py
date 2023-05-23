@@ -1,6 +1,9 @@
+import time
 from unittest import TestCase
 from unittest import mock
 from unittest.mock import patch, ANY
+
+import jwt
 
 from data.models import User
 from services import users_service
@@ -241,3 +244,62 @@ class UserService_Should(TestCase):
         result = users_service.generate_token(None)
 
         self.assertIsNone(result)
+
+
+    @patch('services.users_service.jwt.decode', autospec=True)
+    def test_validate_token_with_valid_token(self, mock_decode):
+        current_time = int(time.time()) 
+        expiration_time = current_time + 30 * 60
+        
+        mock_decode.return_value = {
+            'user_id': 123,
+            'email': 'test@example.com',
+            'role': 'user',
+            'exp': expiration_time
+        }
+        
+        actual_user_info = users_service.validate_token('valid_token')
+        
+        self.assertEqual(actual_user_info, [123, 'test@example.com', 'user'])  
+
+        mock_decode.assert_called_once_with(
+            'valid_token',
+            mock.ANY,
+            algorithms=['HS256']
+        )
+
+    def test_validate_token_with_none_token(self):
+
+        result = users_service.validate_token(None)
+        
+        self.assertIsNone(result)
+
+    @patch('services.users_service.jwt.decode', autospec=True)
+    def test_validate_token_with_expired_token(self, mock_decode):
+    
+        mock_decode.side_effect = jwt.ExpiredSignatureError('Expired token')
+        
+        result = users_service.validate_token('expired_token')
+        
+        self.assertIsNone(result)
+        
+        mock_decode.assert_called_once_with(
+            'expired_token',
+            mock.ANY,
+            algorithms=['HS256']
+        )
+
+    @patch('services.users_service.jwt.decode', autospec=True)
+    def test_validate_token_with_invalid_token(self, mock_decode):
+
+        mock_decode.side_effect = jwt.InvalidTokenError('Invalid token')
+        
+        result = users_service.validate_token('invalid_token')
+        
+        self.assertIsNone(result)
+        
+        mock_decode.assert_called_once_with(
+            'invalid_token',
+            mock.ANY,
+            algorithms=['HS256']
+        )
