@@ -31,13 +31,13 @@ def find_by_id(id: int) -> User | None:
     else:
         return None
 
-def find_by_email(username: str) -> User | None:
+def find_by_email(email: str) -> User | None:
 
-    if username is None:
+    if email is None:
         return None
     
     sql = "SELECT id, email, password, first_name, last_name, role FROM users WHERE email = ?;"
-    sql_params = (username,)
+    sql_params = (email,)
     data = read_query(sql, sql_params)
 
     if data:
