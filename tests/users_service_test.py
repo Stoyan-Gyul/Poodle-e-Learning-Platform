@@ -362,4 +362,39 @@ class UserService_Should(TestCase):
 
         self.assertEqual(result, "Verification email sent successfully.")
 
+    @patch('services.users_service.read_query')
+    @patch('services.users_service.update_query')
+    def test_verify_email_with_valid_token_returns_True(self, mock_update_query, mock_read_query):
+        
+        mock_read_query.return_value = [('token',)]
+
+        result = users_service.verify_email("test@example.com", "token")
+
+        self.assertTrue(result)
     
+        mock_read_query.assert_called_once_with("SELECT verification_token FROM users WHERE email = ?", ("test@example.com",))
+        mock_update_query.assert_called_once_with("UPDATE users SET is_verified = ? WHERE email = ?", (1, "test@example.com"))
+
+    @patch('services.users_service.read_query')
+    @patch('services.users_service.update_query')
+    def test_verify_email_with_invalid_token_returns_False(self, mock_update_query, mock_read_query):
+
+        mock_read_query.return_value = [('invalid_token',)]
+
+        result = users_service.verify_email("test@example.com", "token")
+
+        self.assertFalse(result) 
+
+        mock_read_query.assert_called_once_with("SELECT verification_token FROM users WHERE email = ?", ("test@example.com",))
+        mock_update_query.assert_not_called()
+
+    @patch('services.users_service.read_query')
+    @patch('services.users_service.update_query')
+    def test_verify_email_with_none_parameters_returns_None(self, mock_update_query, mock_read_query):
+        
+        result = users_service.verify_email(None, None)
+
+        self.assertIsNone(result)
+
+        mock_read_query.assert_not_called()
+        mock_update_query.assert_not_called()
