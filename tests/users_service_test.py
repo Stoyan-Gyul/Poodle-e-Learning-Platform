@@ -205,4 +205,39 @@ class UserService_Should(TestCase):
         
         result = users_service.try_login(user, None)
         
-        self.assertIsNone(result) 
+        self.assertIsNone(result)
+    
+    @patch('services.users_service.jwt.encode', autospec=True)
+    def test_generate_token_with_valid_user(self, mock_encode):
+
+        user = User(
+            id=123,
+            email='test@example.com',
+            password='password',
+            role='user',
+            first_name='John',
+            last_name='Doe',
+        )
+        
+        mock_encode.return_value = 'mocked_token'
+        
+        actual_token = users_service.generate_token(user)
+        
+        self.assertEqual(actual_token, 'mocked_token')
+        
+        mock_encode.assert_called_once_with(
+            {
+                'user_id': 123,
+                'email': 'test@example.com',
+                'role': 'user',
+                'exp': mock.ANY
+            },
+            mock.ANY,
+            algorithm='HS256'
+        )
+
+    def test_generate_token_with_none_user(self):
+    
+        result = users_service.generate_token(None)
+
+        self.assertIsNone(result)
