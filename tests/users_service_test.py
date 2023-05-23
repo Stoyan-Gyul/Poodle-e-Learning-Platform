@@ -1,5 +1,6 @@
 from unittest import TestCase
-from unittest.mock import patch
+from unittest import mock
+from unittest.mock import patch, ANY
 
 from data.models import User
 from services import users_service
@@ -62,3 +63,79 @@ class UserService_Should(TestCase):
         actual_data = users_service.find_by_id(None)
 
         self.assertIsNone(actual_data)
+    
+    
+    @patch('services.users_service.insert_query', autospec=True)
+    def test_createNewUser_returnsUserID_create_student(self, mock_insert_query):
+        expected_id = 1
+        mock_insert_query.return_value = 1  
+        
+        user = User(
+            email='test@example.com',
+            password='password',
+            role='user',
+            first_name='John',
+            last_name='Doe',
+            verification_token='token',
+        )
+        
+        actual_id  = users_service.create_new_user(user)
+    
+        
+        self.assertEqual(actual_id, expected_id)
+        
+        mock_insert_query.assert_any_call(
+            "INSERT INTO users (email, password, role, first_name, last_name, verification_token, is_verified) VALUES (?, ?, ?, ?, ?, ?, ?);",
+            ('test@example.com', mock.ANY, 'user', 'John', 'Doe', 'token', 0)
+        )
+        
+        self.assertEqual(mock_insert_query.call_count, 1)
+
+        mock_insert_query.assert_called_once_with(
+            "INSERT INTO users (email, password, role, first_name, last_name, verification_token, is_verified) VALUES (?, ?, ?, ?, ?, ?, ?);",
+            ('test@example.com', mock.ANY, 'user', 'John', 'Doe', 'token', 0)
+        )
+    
+    @patch('services.users_service.insert_query', autospec=True)
+    def test_createNewUser_returnsUserID_create_teacher(self, mock_insert_query):
+        expected_id = 1
+        mock_insert_query.return_value = 1  
+        
+        user = User(
+            email='test@example.com',
+            password='password',
+            role='user',
+            first_name='John',
+            last_name='Doe',
+            verification_token='token',
+            phone='1234567890',
+            linked_in_account='linkedin'
+        )
+        
+        actual_id  = users_service.create_new_user(user)
+    
+        
+        self.assertEqual(actual_id, expected_id)
+        
+        mock_insert_query.assert_any_call(
+            "INSERT INTO users (email, password, role, first_name, last_name, verification_token, is_verified) VALUES (?, ?, ?, ?, ?, ?, ?);",
+            ('test@example.com', mock.ANY, 'user', 'John', 'Doe', 'token', 0)
+        )
+        
+        mock_insert_query.assert_any_call(
+            "INSERT INTO teachers (users_id, phone, linked_in_account) VALUES (?, ?, ?)",
+            (1, '1234567890', 'linkedin')
+        )
+
+        self.assertEqual(mock_insert_query.call_count, 2)
+
+        mock_insert_query.assert_called_with(
+            "INSERT INTO teachers (users_id, phone, linked_in_account) VALUES (?, ?, ?)",
+            (1, '1234567890', 'linkedin')
+        )
+    
+    def test_createNewUser_with_noneUser_returns_None(self):
+
+        result = users_service.create_new_user(None)
+        
+        self.assertIsNone(result)  
