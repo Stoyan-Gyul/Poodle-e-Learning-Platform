@@ -139,3 +139,70 @@ class UserService_Should(TestCase):
         result = users_service.create_new_user(None)
         
         self.assertIsNone(result)  
+
+
+    @patch('services.users_service.bcrypt.checkpw', autospec=True)
+    def test_try_login_with_valid_credentials_returns_user(self, mock_checkpw):
+    
+        user = User(
+            email='test@example.com',
+            password='password',
+            role='user',
+            first_name='John',
+            last_name='Doe',
+            verification_token='token',
+        )
+        
+        mock_checkpw.return_value = True
+        
+        actual_user = users_service.try_login(user, 'password')
+        
+        self.assertEqual(actual_user, user)
+        
+        mock_checkpw.assert_called_once_with(
+            'password'.encode('utf-8'),
+            user.password.encode('utf-8')
+        )
+
+    @patch('services.users_service.bcrypt.checkpw', autospec=True)
+    def test_tryLogin_with_invalid_credentials_returns_none(self, mock_checkpw):
+        user = User(
+            email='test@example.com',
+            password='password',
+            role='user',
+            first_name='John',
+            last_name='Doe',
+            verification_token='token',
+        )
+        
+        mock_checkpw.return_value = False
+        
+        result = users_service.try_login(user, 'wrong_password')
+        
+        self.assertIsNone(result)
+        
+        mock_checkpw.assert_called_once_with(
+            'wrong_password'.encode('utf-8'),
+            user.password.encode('utf-8')
+        )
+
+    def test_try_login_with_none_user_returns_none(self):
+        
+        result = users_service.try_login(None, 'password')
+        
+        self.assertIsNone(result) 
+
+    def test_try_login_with_none_password_returns_none(self):
+
+        user = User(
+            email='test@example.com',
+            password='password',
+            role='user',
+            first_name='John',
+            last_name='Doe',
+            verification_token='token',
+        )
+        
+        result = users_service.try_login(user, None)
+        
+        self.assertIsNone(result) 
