@@ -6,6 +6,7 @@ from unittest.mock import MagicMock, patch, ANY
 import jwt
 
 from data.models import User
+from services.users_service import Teacher
 from services import users_service
 
 class UserService_Should(TestCase):
@@ -398,3 +399,33 @@ class UserService_Should(TestCase):
 
         mock_read_query.assert_not_called()
         mock_update_query.assert_not_called()
+
+
+    @patch('services.users_service.read_query')
+    def test_view_teacher_returnTeacher_when_teacher_addsExists(self, mock_read_query):
+        mock_read_query.return_value=[('08882412', 'https://www.linkedin.com/aliceparker/')]
+        user = User(
+            id=1,
+            email='test@example.com',
+            password='password',
+            role='teacher',
+            first_name='John',
+            last_name='Doe',
+        )
+        result=users_service.view_teacher(user)
+        self.assertIsInstance(result,Teacher)
+
+    @patch('services.users_service.read_query')
+    def test_view_teacher_returnUser_when_No_teacher_adds(self, mock_read_query):
+        mock_read_query.return_value=[]
+        user = User(
+            id=1,
+            email='test@example.com',
+            password='password',
+            role='teacher',
+            first_name='John',
+            last_name='Doe',
+        )
+        result=users_service.view_teacher(user)
+        self.assertIsInstance(result,User)
+
