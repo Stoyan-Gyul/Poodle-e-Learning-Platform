@@ -1,0 +1,417 @@
+{
+	"info": {
+		"_postman_id": "59bdb9b3-92fa-47d4-88fa-c744bd640b87",
+		"name": "E-learnig",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "26696484"
+	},
+	"item": [
+		{
+			"name": "POST Register User",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"email\": \"steven@abv.bg\",\r\n    \"password\": \"steven\",\r\n    \"first_name\": \"Steven\",\r\n    \"last_name\": \"Parker\",\r\n    \"role\": \"student\"\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://127.0.0.1:8000/users",
+					"protocol": "http",
+					"host": [
+						"127",
+						"0",
+						"0",
+						"1"
+					],
+					"port": "8000",
+					"path": [
+						"users"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "POST Login Student",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"email\": \"steven@abv.bg\",\r\n    \"password\": \"steven\"\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://127.0.0.1:8000/users/login",
+					"protocol": "http",
+					"host": [
+						"127",
+						"0",
+						"0",
+						"1"
+					],
+					"port": "8000",
+					"path": [
+						"users",
+						"login"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "GET View Student",
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "token",
+						"value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjoyLCJlbWFpbCI6InN0ZXZlbkBhYnYuYmciLCJyb2xlIjoic3R1ZGVudCIsImV4cCI6MTY4NDQxMTA4MX0.2y1wHn3s8gTtiA_xpFUYnoY3pJHGwiWXb-2SWL_47L4",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "http://127.0.0.1:8000/users",
+					"protocol": "http",
+					"host": [
+						"127",
+						"0",
+						"0",
+						"1"
+					],
+					"port": "8000",
+					"path": [
+						"users"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "PUT Edit Student account",
+			"request": {
+				"method": "PUT",
+				"header": [
+					{
+						"key": "token",
+						"value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjoyLCJlbWFpbCI6InN0ZXZlbkBhYnYuYmciLCJyb2xlIjoic3R1ZGVudCIsImV4cCI6MTY4NDQzNTc0OH0.Ip4ZyG0bKYPEMhedVYF-AMJliPacDtGbMkubcXnLQvM",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"user\": {\r\n        \"email\": \"steven@abv.bg\",\r\n        \"password\": \"steven\",\r\n        \"first_name\": \"Steven1\",\r\n        \"last_name\": \"Parker1\",\r\n        \"role\": \"teacher1\"\r\n    },\r\n    \"teacher_adds\": {\r\n        \"phone_number\": \"\",\r\n        \"linked_in_account\": \"\"\r\n    }\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://127.0.0.1:8000/users",
+					"protocol": "http",
+					"host": [
+						"127",
+						"0",
+						"0",
+						"1"
+					],
+					"port": "8000",
+					"path": [
+						"users"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "POST Login Teacher",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"email\": \"alice@abv.bg\",\r\n    \"password\": \"alice\"\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://127.0.0.1:8000/users/login",
+					"protocol": "http",
+					"host": [
+						"127",
+						"0",
+						"0",
+						"1"
+					],
+					"port": "8000",
+					"path": [
+						"users",
+						"login"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "GET View Teacher",
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "token",
+						"value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjoxLCJlbWFpbCI6ImFsaWNlQGFidi5iZyIsInJvbGUiOiJ0ZWFjaGVyIiwiZXhwIjoxNjg0NDEyMTgyfQ.ixXAECfhxez6bkgjbUGPedzAMzw3NVz5vmeV0SyyW4w",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "http://127.0.0.1:8000/users",
+					"protocol": "http",
+					"host": [
+						"127",
+						"0",
+						"0",
+						"1"
+					],
+					"port": "8000",
+					"path": [
+						"users"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "PUT Edit Teachers account",
+			"request": {
+				"method": "PUT",
+				"header": [
+					{
+						"key": "token",
+						"value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjoxLCJlbWFpbCI6ImFsaWNlQGFidi5iZyIsInJvbGUiOiJ0ZWFjaGVyIiwiZXhwIjoxNjg0NDI2NDEyfQ.QzJ1tOZa6g5d-ujmGZXhKX_VqEhsJ-rwPrJThVv2r8o",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"user\": {\r\n        \"email\": \"alice@abv.bg\",\r\n        \"password\": \"alice\",\r\n        \"first_name\": \"Alice\",\r\n        \"last_name\": \"Parker\",\r\n        \"role\": \"teacher1\"\r\n    },\r\n    \"teacher_adds\": {\r\n        \"phone_number\": \"08882412\",\r\n        \"linked_in_account\": \"https://www.linkedin.com/aliceparker/\"\r\n    }\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://127.0.0.1:8000/users",
+					"protocol": "http",
+					"host": [
+						"127",
+						"0",
+						"0",
+						"1"
+					],
+					"port": "8000",
+					"path": [
+						"users"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "GET View enrolled courses",
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "token",
+						"value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjoyLCJlbWFpbCI6InN0ZXZlbkBhYnYuYmciLCJyb2xlIjoic3R1ZGVudCIsImV4cCI6MTY4NDc2MDg3OX0.ytzI0XZfyXo5NFp5W6d3Yy_0PrLVYuacigxcNrIeoLo",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "http://127.0.0.1:8000/courses/enrolled_courses?tag=d&title=p",
+					"protocol": "http",
+					"host": [
+						"127",
+						"0",
+						"0",
+						"1"
+					],
+					"port": "8000",
+					"path": [
+						"courses",
+						"enrolled_courses"
+					],
+					"query": [
+						{
+							"key": "tag",
+							"value": "d"
+						},
+						{
+							"key": "title",
+							"value": "p"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "GET Courses Anonymous",
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "token",
+						"value": "",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "http://127.0.0.1:8000/courses",
+					"protocol": "http",
+					"host": [
+						"127",
+						"0",
+						"0",
+						"1"
+					],
+					"port": "8000",
+					"path": [
+						"courses"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "GET Courses Students",
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "token",
+						"value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjoyLCJlbWFpbCI6InN0ZXZlbkBhYnYuYmciLCJyb2xlIjoic3R1ZGVudCIsImV4cCI6MTY4NDc2NjY2Nn0.pma5vxm6977KCNdhOj4T8SYvG4RT8Ezmwl_PPRwLnbs",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "http://127.0.0.1:8000/courses?title=p&tag=w",
+					"protocol": "http",
+					"host": [
+						"127",
+						"0",
+						"0",
+						"1"
+					],
+					"port": "8000",
+					"path": [
+						"courses"
+					],
+					"query": [
+						{
+							"key": "title",
+							"value": "p"
+						},
+						{
+							"key": "tag",
+							"value": "w"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "GET Courses Teachers",
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "token",
+						"value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjoxLCJlbWFpbCI6ImFsaWNlQGFidi5iZyIsInJvbGUiOiJ0ZWFjaGVyIiwiZXhwIjoxNjg0NzY2NzAwfQ.1FFqZvfqEfLewG769ZDQxt0VyeD86zubPv0z3kjkz1o",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "http://127.0.0.1:8000/courses?title=p&tag=w",
+					"protocol": "http",
+					"host": [
+						"127",
+						"0",
+						"0",
+						"1"
+					],
+					"port": "8000",
+					"path": [
+						"courses"
+					],
+					"query": [
+						{
+							"key": "title",
+							"value": "p"
+						},
+						{
+							"key": "tag",
+							"value": "w"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "PUT Rate enrolled courses",
+			"request": {
+				"method": "PUT",
+				"header": [
+					{
+						"key": "token",
+						"value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjoyLCJlbWFpbCI6InN0ZXZlbkBhYnYuYmciLCJyb2xlIjoic3R1ZGVudCIsImV4cCI6MTY4NDgwNDYwMX0.maH_Y8B0NfAymWhcP2IiXKDg-gKXYYb2USEr56BF1qc",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "6.0",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://127.0.0.1:8000/courses/2/ratings",
+					"protocol": "http",
+					"host": [
+						"127",
+						"0",
+						"0",
+						"1"
+					],
+					"port": "8000",
+					"path": [
+						"courses",
+						"2",
+						"ratings"
+					]
+				}
+			},
+			"response": []
+		}
+	]
+}
