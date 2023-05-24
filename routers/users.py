@@ -1,6 +1,6 @@
 from fastapi import APIRouter, HTTPException, Header, Response, status
 from fastapi.responses import JSONResponse, FileResponse
-from data.models import User, LoginData, TeacherAdds, Course
+from data.models import User, LoginData, UpdateData, TeacherAdds, Course
 from services import users_service, courses_service
 from services.users_service import Teacher
 from data.common.auth import get_user_params_or_raise_error
@@ -136,9 +136,9 @@ def view_user(token: str =Header()) -> User | Teacher:
         return users_service.view_teacher(user) 
 
 
-@user_router.put('/', tags=['Users'], response_model=User | Teacher)
-def update_user(user: User, teacher_adds: TeacherAdds = None, token: str =Header()):
-    '''Edit account information depending on role - sutdent or teacher'''
+@user_router.put('/', tags=['Users']) 
+def update_user(update_info: UpdateData, token: str =Header()):
+    '''Edit account information'''
 
     token_params=get_user_params_or_raise_error(token)
     
@@ -146,12 +146,13 @@ def update_user(user: User, teacher_adds: TeacherAdds = None, token: str =Header
     role=token_params[2]
     existing_user=users_service.find_by_id(id)
 
-    if role == 'student':
-        return users_service.update_user(existing_user, user)
-    elif role == 'teacher':
-        if teacher_adds:
-            return users_service.update_teacher(existing_user, user, teacher_adds)
-        else:
-            return users_service.update_user(existing_user, user)
+    if role == 'student' and (update_info.phone or update_info.linked_in_account):
+        return JSONResponse(content="You can not change phone or linked account", status_code=401)
 
+    if users_service.update_user(existing_user, update_info):
+        return JSONResponse(content="You have updated your profile successfully", status_code=200)
+    else:
+        return JSONResponse(content="Failed to update profile", status_code=400)
+    
+    
 

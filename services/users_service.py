@@ -1,4 +1,4 @@
-from data.models import User, TeacherAdds
+from data.models import User, TeacherAdds, UpdateData
 from pydantic import BaseModel
 from data.database import read_query, insert_query, update_query
 import bcrypt
@@ -92,7 +92,6 @@ def generate_token(user: User) -> str:
     token = jwt.encode(payload, secret_key, algorithm="HS256")
     return token
 
-
 def validate_token(token):
     if token is None:
         return None
@@ -150,42 +149,43 @@ def view_teacher(user: User)-> User | Teacher:
     else:
         return user
     
-def update_user(old: User, new: User) -> User:
+def update_user(user: User, update_info: UpdateData) -> bool | None:
     ''' Edit basic account information'''
 
+    if user is None or update_info is None:
+        return None
+    
     hashed_password=''
-    if new.password:
-        passwd = new.password.encode("utf-8")
+    if update_info.password:
+        passwd = update_info.password.encode("utf-8")
         hashed_password = bcrypt.hashpw(passwd, main_salt)
 
     merged=User(
-        id=old.id,
-        email=old.email,
-        password=hashed_password or old.password,
-        first_name=new.first_name or old.first_name,
-        last_name=new.last_name or old.last_name,
-        role=old.role)
+        id=user.id,
+        email=user.email,
+        password=hashed_password or user.password,
+        first_name=update_info.first_name or user.first_name,
+        last_name=update_info.last_name or user.last_name,
+        role=user.role)
     
-    update_query('''UPDATE users SET
-                    email = ?, password = ?, first_name = ?, last_name = ?, role = ?
-                    WHERE id = ?''',
-                    (merged.email, merged.password, merged.first_name, merged.last_name, merged.role, merged.id ))
-    return merged
+    if update_info.phone:
 
-def update_teacher(old: User, new: User, adds: TeacherAdds)-> Teacher:
-    ''' Edit teacher account information '''
-    
-    old_adds=view_teacher(old).teacher_adds
-    updated_user=update_user(old, new)
-    merged_adds=TeacherAdds(
-        phone_number=adds.phone_number if adds.phone_number else old_adds.phone_number,
-        linked_in_account=adds.linked_in_account if adds.linked_in_account else old_adds.linked_in_account)
-    update_query('''UPDATE teachers SET
-                    phone_number = ?, linked_in_account = ?
+        update_query('''UPDATE teachers SET
+                    phone_number = ? 
                     WHERE users_id = ?''',
-                    (merged_adds.phone_number,merged_adds.linked_in_account, updated_user.id))
+                    (update_info.phone, merged.id))
+        
+    if update_info.linked_in_account:
 
-    return Teacher(user=updated_user, teacher_adds=merged_adds)
+        update_query('''UPDATE teachers SET
+                    linked_in_account = ? 
+                    WHERE users_id = ?''',
+                    (update_info.linked_in_account, merged.id))
+        
+    return update_query('''UPDATE users SET
+                    password = ?, first_name = ?, last_name = ?, role = ?
+                    WHERE id = ?''',
+                    (merged.password, merged.first_name, merged.last_name, merged.role, merged.id))
 
 
 def is_course_owner(user_id, course_id: int):
