@@ -185,7 +185,7 @@ def update_user(user: User, update_info: UpdateData) -> bool | None:
     return update_query('''UPDATE users SET
                     password = ?, first_name = ?, last_name = ?, role = ?
                     WHERE id = ?''',
-                    (merged.password, merged.first_name, merged.last_name, merged.role, merged.id))
+                    (merged.password, merged.first_name, merged.last_name, merged.role, merged.id))>0
 
 
 def is_course_owner(user_id, course_id: int):

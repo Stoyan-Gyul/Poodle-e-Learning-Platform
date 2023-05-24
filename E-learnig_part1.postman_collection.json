@@ -1,7 +1,7 @@
 {
 	"info": {
 		"_postman_id": "59bdb9b3-92fa-47d4-88fa-c744bd640b87",
-		"name": "E-learnig",
+		"name": "E-learnig_part1",
 		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
 		"_exporter_id": "26696484"
 	},
@@ -104,13 +104,13 @@
 				"header": [
 					{
 						"key": "token",
-						"value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjoyLCJlbWFpbCI6InN0ZXZlbkBhYnYuYmciLCJyb2xlIjoic3R1ZGVudCIsImV4cCI6MTY4NDQzNTc0OH0.Ip4ZyG0bKYPEMhedVYF-AMJliPacDtGbMkubcXnLQvM",
+						"value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjozLCJlbWFpbCI6InN0ZXZlbjFAYWJ2LmJnIiwicm9sZSI6InN0dWRlbnQiLCJleHAiOjE2ODQ5NTczNjh9.ufQNRbS6B5BKAOxFPRwMZr2kKACC-GZWYVtK2wnVgGI",
 						"type": "text"
 					}
 				],
 				"body": {
 					"mode": "raw",
-					"raw": "{\r\n    \"user\": {\r\n        \"email\": \"steven@abv.bg\",\r\n        \"password\": \"steven\",\r\n        \"first_name\": \"Steven1\",\r\n        \"last_name\": \"Parker1\",\r\n        \"role\": \"teacher1\"\r\n    },\r\n    \"teacher_adds\": {\r\n        \"phone_number\": \"\",\r\n        \"linked_in_account\": \"\"\r\n    }\r\n}",
+					"raw": "{\r\n        \"password\": \"steven1\",\r\n        \"first_name\": \"Steven1\",\r\n        \"last_name\": \"Parker1\",\r\n        \"role\": \"teacher\",\r\n        \"phone\": \"\",\r\n        \"linked_in_account\": \"\"\r\n        }\r\n",
 					"options": {
 						"raw": {
 							"language": "json"
@@ -201,13 +201,13 @@
 				"header": [
 					{
 						"key": "token",
-						"value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjoxLCJlbWFpbCI6ImFsaWNlQGFidi5iZyIsInJvbGUiOiJ0ZWFjaGVyIiwiZXhwIjoxNjg0NDI2NDEyfQ.QzJ1tOZa6g5d-ujmGZXhKX_VqEhsJ-rwPrJThVv2r8o",
+						"value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjoxLCJlbWFpbCI6ImFsaWNlQGFidi5iZyIsInJvbGUiOiJ0ZWFjaGVyIiwiZXhwIjoxNjg0NDM4OTA0fQ.EAttiRHCBluqOfs8s2jgBjUPsoeCwEv_QYRHX2gPOGg",
 						"type": "text"
 					}
 				],
 				"body": {
 					"mode": "raw",
-					"raw": "{\r\n    \"user\": {\r\n        \"email\": \"alice@abv.bg\",\r\n        \"password\": \"alice\",\r\n        \"first_name\": \"Alice\",\r\n        \"last_name\": \"Parker\",\r\n        \"role\": \"teacher1\"\r\n    },\r\n    \"teacher_adds\": {\r\n        \"phone_number\": \"08882412\",\r\n        \"linked_in_account\": \"https://www.linkedin.com/aliceparker/\"\r\n    }\r\n}",
+					"raw": "{\r\n        \"password\": \"alice\",\r\n        \"first_name\": \"alice\",\r\n        \"last_name\": \"Parker\",\r\n        \"role\": \"teacher\",\r\n        \"phone\": \"0888333\",\r\n        \"linked_in_account\": \"www.linkedin.com/aliceparker2\"\r\n        }",
 					"options": {
 						"raw": {
 							"language": "json"
