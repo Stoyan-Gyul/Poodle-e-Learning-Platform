@@ -5,9 +5,29 @@ from unittest.mock import MagicMock, patch, ANY
 
 import jwt
 
-from data.models import User
+from data.models import User, UpdateData
 from services.users_service import Teacher
 from services import users_service
+
+
+USER = User(
+            email='test@example.com',
+            password='password',
+            role='user',
+            first_name='John',
+            last_name='Doe',
+            verification_token='token',
+            phone='1234567890',
+            linked_in_account='linkedin'
+        )
+
+NEW_DATA=UpdateData(
+                    password='pass',
+                    first_name='fname',
+                    last_name='lname',
+                    role='teacher',
+                    phone='0098',
+                    linked_in_account='www.sdfsd.sdf')
 
 class UserService_Should(TestCase):
     
@@ -105,18 +125,18 @@ class UserService_Should(TestCase):
         expected_id = 1
         mock_insert_query.return_value = 1  
         
-        user = User(
-            email='test@example.com',
-            password='password',
-            role='user',
-            first_name='John',
-            last_name='Doe',
-            verification_token='token',
-            phone='1234567890',
-            linked_in_account='linkedin'
-        )
+        # user = User(
+        #     email='test@example.com',
+        #     password='password',
+        #     role='user',
+        #     first_name='John',
+        #     last_name='Doe',
+        #     verification_token='token',
+        #     phone='1234567890',
+        #     linked_in_account='linkedin'
+        # )
         
-        actual_id  = users_service.create_new_user(user)
+        actual_id  = users_service.create_new_user(USER)
     
         
         self.assertEqual(actual_id, expected_id)
@@ -148,46 +168,46 @@ class UserService_Should(TestCase):
     @patch('services.users_service.bcrypt.checkpw', autospec=True)
     def test_try_login_with_valid_credentials_returns_user(self, mock_checkpw):
     
-        user = User(
-            email='test@example.com',
-            password='password',
-            role='user',
-            first_name='John',
-            last_name='Doe',
-            verification_token='token',
-        )
+        # user = User(
+        #     email='test@example.com',
+        #     password='password',
+        #     role='user',
+        #     first_name='John',
+        #     last_name='Doe',
+        #     verification_token='token',
+        # )
         
         mock_checkpw.return_value = True
         
-        actual_user = users_service.try_login(user, 'password')
+        actual_user = users_service.try_login(USER, 'password')
         
-        self.assertEqual(actual_user, user)
+        self.assertEqual(actual_user, USER)
         
         mock_checkpw.assert_called_once_with(
             'password'.encode('utf-8'),
-            user.password.encode('utf-8')
+            USER.password.encode('utf-8')
         )
 
     @patch('services.users_service.bcrypt.checkpw', autospec=True)
     def test_tryLogin_with_invalid_credentials_returns_none(self, mock_checkpw):
-        user = User(
-            email='test@example.com',
-            password='password',
-            role='user',
-            first_name='John',
-            last_name='Doe',
-            verification_token='token',
-        )
+        # user = User(
+        #     email='test@example.com',
+        #     password='password',
+        #     role='user',
+        #     first_name='John',
+        #     last_name='Doe',
+        #     verification_token='token',
+        # )
         
         mock_checkpw.return_value = False
         
-        result = users_service.try_login(user, 'wrong_password')
+        result = users_service.try_login(USER, 'wrong_password')
         
         self.assertIsNone(result)
         
         mock_checkpw.assert_called_once_with(
             'wrong_password'.encode('utf-8'),
-            user.password.encode('utf-8')
+            USER.password.encode('utf-8')
         )
 
     def test_try_login_with_none_user_returns_none(self):
@@ -198,16 +218,16 @@ class UserService_Should(TestCase):
 
     def test_try_login_with_none_password_returns_none(self):
 
-        user = User(
-            email='test@example.com',
-            password='password',
-            role='user',
-            first_name='John',
-            last_name='Doe',
-            verification_token='token',
-        )
+        # user = User(
+        #     email='test@example.com',
+        #     password='password',
+        #     role='user',
+        #     first_name='John',
+        #     last_name='Doe',
+        #     verification_token='token',
+        # )
         
-        result = users_service.try_login(user, None)
+        result = users_service.try_login(USER, None)
         
         self.assertIsNone(result)
     
@@ -404,28 +424,41 @@ class UserService_Should(TestCase):
     @patch('services.users_service.read_query')
     def test_view_teacher_returnTeacher_when_teacher_addsExists(self, mock_read_query):
         mock_read_query.return_value=[('08882412', 'https://www.linkedin.com/aliceparker/')]
-        user = User(
-            id=1,
-            email='test@example.com',
-            password='password',
-            role='teacher',
-            first_name='John',
-            last_name='Doe',
-        )
-        result=users_service.view_teacher(user)
+        
+        result=users_service.view_teacher(USER)
         self.assertIsInstance(result,Teacher)
 
     @patch('services.users_service.read_query')
-    def test_view_teacher_returnUser_when_No_teacher_adds(self, mock_read_query):
+    def test_view_teacher_returnUser_if_No_teacher_adds(self, mock_read_query):
         mock_read_query.return_value=[]
-        user = User(
-            id=1,
-            email='test@example.com',
-            password='password',
-            role='teacher',
-            first_name='John',
-            last_name='Doe',
-        )
-        result=users_service.view_teacher(user)
+        
+        result=users_service.view_teacher(USER)
         self.assertIsInstance(result,User)
+
+    def test_update_user_returnNone_ifNo_user(self):
+        user=None
+        
+        result=users_service.update_user(user,NEW_DATA)
+        self.assertIsNone(result)
+
+    def test_update_user_returnNone_ifNo_updaeteData(self):
+        new_data=None
+        
+        result=users_service.update_user(USER,new_data)
+        self.assertIsNone(result)
+
+    @patch('services.users_service.update_query')
+    def test_update_user_returnFalse_if_data_not_updated(self, mock_update_query):
+        mock_update_query.return_value=-1
+        
+        result=users_service.update_user(USER,NEW_DATA)
+        self.assertEqual(False, result)
+
+    @patch('services.users_service.update_query')
+    def test_update_user_returnTrue_if_data_updated(self, mock_update_query):
+        mock_update_query.return_value=1
+        
+        result=users_service.update_user(USER,NEW_DATA)
+        self.assertEqual(True, result)
+    
 
