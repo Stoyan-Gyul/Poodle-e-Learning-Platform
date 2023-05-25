@@ -20,8 +20,8 @@ class User(BaseModel):
     first_name: str | None
     last_name: str | None
     role: str | None
-    phone: str = None
-    linked_in_account: str = None
+    phone: int | None
+    linked_in_account: str | None
     verification_token: str | None
     is_verified: str | None
 
@@ -235,3 +235,10 @@ class ViewTeacherCourse(BaseModel):
             objective=objective
             )
     
+class ViewUser(BaseModel):
+    password: str | None
+    first_name: str | None
+    last_name: str | None
+    role: str | None
+    phone: int | None
+    linked_in_account: str | None
