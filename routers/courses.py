@@ -75,10 +75,15 @@ def course_rating(course_id: int, rating: float=Body(embed=True, ge=0, le=10), t
 
 @course_router.get('/{course_id}')
 def get_course(course_id: int, token: str = Header()):
-    user = get_user_or_raise_401(token)
-    result = courses_service.get_course_by_id(course_id)
+    get_user_or_raise_401(token)
+    course = courses_service.get_course_by_id(course_id)
+    if course is None:
+        return NotFound()
+    else: 
+        return CourseResponseModel(
+            course=course, 
+            sections=courses_service.get_sections_by_course(course_id))
 
-    return result
 
 @course_router.get('/reports')
 def get_reports_for_all_owned_courses(token: str = Header()):
@@ -91,16 +96,14 @@ def get_reports_for_all_owned_courses(token: str = Header()):
 @course_router.get('/{course_id}/reports')
 def get_reports_by_course_id(course_id: int, token: str = Header()):
     user = get_user_or_raise_401(token)
-    if not courses_service.course_exists(course_id):
-        return NotFound(f'Course {course_id} does not exist!')
-    
+
     course = courses_service.get_course_by_id(course_id)
     if course is None:
         return NotFound(f'Course {course_id} does not exist!')
 
     if not user.is_course_owner(course):
-        return Unauthorized('Only the teacher that created the course has access to its reports.')
-    
+        return Unauthorized('Only the course owner has access to its reports.')
+
     result = courses_service.get_reports_by_id(course_id)
 
     return result
@@ -111,23 +114,40 @@ def create_course(course: Course, token: str = Header()):
     user = get_user_or_raise_401(token)
     if not user.is_teacher():
         return Unauthorized('Only a teacher can create courses.')
-    
+
     created_course = courses_service.create_course(course)
-    
 
     return CourseResponseModel(course=created_course, sections=[])
+
+
+@course_router.put('/{course_id}')
+def update_course(course_id: int, data: CourseUpdate, token: str = Header()):
+    user = get_user_or_raise_401(token)
+
+    course = courses_service.get_course_by_id(course_id)
+    if course is None:
+        return NotFound(f'Course {course_id} does not exist!')
+
+    if not user.is_course_owner(course):
+        return Unauthorized('Only the course owner can modify it.')
+
+    updated_course = courses_service.update_course(data, course)
+    if updated_course is None:
+        return InternalServerError('Failed to update the course.')
+
+    return updated_course
 
 
 @course_router.post('/{course_id}', status_code=status.HTTP_201_CREATED)
 def create_section(course_id: int, section: Section, token: str = Header()):
     user = get_user_or_raise_401(token)
-    if not courses_service.course_exists(course_id):
-        return NotFound(f'Course {course_id} does not exist!')
 
     course = courses_service.get_course_by_id(course_id)
+    if course is None:
+        return NotFound(f'Course {course_id} does not exist!')
 
     if not user.is_course_owner(course):
-        return Unauthorized('Only the course creator can create sections within it.')
+        return Unauthorized('Only the course owner can create sections within it.')
     
     created_section = courses_service.create_section(course_id, section)
     created_section.courses_id = course_id
@@ -135,11 +155,21 @@ def create_section(course_id: int, section: Section, token: str = Header()):
     return created_section
 
 
-@course_router.put('/{course_id}')
-def update_course(course: Course, data: CourseUpdate, token: str = Header()):
+@course_router.put('/{course_id}/sections/{section_id}')
+def update_section(course_id: int, section_id: int, section: Section, token: str = Header()):
     user = get_user_or_raise_401(token)
-    if not courses_service.course_exists(course.id):
-        return NotFound(f'Course {course.id} does not exist!')
 
-    if not user.is_course_owner(course.id):
-        return Unauthorized('Only the course creator can create sections within it.')
+    course = courses_service.get_course_by_id(course_id)
+    if course is None:
+        return NotFound(f'Course {course_id} does not exist!')
+
+    if not user.is_course_owner(course):
+        return Unauthorized('Only the course owner can update sections within it.')
+    
+    existing_section = courses_service.get_section_by_id(section_id)
+    if existing_section is None:
+        return NotFound()
+    else:
+        return courses_service.update_section(existing_section, section)
+
+

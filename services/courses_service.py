@@ -1,6 +1,6 @@
 
 from data.database import read_query, insert_query, update_query
-from data.models import Report, Course, Section
+from data.models import Report, Course, Section, CourseUpdate
 from data.models import ViewPublicCourse, ViewStudentCourse, ViewTeacherCourse
 
 
@@ -116,20 +116,6 @@ def course_rating(rating: float , course_id: int, student_id: int)-> bool:
         return None # student is not enrolled in this course
     
 
-def get_course_by_id(course_id: int):
-    sql = '''
-            SELECT c.id, c.title, c.description, c.home_page_pic, c.owner_id, c.is_active, c.is_premium, t.expertise_area, o.description
-            FROM courses AS c
-            JOIN courses_have_tags AS ct ON c.id = ct.courses_id
-            JOIN tags AS t ON t.id = ct.tags_id
-            JOIN courses_have_objectives as co ON c.id = co.courses_id
-            JOIN objectives as o ON o.id = co.objectives_id
-            WHERE c.id = ?'''
-    sql_params = (course_id,)
-    data = read_query(sql, sql_params)
-
-    return next((Course.from_query_result(*row) for row in data), None)
-
 
 def get_all_reports(user_id: int):
     sql = '''SELECT u.users_id, u.courses_id, u.status, u.rating, u.progress
@@ -153,6 +139,21 @@ def get_reports_by_id(course_id: int):
     return (Report.from_query_result(*row) for row in data)
 
 
+def get_course_by_id(course_id: int):
+    sql = '''
+            SELECT c.id, c.title, c.description, c.home_page_pic, c.owner_id, c.is_active, c.is_premium, t.expertise_area, o.description
+            FROM courses AS c
+            JOIN courses_have_tags AS ct ON c.id = ct.courses_id
+            JOIN tags AS t ON t.id = ct.tags_id
+            JOIN courses_have_objectives as co ON c.id = co.courses_id
+            JOIN objectives as o ON o.id = co.objectives_id
+            WHERE c.id = ?'''
+    sql_params = (course_id,)
+    data = read_query(sql, sql_params)
+
+    return next((Course.from_query_result(*row) for row in data), None)
+
+
 def create_course(course: Course):
     sql = '''INSERT into courses(title, description, home_page_pic, owner_id, is_active, is_premium)
             VALUES (?, ?, ?, ?, ?, ?)'''
@@ -170,6 +171,60 @@ def create_course(course: Course):
     return course
 
 
+def update_course(course_update: CourseUpdate, course: Course):
+    sql = ('''
+            UPDATE courses
+            SET title = ?, 
+                description = ?, 
+                home_page_pic = ?, 
+                is_active = ?, 
+                is_premium = ?
+            WHERE id = ?
+            ''')
+    sql_params = (course_update.title, 
+                  course_update.description, 
+                  course_update.home_page_pic, 
+                  1 if course_update.is_active == 'active' else 0, 
+                  1 if course_update.is_premium == 'premium' else 0, 
+                  course.id
+                  )
+    result = update_query(sql, sql_params)
+
+    if result > 0:
+        course.title = course_update.title
+        course.description = course_update.description
+        course.home_page_pic = course_update.home_page_pic
+        course.is_active = course_update.is_active
+        course.is_premium = course_update.is_premium
+
+    return course
+
+
+def course_exists(id: int):
+    return any(
+        read_query(
+            'SELECT * FROM courses WHERE id = ?',
+            (id,)))
+
+
+def get_section_by_id(section_id: int):
+    data = read_query(
+        '''SELECT id, title, content, description, external_link, courses_id
+            FROM sections 
+            WHERE id = ?''', (section_id,))
+    
+    return next((Section.from_query_result(*row) for row in data), None)
+
+
+def get_sections_by_course(course_id: int):
+    data = read_query(
+        '''SELECT id, title, content, description, external_link, courses_id
+            FROM sections 
+            WHERE courses_id = ?''', (course_id,))
+
+    return (Section.from_query_result(*row) for row in data)
+
+
 def create_section(course_id: int, section: Section):
     sql = '''INSERT into sections(title, content, description, external_link, courses_id)
             VALUES (?, ?, ?, ?, ?)'''
@@ -181,11 +236,24 @@ def create_section(course_id: int, section: Section):
     return section
 
 
-def course_exists(id: int):
-    return any(
-        read_query(
-            'SELECT * FROM courses WHERE id = ?',
-            (id,)))
+def update_section(old: Section, new: Section):
+    merged = Section(
+        id=old.id,
+        title=new.title or old.title,
+        content=new.content or old.content,
+        description=new.description or old.description,
+        external_link=new.external_link or old.external_link,
+        courses_id=new.courses_id or old.courses_id)
+
+    update_query(
+        '''UPDATE sections 
+           SET title = ?, content = ?, description = ?, external_link = ?, courses_id = ?
+           WHERE id = ? 
+        ''',
+        (merged.title, merged.content, merged.description, merged.external_link, merged.courses_id, merged.id))
+
+    return merged
+
     
 
 
