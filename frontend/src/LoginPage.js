@@ -39,21 +39,24 @@ const LoginPage = () => {
       setError('Email and password cannot be empty.');
       return;
     }
-
+  
     try {
       // Make the API request and get the token
       const token = await apiLogin(email, password);
-
+  
+      // Save the token to local storage
+      localStorage.setItem('authToken', token);
+  
       // Set the token in the app state
       setAuthToken(token);
-
+  
       // Redirect to Dashboard
       navigate('/dashboard');
     } catch (error) {
       setError('Login failed. Please check your email and password.');
       console.error(error);
     }
-  };
+  };  
 
   // API login function
   const apiLogin = async (email, password) => {
