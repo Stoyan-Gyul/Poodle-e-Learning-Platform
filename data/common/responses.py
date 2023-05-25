@@ -28,5 +28,5 @@ class Conflict(JSONResponse):
 
 
 class InternalServerError(JSONResponse):
-    def __init__(self):
-        super().__init__(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR)
+    def __init__(self, content=''):
+        super().__init__(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, content=content)
