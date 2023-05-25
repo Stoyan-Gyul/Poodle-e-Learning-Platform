@@ -33,7 +33,7 @@ class User(BaseModel):
 
     def is_student(self):
         return self.role == Role.STUDENT
-    
+
     def is_course_owner(self, course: 'Course'):
         return self.id == course.owner_id
 
@@ -91,14 +91,16 @@ class CourseUpdate(BaseModel):
     description: constr(min_length=1) | None
     home_page_pic: None
     is_active: constr(regex='^active|hidden$') | None
+    is_premium: constr(regex='^premium|public$') | None
 
     @classmethod
-    def from_query_result(cls, title, description, home_page_pic, is_active):
+    def from_query_result(cls, title, description, home_page_pic, is_active, is_premium):
         return cls(
             title=title,
             description=description,
             home_page_pic=home_page_pic,
-            is_active='active' if is_active else 'hidden'
+            is_active='active' if is_active else 'hidden',
+            is_premium='premium' if is_premium else 'public'
             )
 
 
