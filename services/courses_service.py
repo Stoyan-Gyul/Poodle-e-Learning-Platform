@@ -154,16 +154,14 @@ def get_reports_by_id(course_id: int):
 
 
 def create_course(course: Course):
-    sql = '''INSERT into courses(title, description, home_page_pic, owner_id, is_active, is_premium, expertise_area, objective)
-            VALUES (?, ?, ?, ?, ?)'''
+    sql = '''INSERT into courses(title, description, home_page_pic, owner_id, is_active, is_premium)
+            VALUES (?, ?, ?, ?, ?, ?)'''
     sql_params = (course.title, 
-                 course.description, 
-                 course.home_page_pic, 
-                 course.owner_id, 
-                 1 if course.is_active == 'active' else 0, 
-                 1 if course.is_premium else 0, 
-                 course.expertise_area, 
-                 course.objective
+                  course.description, 
+                  course.home_page_pic, 
+                  course.owner_id, 
+                  1 if course.is_active == 'active' else 0, 
+                  1 if course.is_premium == 'premium' else 0
                  )
     generated_id = insert_query(sql, sql_params)
 
@@ -189,4 +187,5 @@ def course_exists(id: int):
             'SELECT * FROM courses WHERE id = ?',
             (id,)))
     
+
 

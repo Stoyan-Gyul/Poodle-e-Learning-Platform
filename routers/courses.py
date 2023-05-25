@@ -119,16 +119,18 @@ def create_course(course: Course, token: str = Header()):
 
 
 @course_router.post('/{course_id}', status_code=status.HTTP_201_CREATED)
-def create_section(course: Course, section: Section, token: str = Header()):
+def create_section(course_id: int, section: Section, token: str = Header()):
     user = get_user_or_raise_401(token)
-    if not courses_service.course_exists(course.id):
-        return NotFound(f'Course {course.id} does not exist!')
+    if not courses_service.course_exists(course_id):
+        return NotFound(f'Course {course_id} does not exist!')
 
-    if not user.is_course_owner(course.id):
+    course = courses_service.get_course_by_id(course_id)
+
+    if not user.is_course_owner(course):
         return Unauthorized('Only the course creator can create sections within it.')
     
-    created_section = courses_service.create_section(course.id, section)
-    created_section.courses_id = course.id
+    created_section = courses_service.create_section(course_id, section)
+    created_section.courses_id = course_id
 
     return created_section
 
