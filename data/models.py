@@ -68,8 +68,8 @@ class Course(BaseModel):
     owner_id: int
     is_active: constr(regex='^active|hidden$')
     is_premium: constr(regex='^premium|public$')
-    expertise_area: str
-    objective: str
+    expertise_area: str | None
+    objective: str | None
 
     @classmethod
     def from_query_result(cls, id, title, description, home_page_pic, owner_id, is_active, is_premium, expertise_area, objective):
