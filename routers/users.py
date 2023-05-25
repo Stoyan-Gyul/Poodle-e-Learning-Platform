@@ -137,10 +137,15 @@ def view_user(token: str =Header()) -> User | Teacher:
 
 
 @user_router.put('/', tags=['Users']) 
-def update_user(update_info: UpdateData, token: str =Header()):
+def update_user(update_info: UpdateData, authorization: str = Header(None)):
     '''Edit account information'''
 
-    token_params=get_user_params_or_raise_error(token)
+    if authorization is None:
+        raise HTTPException(status_code=403)
+    
+    token = authorization.split(" ")[1] if authorization.startswith("Bearer ") else None
+
+    token_params = users_service.validate_token(token)
     
     id=token_params[0]
     role=token_params[2]
@@ -155,4 +160,16 @@ def update_user(update_info: UpdateData, token: str =Header()):
         return JSONResponse(content="Failed to update profile", status_code=400)
     
     
+@user_router.get('/current')
+def show_current_user_data_based_on_role(authorization: str = Header(None)):
+    if authorization is None:
+        raise HTTPException(status_code=403)
+    
+    token = authorization.split(" ")[1] if authorization.startswith("Bearer ") else None
 
+    token_params = users_service.validate_token(token)
+
+    id=token_params[0]
+    role=token_params[2]
+
+    return users_service.view_current_user_info(id, role)
