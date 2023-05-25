@@ -12,7 +12,7 @@ course_router = APIRouter(prefix="/courses")
 def view_enrolled_courses(title: str | None = None,
                           tag: str | None = None, 
                           token: str =Header()) -> list[ViewStudentCourse]:
-    ''' View public and enrolled courses by students only'''
+    ''' View enrolled public and premium courses by students only'''
 
     token_params=get_user_params_or_raise_error(token)
     
