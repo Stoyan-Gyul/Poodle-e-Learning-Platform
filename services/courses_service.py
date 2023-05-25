@@ -1,5 +1,8 @@
-from data.database import read_query, update_query
+
+from data.database import read_query, insert_query, update_query
+from data.models import Report, Course, Section
 from data.models import ViewPublicCourse, ViewStudentCourse, ViewTeacherCourse
+
 
 def view_public_courses() -> list[ViewPublicCourse] :
     ''' View only title, description and tag of public course'''
@@ -111,3 +114,68 @@ def course_rating(rating: float , course_id: int, student_id: int)-> bool:
                 return True
     except:
         return None # student is not enrolled in this course
+    
+
+def get_course_by_id(course_id: int):
+    sql = ''''''
+
+
+def get_all_reports(user_id: int):
+    sql = '''SELECT u.users_id, u.courses_id, u.status, u.rating, u.progress
+            FROM users_have_courses u
+            JOIN courses c
+            ON c.id = u.courses_id
+            WHERE owner_id = ?'''
+    sql_params = (user_id,)
+    data = read_query(sql, sql_params)
+
+    return (Report.from_query_result(*row) for row in data)
+
+
+def get_reports_by_id(course_id: int):
+    sql = '''SELECT users_id, courses_id, status, rating, progress 
+            FROM users_have_courses 
+            WHERE courses_id = ?'''
+    sql_params = (course_id,)
+    data = read_query(sql, sql_params)
+
+    return (Report.from_query_result(*row) for row in data)
+
+
+def create_course(course: Course):
+    sql = '''INSERT into courses(title, description, home_page_pic, owner_id, is_active, is_premium, expertise_area, objective)
+            VALUES (?, ?, ?, ?, ?)'''
+    sql_params = (course.title, 
+                 course.description, 
+                 course.home_page_pic, 
+                 course.owner_id, 
+                 1 if course.is_active == 'active' else 0, 
+                 1 if course.is_premium else 0, 
+                 course.expertise_area, 
+                 course.objective
+                 )
+    generated_id = insert_query(sql, sql_params)
+
+    course.id = generated_id
+
+    return course
+
+
+def create_section(course_id: int, section: Section):
+    sql = '''INSERT into sections(title, content, description, external_link, courses_id)
+            VALUES (?, ?, ?, ?, ?)'''
+    sql_params = section.title, section.content, section.description, section.external_link, course_id
+    generated_id = insert_query(sql, sql_params)
+
+    section.id = generated_id
+
+    return section
+
+
+def course_exists(id: int):
+    return any(
+        read_query(
+            'SELECT * FROM courses WHERE id = ?',
+            (id,)))
+    
+
