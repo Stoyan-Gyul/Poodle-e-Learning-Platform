@@ -1,9 +1,9 @@
-import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
+import React, { useState, useContext } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
 import { Box, Button, Container, FormControl, MenuItem, Select, TextField, Typography } from '@mui/material';
 import { styled } from '@mui/system';
-
-import logoImage from './images/logo.png'; 
+import { AuthContext } from './AuthContext';
+import logoImage from './images/logo.png';
 
 const Header = styled('header')({
   position: 'absolute',
@@ -16,7 +16,7 @@ const Header = styled('header')({
   width: '100%',
   backgroundColor: '#e8f0fe', // Replace with your desired background color
   padding: '0.1rem',
-  borderTop: '1px solid #7d68a1', 
+  borderTop: '1px solid #7d68a1',
 });
 
 const LogoImage = styled('img')({
@@ -28,22 +28,90 @@ const LogoImage = styled('img')({
 const SignupPage = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [firstName, setFirstName] = useState('');
-  const [lastName, setLastName] = useState('');
+  const [first_name, setfirst_name] = useState('');
+  const [last_name, setLastName] = useState('');
   const [role, setRole] = useState('student'); // Default role is 'student'
   const [phone, setPhone] = useState('');
   const [linkedin, setLinkedin] = useState('');
+  const [error] = useState('');
 
   const handleRoleChange = (event) => {
     setRole(event.target.value);
   };
+  const { setAuthToken } = useContext(AuthContext);
+  const navigate = useNavigate();
 
-  const handleSignup = () => {
-    // Perform signup logic here
-    // You can access the values entered by the user in the state variables (email, password, firstName, lastName, role, phone, linkedin)
+  const handleSignup = async () => {
+    try {
+      const userData = {
+        email,
+        password,
+        first_name,
+        last_name,
+        role,
+      };
+
+      if (role === 'teacher') {
+        userData.phone = phone;
+        userData.linkedin = linkedin;
+      }
+
+      const response = await fetch('http://localhost:8000/users/', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(userData),
+      });
+
+      if (response.ok) {
+        // Signup successful
+        await handleLogin();
+      } else {
+        // Signup failed
+        // You can handle the error and display an appropriate message to the user
+        console.log('Signup failed');
+      }
+    } catch (error) {
+      // Handle any network or server errors
+      console.error('Error occurred while signing up:', error);
+    }
   };
 
-  const showTeacherFields = role === 'teacher';
+  const handleLogin = async () => {
+    try {
+      // Make the API request and get the token
+      const loginResponse = await fetch('http://localhost:8000/users/login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          email,
+          password,
+        }),
+      });
+
+      if (loginResponse.ok) {
+        // Login successful
+        const { token } = await loginResponse.json();
+
+        // Set the token in the app state or local storage
+        // For example, if you have a state management library like Redux, you can dispatch an action to set the token
+        // Or if you want to store it in local storage, you can use: localStorage.setItem('token', token);
+        setAuthToken(token);
+
+        // Redirect to Dashboard
+        navigate('/dashboard');
+      } else {
+        // Login failed
+        console.log('Login failed');
+      }
+    } catch (error) {
+      // Handle any network or server errors
+      console.error('Error occurred while logging in:', error);
+    }
+  };
 
   return (
     <>
@@ -53,12 +121,18 @@ const SignupPage = () => {
         </a>
       </Header>
       <Container maxWidth="sm">
-        <Box sx={{ mt: 15 }}>
+        <Box sx={{ mt: 8 }}>
           <Typography variant="h4" component="h2" align="center" gutterBottom>
-            Signup
+            Sign Up
           </Typography>
           <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-            <TextField label="Email" type="email" required value={email} onChange={(e) => setEmail(e.target.value)} />
+            <TextField
+              label="Email"
+              type="email"
+              required
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+            />
             <TextField
               label="Password"
               type="password"
@@ -70,23 +144,23 @@ const SignupPage = () => {
               label="First Name"
               type="text"
               required
-              value={firstName}
-              onChange={(e) => setFirstName(e.target.value)}
+              value={first_name}
+              onChange={(e) => setfirst_name(e.target.value)}
             />
             <TextField
               label="Last Name"
               type="text"
               required
-              value={lastName}
+              value={last_name}
               onChange={(e) => setLastName(e.target.value)}
             />
-            <FormControl fullWidth>
-              <Select value={role} onChange={handleRoleChange} displayEmpty>
+            <FormControl>
+              <Select value={role} onChange={handleRoleChange}>
                 <MenuItem value="student">Student</MenuItem>
                 <MenuItem value="teacher">Teacher</MenuItem>
               </Select>
             </FormControl>
-            {showTeacherFields && (
+            {role === 'teacher' && (
               <>
                 <TextField
                   label="Phone"
@@ -105,11 +179,16 @@ const SignupPage = () => {
               </>
             )}
             <Button variant="contained" color="primary" size="large" fullWidth onClick={handleSignup}>
-              Signup
+              Sign Up
             </Button>
+            {error && (
+              <Typography variant="body1" component="p" color="error" align="center">
+                {error}
+              </Typography>
+            )}
           </Box>
           <Typography variant="body1" component="p" align="center">
-            Already have an account? <Link to="/login">Login</Link>
+            Already have an account? <Link to="/login">Log in</Link>
           </Typography>
         </Box>
       </Container>
@@ -118,8 +197,3 @@ const SignupPage = () => {
 };
 
 export default SignupPage;
-
-
-
-
-
