@@ -1,4 +1,4 @@
-from data.models import User, TeacherAdds, UpdateData
+from data.models import User, TeacherAdds, UpdateData, ViewUser
 from pydantic import BaseModel
 from data.database import read_query, insert_query, update_query
 import bcrypt
@@ -60,7 +60,7 @@ def create_new_user(user: User):
 
     if user.phone or user.linked_in_account:
     
-        sql_teacher = "INSERT INTO teachers (users_id, phone, linked_in_account) VALUES (?, ?, ?)"
+        sql_teacher = "INSERT INTO teachers (users_id, phone_number, linked_in_account) VALUES (?, ?, ?)"
         sql_params_teacher = (user_id, user.phone, user.linked_in_account)
         
         insert_query(sql_teacher, sql_params_teacher)
@@ -135,7 +135,6 @@ def unsubscribe_from_course(user_id: int, course_id:int):
 
     return update_query(sql, sql_params)
 
-
 def view_teacher(user: User)-> User | Teacher:
     ''' View account information as per the role -  teacher'''
 
@@ -185,8 +184,12 @@ def update_user(user: User, update_info: UpdateData) -> bool | None:
     return update_query('''UPDATE users SET
                     password = ?, first_name = ?, last_name = ?, role = ?
                     WHERE id = ?''',
-                    (merged.password, merged.first_name, merged.last_name, merged.role, merged.id))>0
+                    (merged.password, merged.first_name, merged.last_name, merged.role, merged.id))
 
+def is_course_owner(user_id, course_id: int):
+        owner_id = read_query('''SELECT owner_id FROM courses
+WHERE id = ?''', (course_id,))
+        return user_id == owner_id
 
 def send_verification_email(email: str, verification_link: str):
     smtp_host = "smtp.office365.com"
@@ -226,4 +229,26 @@ def verify_email(email:str, token:str) -> bool:
         return update_query(sql, sql_params)
     else:
         return False
-        
+
+def view_current_user_info(id:int, role: str):
+    if id is None or role is None:
+        return None
+    
+    if role == 'student':
+        sql = "SELECT first_name, last_name, role FROM users WHERE id = ?;"
+        sql_params = (id,)
+        data = read_query(sql, sql_params)
+
+        if data:
+            return ViewUser(first_name=data[0][0], last_name=data[0][1], role=data[0][2])
+        else:
+            return None
+    elif role == 'teacher':
+        sql = "SELECT users.first_name, users.last_name, users.role, teachers.phone_number, teachers.linked_in_account FROM users JOIN teachers ON users.id = teachers.users_id WHERE users.id = ?"
+        sql_params = (id,)
+        data = read_query(sql, sql_params)
+
+        if data:
+            return ViewUser(first_name=data[0][0], last_name=data[0][1], role=data[0][2], phone=data[0][3], linked_in_account=data[0][4])
+        else:
+            return None
