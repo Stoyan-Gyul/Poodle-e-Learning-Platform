@@ -461,4 +461,19 @@ class UserService_Should(TestCase):
         result=users_service.update_user(USER,NEW_DATA)
         self.assertEqual(True, result)
     
+    @patch('services.users_service.read_query')
+    def test_is_course_owner_returnTrue(self, mock_read_query):
+        mock_read_query.return_value=[(1,)]
+        user_id=1
+        fake_course_id=100
+        result=users_service.is_course_owner(user_id, fake_course_id)
+        self.assertEqual(True, result)
+
+    @patch('services.users_service.read_query')
+    def test_is_course_owner_returnFalse(self, mock_read_query):
+        mock_read_query.return_value=[(2,)]
+        user_id=1
+        fake_course_id=100
+        result=users_service.is_course_owner(user_id, fake_course_id)
+        self.assertEqual(False, result)
 

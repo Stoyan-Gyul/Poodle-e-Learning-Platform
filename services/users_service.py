@@ -188,10 +188,10 @@ def update_user(user: User, update_info: UpdateData) -> bool | None:
                     (merged.password, merged.first_name, merged.last_name, merged.role, merged.id))>0
 
 
-def is_course_owner(user_id, course_id: int):
+def is_course_owner(user_id, course_id: int)->bool:
         owner_id = read_query('''SELECT owner_id FROM courses
-WHERE id = ?''', (course_id,))
-        return user_id == owner_id
+                                 WHERE id = ?''', (course_id,))
+        return user_id == owner_id[0][0]
 
 
 def send_verification_email(email: str, verification_link: str):
