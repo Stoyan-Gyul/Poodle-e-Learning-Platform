@@ -73,6 +73,13 @@ def course_rating(course_id: int, rating: float=Body(embed=True, ge=0, le=10), t
     return JSONResponse(status_code=409,content={'detail': 'You are not allowed to rate this course!'} )
 
 
+@course_router.get('/{course_id}')
+def get_course(course_id: int, token: str = Header()):
+    user = get_user_or_raise_401(token)
+    result = courses_service.get_course_by_id(course_id)
+
+    return result
+
 @course_router.get('/reports')
 def get_reports_for_all_owned_courses(token: str = Header()):
     user = get_user_or_raise_401(token)
@@ -85,6 +92,10 @@ def get_reports_for_all_owned_courses(token: str = Header()):
 def get_reports_by_course_id(course_id: int, token: str = Header()):
     user = get_user_or_raise_401(token)
     if not courses_service.course_exists(course_id):
+        return NotFound(f'Course {course_id} does not exist!')
+    
+    course = courses_service.get_course_by_id(course_id)
+    if course is None:
         return NotFound(f'Course {course_id} does not exist!')
 
     if not user.is_course_owner(course):

@@ -117,7 +117,18 @@ def course_rating(rating: float , course_id: int, student_id: int)-> bool:
     
 
 def get_course_by_id(course_id: int):
-    sql = ''''''
+    sql = '''
+            SELECT c.id, c.title, c.description, c.home_page_pic, c.owner_id, c.is_active, c.is_premium, t.expertise_area, o.description
+            FROM courses AS c
+            JOIN courses_have_tags AS ct ON c.id = ct.courses_id
+            JOIN tags AS t ON t.id = ct.tags_id
+            JOIN courses_have_objectives as co ON c.id = co.courses_id
+            JOIN objectives as o ON o.id = co.objectives_id
+            WHERE c.id = ?'''
+    sql_params = (course_id,)
+    data = read_query(sql, sql_params)
+
+    return next((Course.from_query_result(*row) for row in data), None)
 
 
 def get_all_reports(user_id: int):
