@@ -1,10 +1,16 @@
 from pydantic import BaseModel, constr, condecimal, validator
 from data.database import read_query
+from typing import Optional
 
 class Role:
     ADMIN = 'admin'
     TEACHER = 'teacher'
     STUDENT = 'student'
+
+class Status:
+    UNSUBSCRIBED = 'unsubscribed'
+    PENDING = 'pending'
+    SUBSCRIBED = 'subscribed'
 
 
 class User(BaseModel):
@@ -27,6 +33,9 @@ class User(BaseModel):
 
     def is_student(self):
         return self.role == Role.STUDENT
+    
+    def is_course_owner(self, course: 'Course'):
+        return self.id == course.owner_id
 
     @classmethod
     def from_query_result(cls, id, email, password, first_name, last_name, role):
@@ -58,15 +67,37 @@ class Course(BaseModel):
     home_page_pic: None
     owner_id: int
     is_active: constr(regex='^active|hidden$')
+    is_premium: constr(regex='^premium|public$')
+    expertise_area: str
+    objective: str
 
     @classmethod
-    def from_query_result(cls, id, title, description, home_page_pic, owner_id, is_active):
+    def from_query_result(cls, id, title, description, home_page_pic, owner_id, is_active, is_premium, expertise_area, objective):
         return cls(
             id=id,
             title=title,
             description=description,
             home_page_pic=home_page_pic,
             owner_id=owner_id,
+            is_active='active' if is_active else 'hidden',
+            is_premium='premium' if is_premium else 'public',
+            expertise_area = expertise_area,
+            objective = objective
+            )
+
+
+class CourseUpdate(BaseModel):
+    title: constr(min_length=1) | None
+    description: constr(min_length=1) | None
+    home_page_pic: None
+    is_active: constr(regex='^active|hidden$') | None
+
+    @classmethod
+    def from_query_result(cls, title, description, home_page_pic, is_active):
+        return cls(
+            title=title,
+            description=description,
+            home_page_pic=home_page_pic,
             is_active='active' if is_active else 'hidden'
             )
 
@@ -74,18 +105,18 @@ class Course(BaseModel):
 class Section(BaseModel):
     id: int | None
     title: constr(min_length=1)
-    content_type: str
+    content: str
     description: constr(min_length=1)
     external_link: constr(min_length=1)
-    courses_id: int
+    courses_id: Optional[int]
 
     @classmethod
-    def from_query_result(cls, id, title, content_type, description, external_link, courses_id):
+    def from_query_result(cls, id, title, content, description, external_link, courses_id):
         return cls(
             id=id,
             title=title,
             description=description,
-            content_type=content_type,
+            content=content,
             external_link=external_link,
             courses_id=courses_id
             )
@@ -116,8 +147,8 @@ class Tag(BaseModel):
 
 
 class StatusLevelMaps:
-    INT_TO_STR = {0: 'unsubscribed', 1: 'pending', 2: 'subscribed'}
-    STR_TO_INT = {'unsubscribed': 0, 'pending': 1, 'subscribed': 2}
+    INT_TO_STR = {0: Status.UNSUBSCRIBED, 1: Status.PENDING, 2: Status.UNSUBSCRIBED}
+    STR_TO_INT = {Status.UNSUBSCRIBED: 0, Status.PENDING: 1, Status.UNSUBSCRIBED: 2}
 
 class Report(BaseModel):
     user_id: int
