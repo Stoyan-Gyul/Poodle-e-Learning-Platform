@@ -17,6 +17,11 @@ class Unauthorized(JSONResponse):
         super().__init__(status_code=status.HTTP_401_UNAUTHORIZED, content=content)
 
 
+class Forbidden(JSONResponse):
+    def __init__(self, content=''):
+        super().__init__(status_code=status.HTTP_403_FORBIDDEN, content=content)
+
+
 class NotFound(JSONResponse):
     def __init__(self, content=''):
         super().__init__(status_code=status.HTTP_404_NOT_FOUND, content=content)

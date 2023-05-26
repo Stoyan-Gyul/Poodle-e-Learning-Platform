@@ -1,10 +1,10 @@
-from fastapi import APIRouter, HTTPException, status, Header, Body
+from fastapi import APIRouter, status, Header, Body
 from pydantic import BaseModel
 from fastapi.responses import JSONResponse
-from data.models import  ViewStudentCourse, Course, CourseUpdate, Section, Report, User
-from services import  courses_service, users_service
-from data.common.responses import BadRequest, InternalServerError, NoContent, NotFound, Unauthorized
-from data.common.auth import get_user_params_or_raise_error, get_user_or_raise_401
+from data.models import  ViewStudentCourse, Course, CourseUpdate, Section
+from services import  courses_service
+from data.common.responses import InternalServerError, NotFound, Forbidden
+from data.common.auth import get_user_or_raise_401
 
 
 course_router = APIRouter(prefix="/courses")
@@ -109,7 +109,7 @@ def get_reports_by_course_id(course_id: int, authorization: str = Header()):
         return NotFound(f'Course {course_id} does not exist!')
 
     if not user.is_course_owner(course):
-        return Unauthorized('Only the course owner has access to its reports.')
+        return Forbidden('Only the course owner has access to its reports.')
 
     result = courses_service.get_reports_by_id(course_id)
 
@@ -120,7 +120,7 @@ def get_reports_by_course_id(course_id: int, authorization: str = Header()):
 def create_course(course: Course, authorization: str = Header()):
     user = get_user_or_raise_401(authorization)
     if not user.is_teacher():
-        return Unauthorized('Only a teacher can create courses.')
+        return Forbidden('Only a teacher can create courses.')
 
     created_course = courses_service.create_course(course)
 
@@ -136,7 +136,7 @@ def update_course(course_id: int, data: CourseUpdate, authorization: str = Heade
         return NotFound(f'Course {course_id} does not exist!')
 
     if not user.is_course_owner(course):
-        return Unauthorized('Only the course owner can modify the course.')
+        return Forbidden('Only the course owner can modify the course.')
 
     updated_course = courses_service.update_course(data, course)
     if updated_course is None:
@@ -154,7 +154,7 @@ def create_section(course_id: int, section: Section, authorization: str = Header
         return NotFound(f'Course {course_id} does not exist!')
 
     if not user.is_course_owner(course):
-        return Unauthorized('Only the course owner can create sections within it.')
+        return Forbidden('Only the course owner can create sections within it.')
 
     created_section = courses_service.create_section(course_id, section)
     created_section.courses_id = course_id
@@ -171,7 +171,7 @@ def update_section(course_id: int, section_id: int, section: Section, authorizat
         return NotFound(f'Course {course_id} does not exist!')
 
     if not user.is_course_owner(course):
-        return Unauthorized('Only the course owner can update sections within it.')
+        return Forbidden('Only the course owner can update sections within it.')
 
     existing_section = courses_service.get_section_by_id(section_id)
     if existing_section is None:
