@@ -2,7 +2,7 @@ from unittest import TestCase
 from services import courses_service
 from unittest import mock
 from unittest.mock import MagicMock, patch, ANY
-from data.models import ViewPublicCourse, ViewStudentCourse, ViewTeacherCourse, Report
+from data.models import ViewPublicCourse, ViewStudentCourse, ViewTeacherCourse, Report, Course, CourseUpdate
 class CoursesService_Should(TestCase):
     
     @patch('services.courses_service.read_query', autospec=True)
@@ -78,3 +78,68 @@ class CoursesService_Should(TestCase):
 
         result=list(courses_service.get_reports_by_id(1))
         self.assertIsInstance(result[0], Report)
+
+
+    @patch('services.courses_service.read_query', autospec=True)
+    def test_get_course_by_id(self, mock_read_query):
+        mock_read_query.return_value=[(1, 'Core Python', 'This is core modul', None, 1, 1, 0, 'software developement', 'Learn software')]
+        result=courses_service.get_course_by_id(1)
+        self.assertIsInstance(result, Course)
+
+    @patch('services.courses_service.insert_query', autospec=True)
+    def test_create_course_return_Course(self, mock_insert_query):
+        mock_insert_query.return_value=1
+        course=Course(title='fake_title',
+                      description='any',
+                      owner_id=1,
+                      home_page_pic=None,
+                      is_active='active',
+                      is_premium='public')
+        
+        result=courses_service.create_course(course)
+
+        self.assertIsInstance(result, Course)
+
+    @patch('services.courses_service.update_query', autospec=True)
+    def test_update_course_return_Course(self, mock_update_query):
+        mock_update_query.return_value=True
+        course=Course(title='fake_title',
+                      description='any',
+                      owner_id=1,
+                      home_page_pic=None,
+                      is_active='active',
+                      is_premium='public')
+        course_update=CourseUpdate(title='fake_title1',
+                      description='Test',
+                      home_page_pic=None,
+                      is_active='hidden',
+                      is_premium='premium')
+        result=courses_service.update_course(course_update,course)
+        self.assertIsInstance(result, Course)
+        self.assertEqual('fake_title1', result.title)
+        self.assertEqual('Test', result.description)
+        self.assertEqual(None, result.home_page_pic)
+        self.assertEqual('hidden', result.is_active)
+        self.assertEqual('premium', result.is_premium)
+
+    @patch('services.courses_service.read_query', autospec=True)
+    def test_course_exists_returnTrue_ifExists(self, mock_read_query):
+        mock_read_query.return_value=[(1, 'Core Python', 'This is core modul', None, 1, 1, 0)]
+
+        result=courses_service.course_exists(1)
+        self.assertEqual(True, result)
+
+    @patch('services.courses_service.read_query', autospec=True)
+    def test_course_exists_returnFalse_ifNoExist(self, mock_read_query):
+        mock_read_query.return_value=[]
+
+        result=courses_service.course_exists(1)
+        self.assertEqual(False, result)
+
+
+
+
+
+
+    
+
