@@ -149,8 +149,8 @@ class Tag(BaseModel):
 
 
 class StatusLevelMaps:
-    INT_TO_STR = {0: Status.UNSUBSCRIBED, 1: Status.PENDING, 2: Status.UNSUBSCRIBED}
-    STR_TO_INT = {Status.UNSUBSCRIBED: 0, Status.PENDING: 1, Status.UNSUBSCRIBED: 2}
+    INT_TO_STR = {0: Status.UNSUBSCRIBED, 1: Status.PENDING, 2: Status.SUBSCRIBED}
+    STR_TO_INT = {Status.UNSUBSCRIBED: 0, Status.PENDING: 1, Status.SUBSCRIBED: 2}
 
 class Report(BaseModel):
     user_id: int

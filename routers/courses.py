@@ -73,6 +73,13 @@ def course_rating(course_id: int, rating: float=Body(embed=True, ge=0, le=10), t
     return JSONResponse(status_code=409,content={'detail': 'You are not allowed to rate this course!'} )
 
 
+@course_router.get('/reports', tags=['Courses'])
+def get_reports_for_all_owned_courses(authorization: str = Header()):
+    user = get_user_or_raise_401(authorization)
+    result = courses_service.get_all_reports(user.id)
+
+    return result
+
 @course_router.get('/{course_id}', tags=['Courses'])
 def get_course(course_id: int, authorization: str = Header()):
     get_user_or_raise_401(authorization)
@@ -83,15 +90,6 @@ def get_course(course_id: int, authorization: str = Header()):
         return CourseResponseModel(
             course=course, 
             sections=courses_service.get_sections_by_course(course_id))
-
-
-@course_router.get('/reports', tags=['Courses'])
-def get_reports_for_all_owned_courses(authorization: str = Header()):
-    user = get_user_or_raise_401(authorization)
-    result = courses_service.get_all_reports(user.id)
-
-    return result
-
 
 @course_router.get('/{course_id}/reports', tags=['Courses'])
 def get_reports_by_course_id(course_id: int, authorization: str = Header()):
