@@ -3,7 +3,7 @@ from fastapi.responses import JSONResponse, FileResponse
 from data.models import User, LoginData, UpdateData, TeacherAdds, Course
 from services import users_service, courses_service
 from services.users_service import Teacher
-from data.common.auth import get_user_params_or_raise_error
+from data.common.auth import get_user_params_or_raise_error, get_user_or_raise_401
 import uuid
 
 user_router = APIRouter(prefix="/users")
@@ -84,9 +84,9 @@ def subscribe_to_course(user_id: int, course_id: int, authorization: str = Heade
     if user is None:
         raise HTTPException(status_code=404, detail=f"User {user_id} does not exist")
 
-    course = courses_service.find_by_id(course_id)
-    # if course is None:
-    #     raise HTTPException(status_code=404, detail=f"Course {course_id} does not exist")
+    course = courses_service.get_course_by_id(course_id)
+    if course is None:
+        raise HTTPException(status_code=404, detail=f"Course {course_id} does not exist")
     
     users_service.subscribe_to_course(user_id, course_id)
 
@@ -112,27 +112,32 @@ def unsubscribe_from_course(user_id: int, course_id: int, authorization: str = H
     if user is None:
         raise HTTPException(status_code=404, detail=f"User {user_id} does not exist")
 
-    course = courses_service.find_by_id(course_id)
-    # if course is None:
-    #     raise HTTPException(status_code=404, detail=f"Course {course_id} does not exist")
+    course = courses_service.get_course_by_id(course_id)
+    if course is None:
+        raise HTTPException(status_code=404, detail=f"Course {course_id} does not exist")
 
     users_service.unsubscribe_from_course(user_id, course_id)
     return Response(content="You have been unsubscribed from this course.", status_code=200)
 
 
 @user_router.get('/', tags=['Users'], response_model=User)
-def view_user(token: str =Header()) -> User | Teacher:
+def view_user(authorization: str =Header()) -> User | Teacher:
     ''' View account information depending on role - student or teacher'''
 
-    token_params=get_user_params_or_raise_error(token)
+    # token_params=get_user_params_or_raise_error(token)
     
-    id=token_params[0]
-    role=token_params[2]
+    # id=token_params[0]
+    # role=token_params[2]
+
+    user = get_user_or_raise_401(authorization)
+    id=user.id
     user=users_service.find_by_id(id)
     
-    if role == 'student':
+    # if role == 'student':
+    if user.is_student():
         return user
-    elif role == 'teacher':
+    elif user.is_teacher():
+    # elif role == 'teacher':
         return users_service.view_teacher(user) 
 
 
@@ -143,15 +148,18 @@ def update_user(update_info: UpdateData, authorization: str = Header(None)):
     if authorization is None:
         raise HTTPException(status_code=403)
     
-    token = authorization.split(" ")[1] if authorization.startswith("Bearer ") else None
+    # token = authorization.split(" ")[1] if authorization.startswith("Bearer ") else None
 
-    token_params = users_service.validate_token(token)
+    # token_params = users_service.validate_token(token)
     
-    id=token_params[0]
-    role=token_params[2]
+    # id=token_params[0]
+    # role=token_params[2]
+
+    user = get_user_or_raise_401(authorization)
+    id=user.id
     existing_user=users_service.find_by_id(id)
 
-    if role == 'student' and (update_info.phone or update_info.linked_in_account):
+    if user.is_student() and (update_info.phone or update_info.linked_in_account):
         return JSONResponse(content="You can not change phone or linked account", status_code=401)
 
     if users_service.update_user(existing_user, update_info):

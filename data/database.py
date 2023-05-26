@@ -35,4 +35,3 @@ def update_query(sql: str, sql_params=()) -> bool:
 
         return cursor.rowcount>0
     
-

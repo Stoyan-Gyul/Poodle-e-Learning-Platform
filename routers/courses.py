@@ -16,16 +16,18 @@ class CourseResponseModel(BaseModel):
 @course_router.get('/enrolled_courses', tags=['Courses'], response_model=list[ViewStudentCourse])
 def view_enrolled_courses(title: str | None = None,
                           tag: str | None = None, 
-                          token: str =Header()) -> list[ViewStudentCourse]:
+                          authorization: str =Header()) -> list[ViewStudentCourse]:
     ''' View enrolled public and premium courses by students only'''
 
-    token_params=get_user_params_or_raise_error(token)
+    # token_params=get_user_params_or_raise_error(token)
     
-    id=token_params[0]
-    role=token_params[2]
-    
+    # id=token_params[0]
+    # role=token_params[2]
+    user = get_user_or_raise_401(authorization)
+    id=user.id
 
-    if role == 'student':
+    # if role == 'student':
+    if user.is_student():
         return courses_service.view_enrolled_courses(id, title, tag)
         
     else:
@@ -35,36 +37,43 @@ def view_enrolled_courses(title: str | None = None,
 @course_router.get('/', tags=['Courses'])
 def view_all_courses(title: str | None = None,
                      tag: str | None = None,
-                     token: str =Header()):
+                     authorization: str =Header()):
     ''' View all courses depending on role - anonymous, student, teacher'''
-    if not token:
+    if not authorization:
         return courses_service.view_public_courses()
         # return JSONResponse(status_code=200,content={'message': 'This for test ONLY Anonymous users!'})
     
-    token_params=get_user_params_or_raise_error(token)
+    # token_params=get_user_params_or_raise_error(token)
     
-    id=token_params[0]
-    role=token_params[2]
+    # id=token_params[0]
+    # role=token_params[2]
+
+    user = get_user_or_raise_401(authorization)
+    id=user.id
     
-    if role == 'student':
+    # if role == 'student':
+    if user.is_student():
         return courses_service.view_students_courses(title, tag)
         # return JSONResponse(status_code=200,content={'message': 'This for test ONLY! Students'} )
-    elif role == 'teacher':
+    # elif role == 'teacher':
+    elif user.is_teacher():
         return courses_service.view_teacher_course(id, title, tag)
         # return JSONResponse(status_code=200,content={'message': 'This for test ONLY! Teachers'})
     # elif role == 'admin':
     #     return JSONResponse(status_code=200,content={'message': 'This for test ONLY! Admin'} )
     
 @course_router.put('/{course_id}/ratings', tags=['Courses'])
-def course_rating(course_id: int, rating: float=Body(embed=True, ge=0, le=10), token: str =Header()):
+def course_rating(course_id: int, rating: float=Body(embed=True, ge=0, le=10), authorization: str =Header()):
     ''' Students can rate their enrolled courses only once'''
-    token_params=get_user_params_or_raise_error(token)
+    # token_params=get_user_params_or_raise_error(token)
     
-    student_id=token_params[0]
-    role=token_params[2]
-    
+    # student_id=token_params[0]
+    # role=token_params[2]
+    user = get_user_or_raise_401(authorization)
+    student_id=user.id
 
-    if role == 'student':
+    # if role == 'student':
+    if user.is_student():
         result=courses_service.course_rating(rating, course_id, student_id)
         if result:
             return JSONResponse(status_code=200,content={'message': 'Student successfully rated this course!'})

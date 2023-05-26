@@ -144,7 +144,15 @@ def view_teacher(user: User)-> User | Teacher:
     data = read_query(sql, sql_params)
     if data:
         teacher_adds=TeacherAdds.from_query_result(*data[0])
-        return Teacher(user=user, teacher_adds=teacher_adds)
+        # return Teacher(user=user, teacher_adds=teacher_adds)
+        return User(id=user.id,
+                    email=user.email,
+                    password=user.password,
+                    first_name=user.first_name,
+                    last_name=user.last_name,
+                    role=user.role,
+                    phone=data[0][0],
+                    linked_in_account=data[0][1])
     else:
         return user
     
