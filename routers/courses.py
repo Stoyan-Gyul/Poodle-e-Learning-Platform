@@ -13,7 +13,7 @@ class CourseResponseModel(BaseModel):
     course: Course
     sections: list[Section]
 
-@course_router.get('/enrolled_courses', tags=['Users'], response_model=list[ViewStudentCourse])
+@course_router.get('/enrolled_courses', tags=['Courses'], response_model=list[ViewStudentCourse])
 def view_enrolled_courses(title: str | None = None,
                           tag: str | None = None, 
                           token: str =Header()) -> list[ViewStudentCourse]:
@@ -32,7 +32,7 @@ def view_enrolled_courses(title: str | None = None,
         return JSONResponse(status_code=409,content={'detail': 'Only students can view their enrolled courses!'} )
     
 
-@course_router.get('/', tags=['Users'])
+@course_router.get('/', tags=['Courses'])
 def view_all_courses(title: str | None = None,
                      tag: str | None = None,
                      token: str =Header()):
@@ -55,7 +55,7 @@ def view_all_courses(title: str | None = None,
     # elif role == 'admin':
     #     return JSONResponse(status_code=200,content={'message': 'This for test ONLY! Admin'} )
     
-@course_router.put('/{course_id}/ratings', tags=['Users'])
+@course_router.put('/{course_id}/ratings', tags=['Courses'])
 def course_rating(course_id: int, rating: float=Body(embed=True, ge=0, le=10), token: str =Header()):
     ''' Students can rate their enrolled courses only once'''
     token_params=get_user_params_or_raise_error(token)
@@ -73,7 +73,7 @@ def course_rating(course_id: int, rating: float=Body(embed=True, ge=0, le=10), t
     return JSONResponse(status_code=409,content={'detail': 'You are not allowed to rate this course!'} )
 
 
-@course_router.get('/{course_id}')
+@course_router.get('/{course_id}', tags=['Courses'])
 def get_course(course_id: int, token: str = Header()):
     get_user_or_raise_401(token)
     course = courses_service.get_course_by_id(course_id)
@@ -85,7 +85,7 @@ def get_course(course_id: int, token: str = Header()):
             sections=courses_service.get_sections_by_course(course_id))
 
 
-@course_router.get('/reports')
+@course_router.get('/reports', tags=['Courses'])
 def get_reports_for_all_owned_courses(token: str = Header()):
     user = get_user_or_raise_401(token)
     result = courses_service.get_all_reports(user.id)
@@ -93,7 +93,7 @@ def get_reports_for_all_owned_courses(token: str = Header()):
     return result
 
 
-@course_router.get('/{course_id}/reports')
+@course_router.get('/{course_id}/reports', tags=['Courses'])
 def get_reports_by_course_id(course_id: int, token: str = Header()):
     user = get_user_or_raise_401(token)
 
@@ -109,7 +109,7 @@ def get_reports_by_course_id(course_id: int, token: str = Header()):
     return result
 
 
-@course_router.post('/', status_code=status.HTTP_201_CREATED)
+@course_router.post('/', status_code=status.HTTP_201_CREATED, tags=['Courses'])
 def create_course(course: Course, token: str = Header()):
     user = get_user_or_raise_401(token)
     if not user.is_teacher():
@@ -120,7 +120,7 @@ def create_course(course: Course, token: str = Header()):
     return CourseResponseModel(course=created_course, sections=[])
 
 
-@course_router.put('/{course_id}')
+@course_router.put('/{course_id}', tags=['Courses'])
 def update_course(course_id: int, data: CourseUpdate, token: str = Header()):
     user = get_user_or_raise_401(token)
 
@@ -138,7 +138,7 @@ def update_course(course_id: int, data: CourseUpdate, token: str = Header()):
     return updated_course
 
 
-@course_router.post('/{course_id}', status_code=status.HTTP_201_CREATED)
+@course_router.post('/{course_id}', status_code=status.HTTP_201_CREATED, tags=['Courses'])
 def create_section(course_id: int, section: Section, token: str = Header()):
     user = get_user_or_raise_401(token)
 
@@ -155,7 +155,7 @@ def create_section(course_id: int, section: Section, token: str = Header()):
     return created_section
 
 
-@course_router.put('/{course_id}/sections/{section_id}')
+@course_router.put('/{course_id}/sections/{section_id}',tags=['Courses'])
 def update_section(course_id: int, section_id: int, section: Section, token: str = Header()):
     user = get_user_or_raise_401(token)
 

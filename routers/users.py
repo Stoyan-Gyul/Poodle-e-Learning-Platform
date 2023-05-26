@@ -9,7 +9,7 @@ import uuid
 user_router = APIRouter(prefix="/users")
 
 
-@user_router.post("/", status_code=201)
+@user_router.post("/", status_code=201, tags=['Users'])
 def register_user(user: User):
 
     if not user.email or not user.password:
@@ -37,7 +37,7 @@ def register_user(user: User):
     except Exception:
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Something went wrong!")
     
-@user_router.get("/{email}/verification/{token}")
+@user_router.get("/{email}/verification/{token}", tags=['Users'])
 def verify_email(email:str, token: str):
 
     if users_service.verify_email(email, token):
@@ -46,7 +46,7 @@ def verify_email(email:str, token: str):
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Invalid verification token.")
     
 
-@user_router.post('/login')
+@user_router.post('/login', tags=['Users'])
 def login(data: LoginData):
 
     if data.email is None or data.password is None:
@@ -65,7 +65,7 @@ def login(data: LoginData):
         return JSONResponse(status_code=400, content={'message': 'Invalid login data'})
 
 
-@user_router.put('/{user_id}/courses/{course_id}/subscribe')
+@user_router.put('/{user_id}/courses/{course_id}/subscribe', tags=['Users'])
 def subscribe_to_course(user_id: int, course_id: int, authorization: str = Header(None)):
 
     if authorization is None:
@@ -93,7 +93,7 @@ def subscribe_to_course(user_id: int, course_id: int, authorization: str = Heade
     #send email to teacher that this student has been subscibed 
     return Response(content = "You have subscribed to this course", status_code=200,)
 
-@user_router.put('/{user_id}/courses/{course_id}/unsubscribe')
+@user_router.put('/{user_id}/courses/{course_id}/unsubscribe', tags=['Users'])
 def unsubscribe_from_course(user_id: int, course_id: int, authorization: str = Header(None)):
     
     if authorization is None:
@@ -160,7 +160,7 @@ def update_user(update_info: UpdateData, authorization: str = Header(None)):
         return JSONResponse(content="Failed to update profile", status_code=400)
     
     
-@user_router.get('/current')
+@user_router.get('/current', tags=['Users'])
 def show_current_user_data_based_on_role(authorization: str = Header(None)):
     if authorization is None:
         raise HTTPException(status_code=403)
