@@ -122,7 +122,7 @@ def get_all_reports(user_id: int):
             FROM users_have_courses u
             JOIN courses c
             ON c.id = u.courses_id
-            WHERE owner_id = ?'''
+            WHERE c.owner_id = ?'''
     sql_params = (user_id,)
     data = read_query(sql, sql_params)
 
