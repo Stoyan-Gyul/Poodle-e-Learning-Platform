@@ -33,6 +33,6 @@ def update_query(sql: str, sql_params=()) -> bool:
         cursor.execute(sql, sql_params)
         conn.commit()
 
-        return cursor.rowcount
+        return cursor.rowcount>0
     
 
