@@ -2,7 +2,7 @@ from unittest import TestCase
 from services import courses_service
 from unittest import mock
 from unittest.mock import MagicMock, patch, ANY
-from data.models import ViewPublicCourse, ViewStudentCourse, ViewTeacherCourse
+from data.models import ViewPublicCourse, ViewStudentCourse, ViewTeacherCourse, Report
 class CoursesService_Should(TestCase):
     
     @patch('services.courses_service.read_query', autospec=True)
@@ -62,4 +62,19 @@ class CoursesService_Should(TestCase):
             result=courses_service.course_rating(6.0,2,2)
         self.assertIsNone(result)
 
-    
+    @patch('services.courses_service.read_query', autospec=True)
+    def test_get_all_reports(self,mock_read_query):
+        mock_read_query.return_value=[(2, 1, 0, 6.0, None),
+                                      (2, 2, 0, 6.0, None), 
+                                      (3, 2, 0, 7.0, None),
+                                      (3, 4, 0, 7.0, None)]
+        
+        result=list(courses_service.get_all_reports(1))
+        self.assertIsInstance(result[0], Report)
+
+    @patch('services.courses_service.read_query', autospec=True)
+    def test_get_reports_by_id(self, mock_read_query):
+        mock_read_query.return_value=[(2, 1, 0, 6.0, None)]
+
+        result=list(courses_service.get_reports_by_id(1))
+        self.assertIsInstance(result[0], Report)
