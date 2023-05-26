@@ -186,10 +186,10 @@ def update_user(user: User, update_info: UpdateData) -> bool | None:
                     WHERE id = ?''',
                     (merged.password, merged.first_name, merged.last_name, merged.role, merged.id))
 
-def is_course_owner(user_id, course_id: int):
-        owner_id = read_query('''SELECT owner_id FROM courses
-WHERE id = ?''', (course_id,))
-        return user_id == owner_id
+# def is_course_owner(user_id, course_id: int):
+#         owner_id = read_query('''SELECT owner_id FROM courses
+# WHERE id = ?''', (course_id,))
+#         return user_id == owner_id
 
 def send_verification_email(email: str, verification_link: str):
     smtp_host = "smtp.office365.com"
