@@ -1,7 +1,7 @@
 from pydantic import BaseModel, constr, condecimal, validator
 from data.database import read_query
 from typing import Optional
-from data.common.constants import Role, Status, Regex, ACTIVE, HIDDEN, PREMIUM, PUBLIC
+from data.common.constants import CourseStatus, CourseType, Role, StudentStatus, Regex
 
 
 class User(BaseModel):
@@ -70,8 +70,8 @@ class Course(BaseModel):
             description=description,
             home_page_pic=home_page_pic,
             owner_id=owner_id,
-            is_active=ACTIVE if is_active else HIDDEN,
-            is_premium=PREMIUM if is_premium else PUBLIC,
+            is_active=CourseStatus.ACTIVE if is_active else CourseStatus.HIDDEN,
+            is_premium=CourseType.PREMIUM if is_premium else CourseType.PUBLIC,
             expertise_area = expertise_area,
             objective = objective
             )
@@ -90,8 +90,8 @@ class CourseUpdate(BaseModel):
             title=title,
             description=description,
             home_page_pic=home_page_pic,
-            is_active=ACTIVE if is_active else HIDDEN,
-            is_premium=PREMIUM if is_premium else PUBLIC
+            is_active=CourseStatus.ACTIVE if is_active else CourseStatus.HIDDEN,
+            is_premium=CourseType.PREMIUM if is_premium else CourseType.PUBLIC
             )
 
 
@@ -140,8 +140,8 @@ class Tag(BaseModel):
 
 
 class StatusLevelMaps:
-    INT_TO_STR = {0: Status.UNSUBSCRIBED, 1: Status.PENDING, 2: Status.UNSUBSCRIBED}
-    STR_TO_INT = {Status.UNSUBSCRIBED: 0, Status.PENDING: 1, Status.UNSUBSCRIBED: 2}
+    INT_TO_STR = {0: StudentStatus.UNSUBSCRIBED, 1: StudentStatus.PENDING, 2: StudentStatus.UNSUBSCRIBED}
+    STR_TO_INT = {StudentStatus.UNSUBSCRIBED: 0, StudentStatus.PENDING: 1, StudentStatus.UNSUBSCRIBED: 2}
 
 class Report(BaseModel):
     user_id: int
@@ -220,8 +220,8 @@ class ViewTeacherCourse(BaseModel):
             title=title,
             description=description,
             home_page_pic=home_page_pic,
-            is_active=ACTIVE if is_active else HIDDEN,
-            is_premium=PREMIUM if is_premium else PUBLIC,
+            is_active=CourseStatus.ACTIVE if is_active else CourseStatus.HIDDEN,
+            is_premium=CourseType.PREMIUM if is_premium else CourseType.PUBLIC,
             expertise_area=expertise_area,
             objective=objective
             )

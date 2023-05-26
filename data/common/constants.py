@@ -1,19 +1,22 @@
-ACTIVE = 'active'
-HIDDEN = 'hidden'
-PREMIUM = 'premium'
-PUBLIC = 'public'
+class CourseStatus:
+    ACTIVE = 'active'
+    HIDDEN = 'hidden'
+
+class CourseType:
+    PUBLIC = 'public'
+    PREMIUM = 'premium'
 
 class Role:
     ADMIN = 'admin'
     TEACHER = 'teacher'
     STUDENT = 'student'
 
-class Status:
+class StudentStatus:
     UNSUBSCRIBED = 'unsubscribed'
     PENDING = 'pending'
     SUBSCRIBED = 'subscribed'
 
 class Regex:
-    ACTIVE_HIDDEN = f'^{ACTIVE}|{HIDDEN}$'
-    PREMIUM_PUBLIC = f'^{PREMIUM}|{PUBLIC}$'
-    UNSUBSCRIBED_SUBSCRIBED = '^unsubscribed|pending|subscribed$'
+    ACTIVE_HIDDEN = f'^{CourseStatus.ACTIVE}|{CourseStatus.HIDDEN}$'
+    PREMIUM_PUBLIC = f'^{CourseType.PREMIUM}|{CourseType.PUBLIC}$'
+    UNSUBSCRIBED_SUBSCRIBED = f'^{StudentStatus.UNSUBSCRIBED}|{StudentStatus.PENDING}|{StudentStatus.SUBSCRIBED}$'
