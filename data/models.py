@@ -1,16 +1,7 @@
 from pydantic import BaseModel, constr, condecimal, validator
 from data.database import read_query
 from typing import Optional
-
-class Role:
-    ADMIN = 'admin'
-    TEACHER = 'teacher'
-    STUDENT = 'student'
-
-class Status:
-    UNSUBSCRIBED = 'unsubscribed'
-    PENDING = 'pending'
-    SUBSCRIBED = 'subscribed'
+from data.common.constants import Role, Status, Regex, ACTIVE, HIDDEN, PREMIUM, PUBLIC
 
 
 class User(BaseModel):
@@ -66,8 +57,8 @@ class Course(BaseModel):
     description: constr(min_length=1)
     home_page_pic: None
     owner_id: int
-    is_active: constr(regex='^active|hidden$')
-    is_premium: constr(regex='^premium|public$')
+    is_active: constr(regex=Regex.ACTIVE_HIDDEN)
+    is_premium: constr(regex=Regex.PREMIUM_PUBLIC)
     expertise_area: str | None
     objective: str | None
 
@@ -79,8 +70,8 @@ class Course(BaseModel):
             description=description,
             home_page_pic=home_page_pic,
             owner_id=owner_id,
-            is_active='active' if is_active else 'hidden',
-            is_premium='premium' if is_premium else 'public',
+            is_active=ACTIVE if is_active else HIDDEN,
+            is_premium=PREMIUM if is_premium else PUBLIC,
             expertise_area = expertise_area,
             objective = objective
             )
@@ -90,8 +81,8 @@ class CourseUpdate(BaseModel):
     title: constr(min_length=1) | None
     description: constr(min_length=1) | None
     home_page_pic: None
-    is_active: constr(regex='^active|hidden$') | None
-    is_premium: constr(regex='^premium|public$') | None
+    is_active: constr(regex=Regex.ACTIVE_HIDDEN) | None
+    is_premium: constr(regex=Regex.PREMIUM_PUBLIC) | None
 
     @classmethod
     def from_query_result(cls, title, description, home_page_pic, is_active, is_premium):
@@ -99,8 +90,8 @@ class CourseUpdate(BaseModel):
             title=title,
             description=description,
             home_page_pic=home_page_pic,
-            is_active='active' if is_active else 'hidden',
-            is_premium='premium' if is_premium else 'public'
+            is_active=ACTIVE if is_active else HIDDEN,
+            is_premium=PREMIUM if is_premium else PUBLIC
             )
 
 
@@ -154,8 +145,8 @@ class StatusLevelMaps:
 
 class Report(BaseModel):
     user_id: int
-    course_id: int
-    status: constr(regex='^unsubscribed|pending|subscribed$')
+    course_id: int | None
+    status: constr(regex=Regex.UNSUBSCRIBED_SUBSCRIBED)
     rating: condecimal(decimal_places=1, ge=1, le=10) | None
     progress: condecimal(decimal_places=0, ge=0, le=100) | None
 
@@ -229,8 +220,8 @@ class ViewTeacherCourse(BaseModel):
             title=title,
             description=description,
             home_page_pic=home_page_pic,
-            is_active='active' if is_active else 'hidden',
-            is_premium='premium' if is_premium else 'public',
+            is_active=ACTIVE if is_active else HIDDEN,
+            is_premium=PREMIUM if is_premium else PUBLIC,
             expertise_area=expertise_area,
             objective=objective
             )
