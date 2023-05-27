@@ -64,7 +64,7 @@ def view_all_courses(title: str | None = None,
     #     return JSONResponse(status_code=200,content={'message': 'This for test ONLY! Admin'} )
     
 @course_router.put('/{course_id}/ratings', tags=['Courses'])
-def course_rating(course_id: int, rating: float=Body(embed=True, ge=0, le=10), authorization: str =Header()):
+def course_rating(course_id: int, rating: int=Body(embed=True, ge=0, le=10), authorization: str =Header()):
     ''' Students can rate their enrolled courses only once'''
     # token_params=get_user_params_or_raise_error(token)
     

@@ -104,7 +104,7 @@ def view_teacher_course(id: int,
     return (ViewTeacherCourse.from_query_result(*obj) for obj in data)
 
 
-def course_rating(rating: float , course_id: int, student_id: int)-> bool:
+def course_rating(rating: int , course_id: int, student_id: int)-> bool:
     ''' Student can rate his enrolled course only one time'''
     try:
         sql='''SELECT rating 
@@ -119,8 +119,25 @@ def course_rating(rating: float , course_id: int, student_id: int)-> bool:
                 WHERE (users_id = ?) and (courses_id = ?)'''
                 
             result=update_query(sql,(rating, student_id, course_id))
-            if result>0:
-                return True
+            if result:
+                # calculates average course rating
+                sql='SELECT rating FROM users_have_courses WHERE courses_id=?'
+
+                data=read_query(sql,(course_id,))
+                ratings=[]
+                for i in data:
+                    ratings.append(i[0])
+                course_rating=round(sum(ratings)/len(ratings),1)
+
+                # update course_rating in DB
+                sql='''UPDATE courses 
+                       SET course_rating = ? WHERE (id = ?);'''
+                
+                result=update_query(sql,(course_rating, course_id))
+                if result:
+                    return True
+                else:
+                    return None # transaction not successful
     except:
         return None # student is not enrolled in this course
     
