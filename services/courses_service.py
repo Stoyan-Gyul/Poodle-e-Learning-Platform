@@ -120,24 +120,28 @@ def course_rating(rating: int , course_id: int, student_id: int)-> bool:
                 
             result=update_query(sql,(rating, student_id, course_id))
             if result:
-                # calculates average course rating
-                sql='SELECT rating FROM users_have_courses WHERE courses_id=?'
-
-                data=read_query(sql,(course_id,))
-                ratings=[]
-                for i in data:
-                    ratings.append(i[0])
-                course_rating=round(sum(ratings)/len(ratings),1)
-
-                # update course_rating in DB
-                sql='''UPDATE courses 
-                       SET course_rating = ? WHERE (id = ?);'''
-                
-                result=update_query(sql,(course_rating, course_id))
-                if result:
+                transaction=_course_rating_change_transaction(course_id)
+                if transaction:
                     return True
-                else:
-                    return None # transaction not successful
+                return None
+                # # calculates average course rating
+                # sql='SELECT rating FROM users_have_courses WHERE courses_id=?'
+
+                # data=read_query(sql,(course_id,))
+                # ratings=[]
+                # for i in data:
+                #     ratings.append(i[0])
+                # course_rating=round(sum(ratings)/len(ratings),1)
+
+                # # update course_rating in DB
+                # sql='''UPDATE courses 
+                #        SET course_rating = ? WHERE (id = ?);'''
+                
+                # result=update_query(sql,(course_rating, course_id))
+                # if result:
+                #     return True
+                # else:
+                #     return None # transaction not successful
     except:
         return None # student is not enrolled in this course
     
@@ -281,5 +285,24 @@ def update_section(old: Section, new: Section):
     return merged
 
     
+def _course_rating_change_transaction(course_id: int)-> bool:
+    ''' Calculate and change new course rating'''
+    # calculates average course rating
+    sql='SELECT rating FROM users_have_courses WHERE courses_id=?'
 
+    data=read_query(sql,(course_id,))
+    ratings=[]
+    for i in data:
+        ratings.append(i[0])
+    course_rating=round(sum(ratings)/len(ratings),1)
+
+    # update course_rating in DB
+    sql='''UPDATE courses 
+           SET course_rating = ? WHERE (id = ?);'''
+                
+    result=update_query(sql,(course_rating, course_id))
+    if result:
+        return True
+    else:
+        return False # transaction not successful
 
