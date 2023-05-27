@@ -292,17 +292,19 @@ def _course_rating_change_transaction(course_id: int)-> bool:
 
     data=read_query(sql,(course_id,))
     ratings=[]
-    for i in data:
-        ratings.append(i[0])
-    course_rating=round(sum(ratings)/len(ratings),1)
+    if data:
+        for i in data:
+            ratings.append(i[0])
+        course_rating=round(sum(ratings)/len(ratings),1)
 
     # update course_rating in DB
-    sql='''UPDATE courses 
-           SET course_rating = ? WHERE (id = ?);'''
+        sql='''UPDATE courses 
+            SET course_rating = ? WHERE (id = ?);'''
                 
-    result=update_query(sql,(course_rating, course_id))
-    if result:
-        return True
-    else:
-        return False # transaction not successful
+        result=update_query(sql,(course_rating, course_id))
+        if result:
+            return True
+        else:
+            return False # transaction not successful
+    return False
 

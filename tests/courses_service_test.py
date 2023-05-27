@@ -215,6 +215,24 @@ class CoursesService_Should(TestCase):
         self.assertEqual('extlink2', result.external_link)
         self.assertEqual(2, result.courses_id)
 
+    @patch('services.courses_service.read_query', autospec=True)
+    def test_course_rating_change_transaction_return_True_when_trunsactionSuccessful(self, mock_read_query):
+        mock_read_query.return_value=[(6,),(7,)]
+        
+        with patch('services.courses_service.update_query') as mock_update_query:
+            mock_update_query.return_value=True
+            result=courses_service._course_rating_change_transaction(2)
+            self.assertEqual(True, result)
+
+    @patch('services.courses_service.read_query', autospec=True)
+    def test_course_rating_change_transaction_return_False_when_NoRating(self, mock_read_query):
+        mock_read_query.return_value=[]
+
+        with patch('services.courses_service.update_query') as mock_update_query:
+            mock_update_query.return_value=True
+            result=courses_service._course_rating_change_transaction(2)
+            self.assertEqual(False, result)
+
 
 
     
