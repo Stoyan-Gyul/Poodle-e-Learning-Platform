@@ -31,7 +31,7 @@ def view_enrolled_courses(id: int,
                           tag: str  = None) -> list[ViewStudentCourse]:
     '''View public and enrolled courses of logged student and search them by title and tag'''
 
-    sql='''SELECT c.id, c.title, c.description, c.home_page_pic, t.expertise_area, o.description as objectiv 
+    sql='''SELECT c.id, c.title, c.description, c.course_rating, c.home_page_pic, t.expertise_area, o.description as objectiv 
            FROM courses AS c
            JOIN courses_have_tags AS ct ON c.id = ct.courses_id
            JOIN tags AS t ON t.id = ct.tags_id
@@ -57,7 +57,7 @@ def view_students_courses( title: str = None,
                            tag: str  = None) -> list[ViewStudentCourse]:
     '''View all public and premium courses available for students and search them by title and tag'''
 
-    sql='''SELECT c.id, c.title, c.description, c.home_page_pic, t.expertise_area, o.description as objectiv 
+    sql='''SELECT c.id, c.title, c.description, c.course_rating, c.home_page_pic, t.expertise_area, o.description as objectiv 
            FROM courses AS c
            JOIN courses_have_tags AS ct ON c.id = ct.courses_id
            JOIN tags AS t ON t.id = ct.tags_id
@@ -83,7 +83,7 @@ def view_teacher_course(id: int,
                           tag: str  = None) -> list[ViewTeacherCourse]:
     '''View all public and premium courses of logged teacher and search them by title and tag'''
     
-    sql='''SELECT c.id, c.title, c.description, c.home_page_pic, c.is_active, c.is_premium, t.expertise_area, o.description as objectiv 
+    sql='''SELECT c.id, c.title, c.description, c.course_rating, c.home_page_pic, c.is_active, c.is_premium, t.expertise_area, o.description as objectiv 
            FROM courses AS c
            JOIN courses_have_tags AS ct ON c.id = ct.courses_id
            JOIN tags AS t ON t.id = ct.tags_id

@@ -175,7 +175,7 @@ class TeacherAdds(BaseModel):
 class ViewPublicCourse(BaseModel):
     title: str
     description: str
-    course_rating: float
+    course_rating: float | None
     expertise_area: str
 
     @classmethod
@@ -191,16 +191,18 @@ class ViewStudentCourse(BaseModel):
     id: int
     title: str
     description: str
+    course_rating: float | None
     home_page_pic: None
     expertise_area: str
     objective: str
     
     @classmethod
-    def from_query_result(cls, id, title, description, home_page_pic, expertise_area, objective):
+    def from_query_result(cls, id, title, description, course_rating, home_page_pic, expertise_area, objective):
         return cls(
             id=id,
             title=title,
             description=description,
+            course_rating=course_rating,
             home_page_pic=home_page_pic,
             expertise_area=expertise_area,
             objective=objective
@@ -209,6 +211,7 @@ class ViewTeacherCourse(BaseModel):
     id: int
     title: str
     description: str
+    course_rating: float | None
     home_page_pic: None
     is_active: str
     is_premium: str
@@ -216,11 +219,12 @@ class ViewTeacherCourse(BaseModel):
     objective: str
     
     @classmethod
-    def from_query_result(cls, id, title, description, home_page_pic, is_active, is_premium, expertise_area, objective):
+    def from_query_result(cls, id, title, description, course_rating, home_page_pic, is_active, is_premium, expertise_area, objective):
         return cls(
             id=id,
             title=title,
             description=description,
+            course_rating=course_rating,
             home_page_pic=home_page_pic,
             is_active=CourseStatus.ACTIVE if is_active else CourseStatus.HIDDEN,
             is_premium=CourseType.PREMIUM if is_premium else CourseType.PUBLIC,
