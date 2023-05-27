@@ -4,16 +4,25 @@ from data.models import Report, Course, Section, CourseUpdate
 from data.models import ViewPublicCourse, ViewStudentCourse, ViewTeacherCourse
 
 
-def view_public_courses() -> list[ViewPublicCourse] :
-    ''' View only title, description and tag of public course'''
+def view_public_courses(rating: float = None,
+                        tag: str  = None) -> list[ViewPublicCourse] :
+    ''' View only title, description and tag of public course and search them by rating and tag'''
 
-    sql='''SELECT c.title, c.description, t.expertise_area 
+    sql='''SELECT c.title,  c.description, c.course_rating, t.expertise_area 
            FROM courses as c 
            JOIN courses_have_tags as ct 
            ON c.id=ct.courses_id 
            JOIN tags as t 
            ON t.id=ct.tags_id 
            WHERE is_premium = 0'''
+    where_clauses=[]
+    if rating:
+        where_clauses.append(f"c.course_rating >= {rating}")
+    if tag:
+        where_clauses.append(f"t.expertise_area like '%{tag}%'")
+    
+    if where_clauses:
+        sql+= ' AND ' + ' AND '.join(where_clauses)
     
     return (ViewPublicCourse.from_query_result(*obj) for obj in read_query(sql))
 

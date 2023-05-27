@@ -175,13 +175,15 @@ class TeacherAdds(BaseModel):
 class ViewPublicCourse(BaseModel):
     title: str
     description: str
+    course_rating: float
     expertise_area: str
 
     @classmethod
-    def from_query_result(cls, title, description, expertise_area):
+    def from_query_result(cls, title, description, course_rating, expertise_area):
         return cls(
             title=title,
             description=description,
+            course_rating=course_rating,
             expertise_area=expertise_area
             )
     

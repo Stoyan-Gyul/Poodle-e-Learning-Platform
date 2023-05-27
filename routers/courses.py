@@ -36,11 +36,12 @@ def view_enrolled_courses(title: str | None = None,
 
 @course_router.get('/', tags=['Courses'])
 def view_all_courses(title: str | None = None,
+                     rating: float = None,
                      tag: str | None = None,
                      authorization: str =Header()):
     ''' View all courses depending on role - anonymous, student, teacher'''
     if not authorization:
-        return courses_service.view_public_courses()
+        return courses_service.view_public_courses(rating,tag)
         # return JSONResponse(status_code=200,content={'message': 'This for test ONLY Anonymous users!'})
     
     # token_params=get_user_params_or_raise_error(token)
