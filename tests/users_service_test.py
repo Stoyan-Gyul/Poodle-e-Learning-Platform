@@ -125,17 +125,6 @@ class UserService_Should(TestCase):
         expected_id = 1
         mock_insert_query.return_value = 1  
         
-        # user = User(
-        #     email='test@example.com',
-        #     password='password',
-        #     role='user',
-        #     first_name='John',
-        #     last_name='Doe',
-        #     verification_token='token',
-        #     phone='1234567890',
-        #     linked_in_account='linkedin'
-        # )
-        
         actual_id  = users_service.create_new_user(USER)
     
         
@@ -147,15 +136,15 @@ class UserService_Should(TestCase):
         )
         
         mock_insert_query.assert_any_call(
-            "INSERT INTO teachers (users_id, phone, linked_in_account) VALUES (?, ?, ?)",
-            (1, '1234567890', 'linkedin')
+            "INSERT INTO teachers (users_id, phone_number, linked_in_account) VALUES (?, ?, ?)",
+            (1, 1234567890, 'linkedin')
         )
 
         self.assertEqual(mock_insert_query.call_count, 2)
 
         mock_insert_query.assert_called_with(
-            "INSERT INTO teachers (users_id, phone, linked_in_account) VALUES (?, ?, ?)",
-            (1, '1234567890', 'linkedin')
+            "INSERT INTO teachers (users_id, phone_number, linked_in_account) VALUES (?, ?, ?)",
+            (1, 1234567890, 'linkedin')
         )
     
     def test_createNewUser_with_noneUser_returns_None(self):
