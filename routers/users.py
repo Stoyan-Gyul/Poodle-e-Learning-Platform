@@ -20,7 +20,7 @@ def register_user(user: User):
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="User with this username already exists!")
     
     if user.role is None:
-        user.role = 'user'
+        user.role = 'student'
 
     try:
 
@@ -45,7 +45,6 @@ def verify_email(email:str, token: str):
     else:
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Invalid verification token.")
     
-
 @user_router.post('/login', tags=['Users'])
 def login(data: LoginData):
 
@@ -64,7 +63,6 @@ def login(data: LoginData):
     else:
         return JSONResponse(status_code=400, content={'message': 'Invalid login data'})
 
-
 @user_router.put('/{user_id}/courses/{course_id}/subscribe', tags=['Users'])
 def subscribe_to_course(user_id: int, course_id: int, authorization: str = Header(None)):
 
@@ -74,6 +72,7 @@ def subscribe_to_course(user_id: int, course_id: int, authorization: str = Heade
     token = authorization.split(" ")[1] if authorization.startswith("Bearer ") else None
 
     user_info = users_service.validate_token(token)
+
     if not user_info:
         raise HTTPException(status_code=403)
     
@@ -84,14 +83,23 @@ def subscribe_to_course(user_id: int, course_id: int, authorization: str = Heade
     if user is None:
         raise HTTPException(status_code=404, detail=f"User {user_id} does not exist")
 
-    course = courses_service.get_course_by_id(course_id)
-    if course is None:
-        raise HTTPException(status_code=404, detail=f"Course {course_id} does not exist")
+    #course = courses_service.find_by_id(course_id)
+    # if course is None:
+    #     raise HTTPException(status_code=404, detail=f"Course {course_id} does not exist")
     
-    users_service.subscribe_to_course(user_id, course_id)
+    if users_service.subscribe_to_course(user_id, course_id):
+        data = users_service.get_teacher_info_with_course_id(course_id)
 
-    #send email to teacher that this student has been subscibed 
-    return Response(content = "You have subscribed to this course", status_code=200,)
+        teacher_email = data[0][0]
+        teacher_first_name = data[0][1]
+        teahcer_last_name = data[0][2]
+        class_name = data[0][3]
+
+        verification_link =f"http://localhost:8000/users/{user_id}/approval/{course_id}"
+
+        users_service.send_student_enrolled_in_course_email_to_teacher(teacher_email, verification_link, teacher_first_name, teahcer_last_name, class_name)
+    
+        return Response(content = "You have enrolled in this course. Your enrollment is pending approval by the teacher.", status_code=200)
 
 @user_router.put('/{user_id}/courses/{course_id}/unsubscribe', tags=['Users'])
 def unsubscribe_from_course(user_id: int, course_id: int, authorization: str = Header(None)):
@@ -112,13 +120,12 @@ def unsubscribe_from_course(user_id: int, course_id: int, authorization: str = H
     if user is None:
         raise HTTPException(status_code=404, detail=f"User {user_id} does not exist")
 
-    course = courses_service.get_course_by_id(course_id)
-    if course is None:
-        raise HTTPException(status_code=404, detail=f"Course {course_id} does not exist")
+    #course = courses_service.find_by_id(course_id)
+    # if course is None:
+    #     raise HTTPException(status_code=404, detail=f"Course {course_id} does not exist")
 
     users_service.unsubscribe_from_course(user_id, course_id)
     return Response(content="You have been unsubscribed from this course.", status_code=200)
-
 
 @user_router.get('/', tags=['Users'], response_model=User)
 def view_user(authorization: str =Header()) -> User | Teacher:
@@ -137,7 +144,6 @@ def view_user(authorization: str =Header()) -> User | Teacher:
     
         return users_service.view_teacher(user) 
 
-
 @user_router.put('/', tags=['Users']) 
 def update_user(update_info: UpdateData, authorization: str = Header(None)):
     '''Edit account information'''
@@ -154,8 +160,7 @@ def update_user(update_info: UpdateData, authorization: str = Header(None)):
         return JSONResponse(content="You have updated your profile successfully", status_code=200)
     else:
         return JSONResponse(content="Failed to update profile", status_code=400)
-    
-    
+       
 @user_router.get('/current', tags=['Users'])
 def show_current_user_data_based_on_role(authorization: str = Header(None)):
     if authorization is None:
