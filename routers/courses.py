@@ -1,4 +1,4 @@
-from fastapi import APIRouter, status, Header, Body
+from fastapi import APIRouter, HTTPException, status, Header, Body
 from pydantic import BaseModel
 from fastapi.responses import JSONResponse
 from data.models import  ViewStudentCourse, Course, CourseUpdate, Section
@@ -16,8 +16,10 @@ class CourseResponseModel(BaseModel):
 @course_router.get('/enrolled_courses', tags=['Courses'], response_model=list[ViewStudentCourse])
 def view_enrolled_courses(title: str | None = None,
                           tag: str | None = None, 
-                          authorization: str =Header()) -> list[ViewStudentCourse]:
+                          authorization: str =Header(None)) -> list[ViewStudentCourse]:
     ''' View enrolled public and premium courses by students only'''
+    if authorization is None:
+        raise HTTPException(status_code=403)
 
     user = get_user_or_raise_401(authorization)
     id=user.id
@@ -48,9 +50,10 @@ def view_all_courses(title: str | None = None,
         return courses_service.view_teacher_courses(id, title, tag)
     
 @course_router.put('/{course_id}/ratings', tags=['Courses'])
-def course_rating(course_id: int, rating: int=Body(embed=True, ge=0, le=10), authorization: str =Header()):
+def course_rating(course_id: int, rating: int=Body(embed=True, ge=0, le=10), authorization: str =Header(None)):
     ''' Students can rate their enrolled courses only once'''
-
+    if authorization is None:
+        raise HTTPException(status_code=403)
     user = get_user_or_raise_401(authorization)
     student_id=user.id
 

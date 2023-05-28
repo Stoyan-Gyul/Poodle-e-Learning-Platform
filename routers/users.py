@@ -121,8 +121,10 @@ def unsubscribe_from_course(user_id: int, course_id: int, authorization: str = H
 
 
 @user_router.get('/', tags=['Users'], response_model=User)
-def view_user(authorization: str =Header()) -> User | Teacher:
+def view_user(authorization: str =Header(None)) -> User | Teacher:
     ''' View account information depending on role - student or teacher'''
+    if authorization is None:
+        raise HTTPException(status_code=403)
 
     user = get_user_or_raise_401(authorization)
 
@@ -166,5 +168,10 @@ def show_current_user_data_based_on_role(authorization: str = Header(None)):
     return users_service.view_current_user_info(id, role)
 
 @user_router.put('/approuvals', tags=['Users'])
-def admin_approve_users(authorization: str = Header()):
-    pass
+def admin_approve_users(authorization: str = Header(None)):
+    if authorization is None:
+        raise HTTPException(status_code=403)
+    
+    user = get_user_or_raise_401(authorization)
+    if user.is_admin():
+        return JSONResponse(status_code=200, content={'message': 'This for test. ADMIN Only'})
