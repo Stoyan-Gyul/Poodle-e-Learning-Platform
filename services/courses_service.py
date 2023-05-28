@@ -78,7 +78,7 @@ def view_students_courses( title: str = None,
     return (ViewStudentCourse.from_query_result(*obj) for obj in data)
 
 
-def view_teacher_course(id: int, 
+def view_teacher_courses(id: int, 
                           title: str = None,
                           tag: str  = None) -> list[ViewTeacherCourse]:
     '''View all public and premium courses of logged teacher and search them by title and tag'''

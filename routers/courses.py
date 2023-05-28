@@ -57,8 +57,8 @@ def view_all_courses(title: str | None = None,
         return courses_service.view_students_courses(title, tag)
         # return JSONResponse(status_code=200,content={'message': 'This for test ONLY! Students'} )
     # elif role == 'teacher':
-    elif user.is_teacher():
-        return courses_service.view_teacher_course(id, title, tag)
+    elif user.is_teacher() or user.is_admin():
+        return courses_service.view_teacher_courses(id, title, tag)
         # return JSONResponse(status_code=200,content={'message': 'This for test ONLY! Teachers'})
     # elif role == 'admin':
     #     return JSONResponse(status_code=200,content={'message': 'This for test ONLY! Admin'} )
