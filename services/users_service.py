@@ -260,3 +260,40 @@ def view_current_user_info(id:int, role: str):
             return ViewUser(first_name=data[0][0], last_name=data[0][1], role=data[0][2], phone=data[0][3], linked_in_account=data[0][4])
         else:
             return None
+
+
+def get_teacher_info_with_course_id(course_id:int) -> list: 
+        if course_id is None:
+            return None
+        
+        sql = "SELECT u.email, u.first_name, u.last_name, c.title FROM users AS u JOIN courses AS c ON u.id = c.owner_id WHERE c.id = ?"
+        sql_params = (course_id,)
+
+        data = read_query(sql, sql_params)
+
+        return data
+
+def send_student_enrolled_in_course_email_to_teacher(teacher_email: str, verification_link: str, teacher_first_name, teacher_last_name, class_name: str):
+    smtp_host = "smtp.office365.com"
+    smtp_port = 587
+    smtp_username = "poodle.learning@outlook.com"
+    smtp_password = "1234@alpha" 
+
+    message = MIMEMultipart()
+    message["From"] = "poodle.learning@outlook.com"
+    message["To"] = teacher_email
+    message["Subject"] = "New Student Enrollment"
+
+    body = f"Dear {teacher_first_name} {teacher_last_name},\n\n"
+    body += f"A new student has enrolled in your class: '{class_name}'.\n"
+    body += f"Click the following link to approve their enrollment: {verification_link}\n\n"
+    body += "Thank you!\n"
+
+    message.attach(MIMEText(body, "plain"))
+
+    with smtplib.SMTP(smtp_host, smtp_port) as server:
+        server.starttls()
+        server.login(smtp_username, smtp_password)
+        server.sendmail(message["From"], message["To"], message.as_string())
+
+    return "Verification email sent successfully."
