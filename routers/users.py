@@ -124,20 +124,12 @@ def unsubscribe_from_course(user_id: int, course_id: int, authorization: str = H
 def view_user(authorization: str =Header()) -> User | Teacher:
     ''' View account information depending on role - student or teacher'''
 
-    # token_params=get_user_params_or_raise_error(token)
-    
-    # id=token_params[0]
-    # role=token_params[2]
-
     user = get_user_or_raise_401(authorization)
-    id=user.id
-    user=users_service.find_by_id(id)
-    
-    # if role == 'student':
+
     if user.is_student():
         return user
     elif user.is_teacher():
-    # elif role == 'teacher':
+    
         return users_service.view_teacher(user) 
 
 
@@ -148,21 +140,12 @@ def update_user(update_info: UpdateData, authorization: str = Header(None)):
     if authorization is None:
         raise HTTPException(status_code=403)
     
-    # token = authorization.split(" ")[1] if authorization.startswith("Bearer ") else None
-
-    # token_params = users_service.validate_token(token)
-    
-    # id=token_params[0]
-    # role=token_params[2]
-
     user = get_user_or_raise_401(authorization)
-    id=user.id
-    existing_user=users_service.find_by_id(id)
-
+    
     if user.is_student() and (update_info.phone or update_info.linked_in_account):
         return JSONResponse(content="You can not change phone or linked account", status_code=401)
 
-    if users_service.update_user(existing_user, update_info):
+    if users_service.update_user(user, update_info):
         return JSONResponse(content="You have updated your profile successfully", status_code=200)
     else:
         return JSONResponse(content="Failed to update profile", status_code=400)
@@ -181,3 +164,7 @@ def show_current_user_data_based_on_role(authorization: str = Header(None)):
     role=token_params[2]
 
     return users_service.view_current_user_info(id, role)
+
+@user_router.put('/approuvals', tags=['Users'])
+def admin_approve_users(authorization: str = Header()):
+    pass
