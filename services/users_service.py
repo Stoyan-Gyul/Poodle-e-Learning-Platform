@@ -116,6 +116,7 @@ def validate_token(token):
     except jwt.InvalidTokenError:
         # Handle invalid token error
         return None
+    
 
 def subscribe_to_course(user_id: int, course_id:int):
     if user_id is None or course_id is None:
@@ -143,7 +144,7 @@ def view_teacher(user: User)-> User | Teacher:
     sql_params = (id,)
     data = read_query(sql, sql_params)
     if data:
-        teacher_adds=TeacherAdds.from_query_result(*data[0])
+        # teacher_adds=TeacherAdds.from_query_result(*data[0])
         # return Teacher(user=user, teacher_adds=teacher_adds)
         return User(id=user.id,
                     email=user.email,
@@ -260,3 +261,11 @@ def view_current_user_info(id:int, role: str):
             return ViewUser(first_name=data[0][0], last_name=data[0][1], role=data[0][2], phone=data[0][3], linked_in_account=data[0][4])
         else:
             return None
+        
+def admin_approves_user(user_id: int)->bool:
+    '''Admin approves user role'''
+    sql='''UPDATE users SET is_verified = '1' WHERE (`id` = ?);'''
+    data=update_query(sql,(user_id,))
+    if data:
+        return True
+    return False
