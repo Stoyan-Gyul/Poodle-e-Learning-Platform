@@ -68,6 +68,11 @@ const Dashboard = () => {
     handleMenuClose();
   };
 
+  const handleCoursesClick = () => {
+    navigate('/courses');
+    handleMenuClose();
+  };
+
   return (
     <Box sx={{ flexGrow: 1 }}>
       <Grid container>
@@ -87,7 +92,7 @@ const Dashboard = () => {
                   alignItems: 'center',
                   paddingLeft: '20px',
                   '&:hover': {
-                    backgroundColor: 'pink',
+                    backgroundColor: '#1976d2',
                   },
                 }}
               >
@@ -105,7 +110,7 @@ const Dashboard = () => {
                   alignItems: 'center',
                   paddingLeft: '20px',
                   '&:hover': {
-                    backgroundColor: 'pink',
+                    backgroundColor: '#1976d2',
                   },
                 }}
               >
@@ -117,20 +122,20 @@ const Dashboard = () => {
             </Box>
             <Box>
               <MenuItem 
-                onClick={handleMenuClose}
+                onClick={handleCoursesClick}
                 sx={{
                   display: 'flex',
                   alignItems: 'center',
                   paddingLeft: '20px',
                   '&:hover': {
-                    backgroundColor: 'pink',
+                    backgroundColor: '#1976d2',
                   },
                 }}
               >
                 <IconButton>
                   <BookOutlined />
                 </IconButton>
-                Courses
+                My Courses
               </MenuItem>
             </Box>
           </Box>
