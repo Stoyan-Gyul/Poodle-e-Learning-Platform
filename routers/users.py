@@ -138,7 +138,7 @@ def unsubscribe_from_course(user_id: int, course_id: int, authorization: str = H
 
 @user_router.get('/', tags=['Users'], response_model=User)
 def view_user(authorization: str =Header()) -> User | Teacher:
-    ''' View account information depending on role - student or teacher'''
+    ''' View account information depending on role - student or teacher or admin'''
     if authorization is None:
         raise HTTPException(status_code=403)
 
@@ -150,7 +150,6 @@ def view_user(authorization: str =Header()) -> User | Teacher:
     if user.is_student():
         return user
     elif user.is_teacher():
-    
         return users_service.view_teacher(user) 
 
 @user_router.put('/', tags=['Users']) 
@@ -190,7 +189,18 @@ def show_current_user_data_based_on_role(authorization: str = Header(None)):
 
     return users_service.view_current_user_info(id, role)
 
-@user_router.put('/{user_id}/approuvals', tags=['Users'])
+@user_router.get('/all', tags=['Users'])
+def view_all_users_by_admin(email: str = None,
+                            last_name: str = None, authorization: str = Header(None)):
+    '''View all users by admin'''
+    if authorization is None:
+        raise HTTPException(status_code=403)
+    user = get_user_or_raise_401(authorization)
+    if user.is_admin():
+        return users_service.view_admin(email, last_name) 
+    return JSONResponse(status_code=409, content={'detail': 'You are not administator.'})
+
+@user_router.put('/{user_id}/admin_approvals', tags=['Users'])
 def admin_approves_users(user_id: int, authorization: str = Header(None)):
     '''Admin approves user role'''
     
@@ -202,9 +212,9 @@ def admin_approves_users(user_id: int, authorization: str = Header(None)):
         if users_service.admin_approves_user(user_id):
             return JSONResponse(status_code=200, content={'message': 'The user is approved.'})
         return JSONResponse(status_code=409, content={'detail': 'Something went wrong.Try again.'})
-    
+    return JSONResponse(status_code=409, content={'detail': 'You are not administator.'})
 
-@user_router.put('/{user_id}/disapprouvals', tags=['Users'])
+@user_router.put('/{user_id}/admin_disapprovals', tags=['Users'])
 def admin_approves_users(user_id: int, authorization: str = Header(None)):
     '''Admin disapproves user role'''
     

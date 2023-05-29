@@ -52,9 +52,10 @@ def create_new_user(user: User):
     passwd = user.password.encode("utf-8")
     hashed_password = bcrypt.hashpw(passwd, main_salt)
     is_verified = 0
+    is_approved = 0
 
-    sql_user = "INSERT INTO users (email, password, role, first_name, last_name, verification_token, is_verified) VALUES (?, ?, ?, ?, ?, ?, ?);"
-    sql_params_user = (user.email, hashed_password, user.role, user.first_name, user.last_name, user.verification_token, is_verified)
+    sql_user = "INSERT INTO users (email, password, role, first_name, last_name, verification_token, is_verified, is_approved) VALUES (?, ?, ?, ?, ?, ?, ?);"
+    sql_params_user = (user.email, hashed_password, user.role, user.first_name, user.last_name, user.verification_token, is_verified, is_approved)
         
     user_id = insert_query(sql_user, sql_params_user)
 
@@ -264,7 +265,7 @@ def view_current_user_info(id:int, role: str):
         
 def admin_approves_user(user_id: int)->bool:
     '''Admin approves user role'''
-    sql='''UPDATE users SET is_verified = '1' WHERE (`id` = ?);'''
+    sql='''UPDATE users SET is_approved = 1 WHERE (`id` = ?);'''
     data=update_query(sql,(user_id,))
     if data:
         return True
@@ -310,8 +311,24 @@ def send_student_enrolled_in_course_email_to_teacher(teacher_email: str, verific
 
 def admin_disapproves_user(user_id: int)->bool:
     '''Admin disapproves user role'''
-    sql='''UPDATE users SET is_verified = '0' WHERE (`id` = ?);'''
+    sql='''UPDATE users SET is_approved = 0 WHERE (`id` = ?);'''
     data=update_query(sql,(user_id,))
     if data:
         return True
     return False
+
+def view_admin(email: str = None, last_name: str = None)->list[User]:
+    sql='''SELECT id, email, password, first_name, last_name, role, phone_number, linked_in_account, verification_token, is_verified, is_approved 
+           FROM users 
+           LEFT JOIN teachers as t ON id=t.users_id'''
+    where_clauses=[]
+    if email:
+        where_clauses.append(f"email like '%{email}%'")
+    if last_name:
+        where_clauses.append(f"last_name like '%{last_name}%'")
+    
+    if where_clauses:
+        sql+= ' WHERE ' + ' AND '.join(where_clauses)
+
+    data=read_query(sql, (id,))
+    return (User.from_query_result_for_admin(*obj) for obj in data)
