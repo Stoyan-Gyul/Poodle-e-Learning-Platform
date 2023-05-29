@@ -3,29 +3,9 @@ import { Link, useNavigate } from 'react-router-dom';
 import { Box, Button, Container, IconButton, TextField, Typography } from '@mui/material';
 import { ArrowBack } from '@mui/icons-material';
 import { AuthContext } from './AuthContext';
-import { styled } from '@mui/system';
 import logoImage from './images/logo.png'; // Import your logo image
+import { Header, LogoImage } from './common.js';
 
-
-const Header = styled('header')({
-  position: 'absolute',
-  top: '0',
-  left: '0',
-  right: '0',
-  display: 'flex',
-  justifyContent: 'flex-start',
-  alignItems: 'center',
-  width: '100%',
-  backgroundColor: '#e8f0fe', // Replace with your desired background color
-  padding: '0.1rem',
-  borderTop: '1px solid #7d68a1', // Replace with your desired line color
-});
-
-const LogoImage = styled('img')({
-  width: '50px',
-  height: '50px',
-  borderRadius: '50%',
-});
 const LoginPage = () => {
   const { setAuthToken } = useContext(AuthContext);
   const navigate = useNavigate();

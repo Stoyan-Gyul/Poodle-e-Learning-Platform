@@ -1,12 +1,10 @@
 
 import React, { useState, useEffect } from 'react';
-import {
-  Container,
-  Typography,
-  TextField,
-  Button,
-  Grid,
-} from '@mui/material';
+import {Box, Container, Typography, IconButton, TextField, Button, Grid,} from '@mui/material';
+import { ArrowBack } from '@mui/icons-material';
+import { Link } from 'react-router-dom';
+import logoImage from './images/logo.png';
+import { Header, LogoImage } from './common.js';
 
 const ProfilePage = () => {
   const [first_name, setFirstName] = useState('');
@@ -128,10 +126,22 @@ const ProfilePage = () => {
   };
 
   return (
-    <Container maxWidth="sm">
-      <Typography variant="h4" component="h1" align="center" gutterBottom>
-        Profile
-      </Typography>
+    <>
+    <Header>
+        <a href="/">
+          <LogoImage src={logoImage} alt="Logo" />
+        </a>
+      </Header>
+      <div style={{ marginTop: '64px' }}> {/* Adjust the margin value as needed */}
+        <Container maxWidth="sm">
+          <div style={{ display: 'flex', alignItems: 'center', marginBottom: '16px' }}>
+            <IconButton component={Link} to="/dashboard">
+              <ArrowBack />
+            </IconButton>
+            <Typography variant="h4" component="h1" align="center" style={{ flex: '1', marginLeft: '16px' }}>
+              Profile
+            </Typography>
+          </div>
       <form onSubmit={handleSaveProfile}>
         <Grid container spacing={2}>
           <Grid item xs={12}>
@@ -212,6 +222,8 @@ const ProfilePage = () => {
         </Typography>
       )}
     </Container>
+    </div>
+    </>
   );
 };
 
