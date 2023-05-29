@@ -5,6 +5,7 @@ import { ArrowBack } from '@mui/icons-material';
 import { AuthContext } from './AuthContext';
 import logoImage from './images/logo.png'; // Import your logo image
 import { Header, LogoImage } from './common.js';
+import { apiLogin } from './API_requests';
 
 const LoginPage = () => {
   const { setAuthToken } = useContext(AuthContext);
@@ -38,26 +39,7 @@ const LoginPage = () => {
     }
   };  
 
-  // API login function
-  const apiLogin = async (email, password) => {
-    // Make the POST request to your backend API
-    const response = await fetch('http://localhost:8000/users/login', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ email, password }),
-    });
-
-    if (response.ok) {
-      const data = await response.json();
-      const token = data.token;
-      return token;
-    } else {
-      throw new Error('Login failed');
-    }
-  };
-
+  
   return (
     <>
       <Header>
