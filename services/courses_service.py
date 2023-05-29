@@ -307,6 +307,23 @@ def view_admin_courses( title: str = None,
 
     data=read_query(sql)
     return (ViewAdminCourse.from_query_result(*obj) for obj in data)
+
+
+def is_student_enrolled_in_course(course_id: int, student_id: int)->bool:
+    '''Verify if student is enrolled in course'''
+    
+    return any(
+        read_query(
+            'SELECT * FROM users_have_courses WHERE courses_id=?  AND users_id=?',
+            (course_id, student_id)))
+
+def admin_removes_student_from_course(course_id: int,student_id: int)-> bool:
+    ''' Admin removes student from course'''
+
+    sql='''DELETE FROM users_have_courses WHERE (courses_id = ?) and (users_id = ?)'''
+    if update_query(sql,(course_id, student_id)):
+        return True
+    return False
     
 def _course_rating_change_transaction(course_id: int)-> bool:
     ''' Calculate and change new course rating'''

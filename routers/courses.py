@@ -193,5 +193,23 @@ def update_section(course_id: int, section_id: int, section: Section, authorizat
         return NotFound(f'Section {section_id} does not exist!')
     else:
         return courses_service.update_section(existing_section, section)
+    
 
+@course_router.delete('/{course_id}/student_removals/{student_id}', tags=['Courses'])
+def admin_removes_student_from_course(course_id: int, student_id: int, authorization: str = Header()):
+    ''' Admin removes student from course'''
+
+    if authorization is None:
+        raise HTTPException(status_code=403)
+    
+    if not courses_service.is_student_enrolled_in_course(course_id,student_id):
+        return JSONResponse(status_code=409, content={'detail': f'The student with ID:{student_id} is not enrolled in course with ID:{course_id}.'})
+    
+    user = get_user_or_raise_401(authorization)
+    if user.is_admin():
+        if courses_service.admin_removes_student_from_course(course_id,student_id):
+            return JSONResponse(status_code=200, content={'message': f'The student with ID:{student_id} is removed from course with ID:{course_id}.'})
+        return JSONResponse(status_code=409, content={'detail': 'Something went wrong.Try again.'})
+    
+    return JSONResponse(status_code=409, content={'detail': 'You are not administator.'})
 
