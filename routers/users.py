@@ -137,7 +137,7 @@ def unsubscribe_from_course(user_id: int, course_id: int, authorization: str = H
     return Response(content="You have been unsubscribed from this course.", status_code=200)
 
 @user_router.get('/', tags=['Users'], response_model=User)
-def view_user(authorization: str =Header()) -> User | Teacher:
+def view_user(authorization: str = Header()) -> User | Teacher:
     ''' View account information depending on role - student or teacher or admin'''
     if authorization is None:
         raise HTTPException(status_code=403)
@@ -171,23 +171,7 @@ def update_user(update_info: UpdateData, authorization: str = Header(None)):
         return JSONResponse(content="You have updated your profile successfully", status_code=200)
     else:
         return JSONResponse(content="Failed to update profile", status_code=400)
-       
-@user_router.get('/current', tags=['Users'])
-def show_current_user_data_based_on_role(authorization: str = Header(None)):
-    if authorization is None:
-        raise HTTPException(status_code=403)
-    
-    token = authorization.split(" ")[1] if authorization.startswith("Bearer ") else None
 
-    token_params = users_service.validate_token(token)
-
-    id=token_params[0]
-    role=token_params[2]
-    # Verify if role is approved
-    if not is_user_approved_by_admin(id):
-        return JSONResponse(status_code=409, content={'detail': 'Your role is still not approved.'})
-
-    return users_service.view_current_user_info(id, role)
 
 @user_router.get('/all', tags=['Users'])
 def view_all_users_by_admin(email: str = None,
