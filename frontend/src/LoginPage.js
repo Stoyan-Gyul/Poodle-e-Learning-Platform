@@ -3,12 +3,14 @@ import { Link, useNavigate } from 'react-router-dom';
 import { Box, Button, Container, IconButton, TextField, Typography } from '@mui/material';
 import { ArrowBack } from '@mui/icons-material';
 import { AuthContext } from './AuthContext';
+import { UserContext } from './UserContext';
 import logoImage from './images/logo.png'; // Import your logo image
 import { Header, LogoImage } from './common.js';
-import { apiLogin } from './API_requests';
+import { apiLogin, viewUserData } from './API_requests';
 
 const LoginPage = () => {
   const { setAuthToken } = useContext(AuthContext);
+  const { setUserId, setRole} = useContext(UserContext)
   const navigate = useNavigate();
 
   const [email, setEmail] = useState('');
@@ -24,13 +26,21 @@ const LoginPage = () => {
     try {
       // Make the API request and get the token
       const token = await apiLogin(email, password);
+      const userData = await viewUserData(token);
+      const user_id = userData.id;
+      const role = userData.role;
   
       // Save the token to local storage
       localStorage.setItem('authToken', token);
+      localStorage.setItem('user_id', user_id);
+      localStorage.setItem('role', role)
   
-      // Set the token in the app state
+  
+      // Set the token, user_id and rolein the app state
       setAuthToken(token);
-  
+      setUserId(user_id); 
+      setRole(role); 
+
       // Redirect to Dashboard
       navigate('/dashboard');
     } catch (error) {
