@@ -202,4 +202,19 @@ def admin_approves_users(user_id: int, authorization: str = Header(None)):
         if users_service.admin_approves_user(user_id):
             return JSONResponse(status_code=200, content={'message': 'The user is approved.'})
         return JSONResponse(status_code=409, content={'detail': 'Something went wrong.Try again.'})
+    
+
+@user_router.put('/{user_id}/disapprouvals', tags=['Users'])
+def admin_approves_users(user_id: int, authorization: str = Header(None)):
+    '''Admin disapproves user role'''
+    
+    if authorization is None:
+        raise HTTPException(status_code=403)
+    
+    user = get_user_or_raise_401(authorization)
+    if user.is_admin():
+        if users_service.admin_disapproves_user(user_id):
+            return JSONResponse(status_code=200, content={'message': 'The user is disapproved.'})
+        return JSONResponse(status_code=409, content={'detail': 'Something went wrong.Try again.'})
+    
     return JSONResponse(status_code=409, content={'detail': 'You are not administator.'})

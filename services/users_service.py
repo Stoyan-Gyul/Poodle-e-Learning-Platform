@@ -306,3 +306,12 @@ def send_student_enrolled_in_course_email_to_teacher(teacher_email: str, verific
         server.sendmail(message["From"], message["To"], message.as_string())
 
     return "Verification email sent successfully."
+
+
+def admin_disapproves_user(user_id: int)->bool:
+    '''Admin disapproves user role'''
+    sql='''UPDATE users SET is_verified = '0' WHERE (`id` = ?);'''
+    data=update_query(sql,(user_id,))
+    if data:
+        return True
+    return False
