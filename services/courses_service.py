@@ -1,7 +1,7 @@
 
 from data.database import read_query, insert_query, update_query
 from data.models import Report, Course, Section, CourseUpdate
-from data.models import ViewPublicCourse, ViewStudentCourse, ViewTeacherCourse
+from data.models import ViewPublicCourse, ViewStudentCourse, ViewTeacherCourse, ViewAdminCourse
 
 
 def view_public_courses(rating: float = None,
@@ -284,6 +284,27 @@ def update_section(old: Section, new: Section):
 
     return merged
 
+def view_admin_courses( title: str = None,
+                           tag: str  = None):
+    sql='''SELECT c.id, c.title, c.description, c.course_rating, c.home_page_pic, c.is_active, c.is_premium, t.expertise_area, o.description as objectiv, uc.number_students
+           FROM courses AS c
+           JOIN courses_have_tags AS ct ON c.id = ct.courses_id
+           JOIN tags AS t ON t.id = ct.tags_id
+		   JOIN courses_have_objectives as co ON c.id=co.courses_id
+		   JOIN objectives as o ON o.id=co.objectives_id
+           JOIN (SELECT courses_id, count(courses_id) as number_students FROM users_have_courses GROUP BY courses_id) as uc ON c.id=uc.courses_id'''
+    
+    where_clauses=[]
+    if title:
+        where_clauses.append(f"c.title like '%{title}%'")
+    if tag:
+        where_clauses.append(f"t.expertise_area like '%{tag}%'")
+    
+    if where_clauses:
+        sql+= ' AND ' + ' AND '.join(where_clauses)
+
+    data=read_query(sql)
+    return (ViewAdminCourse.from_query_result(*obj) for obj in data)
     
 def _course_rating_change_transaction(course_id: int)-> bool:
     ''' Calculate and change new course rating'''

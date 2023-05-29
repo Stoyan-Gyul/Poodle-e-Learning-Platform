@@ -39,7 +39,7 @@ def view_all_courses(title: str | None = None,
                      rating: float = None,
                      tag: str | None = None,
                      authorization: str =Header(None)):
-    ''' View all courses depending on role - anonymous, student, teacher'''
+    ''' View all courses depending on role - anonymous, student, teacher, admin'''
     if not authorization:
         return courses_service.view_public_courses(rating,tag)
 
@@ -52,9 +52,13 @@ def view_all_courses(title: str | None = None,
     if user.is_student():
         return courses_service.view_students_courses(title, tag)
 
-    elif user.is_teacher() or user.is_admin():
+    elif user.is_teacher():
         return courses_service.view_teacher_courses(id, title, tag)
     
+    elif user.is_admin():
+        return courses_service.view_admin_courses(title, tag)
+    
+
 @course_router.put('/{course_id}/ratings', tags=['Courses'])
 def course_rating(course_id: int, rating: int=Body(embed=True, ge=0, le=10), authorization: str =Header(None)):
     ''' Students can rate their enrolled courses only once'''

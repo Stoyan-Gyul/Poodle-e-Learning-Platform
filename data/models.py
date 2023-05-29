@@ -239,3 +239,31 @@ class ViewUser(BaseModel):
     role: str | None
     phone: int | None
     linked_in_account: str | None
+
+
+class ViewAdminCourse(BaseModel):
+    id: int
+    title: str
+    description: str
+    course_rating: float | None
+    home_page_pic: None
+    is_active: str
+    is_premium: str
+    expertise_area: str
+    objective: str
+    number_students: int
+    
+    @classmethod
+    def from_query_result(cls, id, title, description, course_rating, home_page_pic, is_active, is_premium, expertise_area, objective, number_students):
+        return cls(
+            id=id,
+            title=title,
+            description=description,
+            course_rating=course_rating,
+            home_page_pic=home_page_pic,
+            is_active=CourseStatus.ACTIVE if is_active else CourseStatus.HIDDEN,
+            is_premium=CourseType.PREMIUM if is_premium else CourseType.PUBLIC,
+            expertise_area=expertise_area,
+            objective=objective,
+            number_students=number_students
+            )
