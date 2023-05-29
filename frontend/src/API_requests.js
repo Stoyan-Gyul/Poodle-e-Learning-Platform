@@ -55,6 +55,34 @@ export const signup = async (userData) => {
   }
 };
 
+export const viewUserData = async (token) => {
+  try { 
+    const authorization = `Bearer ${token}`; 
+
+    const response = await fetch('http://localhost:8000/users/', {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': authorization
+      },
+    });
+    if (response.ok) {
+      const data = await response.json();
+      return data;
+
+    } else {
+      const errorData = await response.json();
+      const errorMessage = errorData.detail || 'Failed to get user data';
+      throw new Error(errorMessage);
+    }
+  } catch (error) {
+    // Handle any network or server errors
+    console.error('Error occurred while signing up:', error);
+    throw new Error('Failed to get user data');
+  }
+};
+
+
 export const handleUnsubscribeFromCourse = async (courseId) => {
     
     try {
