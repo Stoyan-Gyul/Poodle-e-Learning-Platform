@@ -285,7 +285,9 @@ def update_section(old: Section, new: Section):
     return merged
 
 def view_admin_courses( title: str = None,
-                           tag: str  = None):
+                           tag: str  = None)-> list[ViewAdminCourse]:
+    '''View all public and premium courses available for admin and search them by title and tag'''
+    
     sql='''SELECT c.id, c.title, c.description, c.course_rating, c.home_page_pic, c.is_active, c.is_premium, t.expertise_area, o.description as objectiv, uc.number_students
            FROM courses AS c
            JOIN courses_have_tags AS ct ON c.id = ct.courses_id
