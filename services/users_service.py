@@ -1,4 +1,4 @@
-from data.models import User, TeacherAdds, UpdateData, ViewUser
+from data.models import User, TeacherAdds, UpdateData
 from pydantic import BaseModel
 from data.database import read_query, insert_query, update_query
 import bcrypt
@@ -54,7 +54,7 @@ def create_new_user(user: User):
     is_verified = 0
     is_approved = 0
 
-    sql_user = "INSERT INTO users (email, password, role, first_name, last_name, verification_token, is_verified, is_approved) VALUES (?, ?, ?, ?, ?, ?, ?);"
+    sql_user = "INSERT INTO users (email, password, role, first_name, last_name, verification_token, is_verified, is_approved) VALUES (?, ?, ?, ?, ?, ?, ?, ?);"
     sql_params_user = (user.email, hashed_password, user.role, user.first_name, user.last_name, user.verification_token, is_verified, is_approved)
         
     user_id = insert_query(sql_user, sql_params_user)
