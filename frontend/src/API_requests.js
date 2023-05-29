@@ -1,6 +1,8 @@
 
 
 const authToken = localStorage.getItem('authToken');
+const user_id = 57
+const role = 'teacher'
 
 export const apiLogin = async (email, password) => {
   // Make the POST request to your backend API
@@ -19,6 +21,11 @@ export const apiLogin = async (email, password) => {
   } else {
     throw new Error('Login failed');
   }
+};
+
+export const handleLogout = () => {
+  // Remove the token from local storage
+  localStorage.removeItem('token');
 };
 
 export const signup = async (userData) => {
@@ -48,9 +55,7 @@ export const signup = async (userData) => {
   }
 };
 
-
 export const handleUnsubscribeFromCourse = async (courseId) => {
-    const user_id = 57
     
     try {
       const response = await fetch(`http://localhost:8000/users/${user_id}/courses/${courseId}/unsubscribe`, {
@@ -118,7 +123,7 @@ export const fetchAllCourses = async () => {
   }
 };
 
-export const createCourse = async (course) => {
+export const createCourse = async (courseData) => {
   try {
     const response = await fetch(`http://localhost:8000/courses`, {
       method: 'POST',
@@ -126,7 +131,7 @@ export const createCourse = async (course) => {
         'Content-Type': 'application/json',
         Authorization: `Bearer ${authToken}`,
       },
-      body: JSON.stringify(course),
+      body: JSON.stringify(courseData),
     });
 
     if (!response.ok) {
