@@ -1,6 +1,7 @@
 import React, { useState, useContext } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Box, Button, Container, FormControl, MenuItem, Select, TextField, Typography } from '@mui/material';
+import { Box, Button, Container, IconButton, FormControl, MenuItem, Select, TextField, Typography } from '@mui/material';
+import { ArrowBack } from '@mui/icons-material';
 import { styled } from '@mui/system';
 import { AuthContext } from './AuthContext';
 import logoImage from './images/logo.png';
@@ -14,7 +15,7 @@ const Header = styled('header')({
   justifyContent: 'flex-start',
   alignItems: 'center',
   width: '100%',
-  backgroundColor: '#e8f0fe', // Replace with your desired background color
+  backgroundColor: '#e8f0fe', 
   padding: '0.1rem',
   borderTop: '1px solid #7d68a1',
 });
@@ -33,15 +34,29 @@ const SignupPage = () => {
   const [role, setRole] = useState('student'); // Default role is 'student'
   const [phone, setPhone] = useState('');
   const [linkedin, setLinkedin] = useState('');
-  const [error] = useState('');
+  const [error, setError] = useState('');
 
   const handleRoleChange = (event) => {
     setRole(event.target.value);
   };
+
   const { setAuthToken } = useContext(AuthContext);
   const navigate = useNavigate();
 
   const handleSignup = async () => {
+
+    // Check if all fields are filled in
+    if (!email || !password || !first_name || !last_name || !role) {
+      setError('Please fill in all required fields.');
+      return;
+    }
+
+    // Additional validation based on role
+    if (role === 'teacher' && (!phone || !linkedin)) {
+      setError('Please fill in all required fields.');
+      return;
+    }
+
     try {
       const userData = {
         email,
@@ -69,8 +84,10 @@ const SignupPage = () => {
         await handleLogin();
       } else {
         // Signup failed
-        // You can handle the error and display an appropriate message to the user
-        console.log('Signup failed');
+        // Handle the error and display an appropriate message to the user
+        const errorData = await response.json();
+        const errorMessage = errorData.detail || 'Signup failed';
+        setError(errorMessage)
       }
     } catch (error) {
       // Handle any network or server errors
@@ -96,9 +113,7 @@ const SignupPage = () => {
         // Login successful
         const { token } = await loginResponse.json();
 
-        // Set the token in the app state or local storage
-        // For example, if you have a state management library like Redux, you can dispatch an action to set the token
-        // Or if you want to store it in local storage, you can use: localStorage.setItem('token', token);
+        // Set the token in the local storage
         setAuthToken(token);
 
         // Redirect to Dashboard
@@ -122,6 +137,9 @@ const SignupPage = () => {
       </Header>
       <Container maxWidth="sm">
         <Box sx={{ mt: 8 }}>
+          <IconButton component={Link} to="/" sx={{ marginBottom: 2 }}>
+            <ArrowBack />
+          </IconButton>
           <Typography variant="h4" component="h2" align="center" gutterBottom>
             Sign Up
           </Typography>
