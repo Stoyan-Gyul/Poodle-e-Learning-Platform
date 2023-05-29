@@ -316,3 +316,19 @@ def admin_disapproves_user(user_id: int)->bool:
     if data:
         return True
     return False
+
+def view_admin(email: str = None, last_name: str = None)->list[User]:
+    sql='''SELECT id, email, password, first_name, last_name, role, phone_number, linked_in_account, verification_token, is_verified, is_approved 
+           FROM users 
+           LEFT JOIN teachers as t ON id=t.users_id'''
+    where_clauses=[]
+    if email:
+        where_clauses.append(f"email like '%{email}%'")
+    if last_name:
+        where_clauses.append(f"last_name like '%{last_name}%'")
+    
+    if where_clauses:
+        sql+= ' WHERE ' + ' AND '.join(where_clauses)
+
+    data=read_query(sql, (id,))
+    return (User.from_query_result_for_admin(*obj) for obj in data)

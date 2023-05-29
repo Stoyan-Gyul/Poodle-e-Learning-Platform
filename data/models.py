@@ -15,7 +15,7 @@ class User(BaseModel):
     linked_in_account: str | None
     verification_token: str | None
     is_verified: str | None
-    is_approved: int | None
+    is_approved: str | None
 
     def is_admin(self):
         return self.role == Role.ADMIN
@@ -38,6 +38,21 @@ class User(BaseModel):
             first_name=first_name,
             last_name=last_name,
             role=role)
+    
+    @classmethod
+    def from_query_result_for_admin(cls, id, email, password, first_name, last_name, role, phone, linked_in_account, verification_token, is_verified, is_approved):
+        return cls(
+            id=id,
+            email=email,
+            password=password,
+            first_name=first_name,
+            last_name=last_name,
+            role=role,
+            phone=phone,
+            linked_in_account=linked_in_account,
+            verification_token=verification_token,
+            is_verified='verified' if is_verified else 'non verified',
+            is_approved='approved' if is_approved else 'non approved')
 
 class UpdateData(BaseModel):
     password: str | None
