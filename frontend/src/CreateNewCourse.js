@@ -54,7 +54,7 @@ const CreateCoursePage = () => {
       </Header>
       <Container maxWidth="sm">
         <Box sx={{ mt: 8 }}>
-          <IconButton component={Link} to="/" sx={{ marginBottom: 2 }}>
+          <IconButton component={Link} to="/dashboard" sx={{ marginBottom: 2 }}>
             <ArrowBack />
           </IconButton>
           <Typography variant="h4" component="h2" align="center" gutterBottom>
