@@ -73,6 +73,10 @@ def subscribe_to_course(user_id: int, course_id: int, authorization: str = Heade
 
     user_info = users_service.validate_token(token)
 
+    # Verify if role is approved
+    if not is_user_approved_by_admin(user_info[0]):
+        return JSONResponse(status_code=409, content={'detail': 'Your role is still not approved.'})
+
     if not user_info:
         raise HTTPException(status_code=403)
     
@@ -110,6 +114,11 @@ def unsubscribe_from_course(user_id: int, course_id: int, authorization: str = H
     token = authorization.split(" ")[1] if authorization.startswith("Bearer ") else None
 
     user_info = users_service.validate_token(token)
+
+    # Verify if role is approved
+    if not is_user_approved_by_admin(user_info[0]):
+        return JSONResponse(status_code=409, content={'detail': 'Your role is still not approved.'})
+
     if not user_info:
         raise HTTPException(status_code=403)
     
@@ -152,6 +161,9 @@ def update_user(update_info: UpdateData, authorization: str = Header(None)):
         raise HTTPException(status_code=403)
     
     user = get_user_or_raise_401(authorization)
+    # Verify if role is approved
+    if not is_user_approved_by_admin(user.id):
+        return JSONResponse(status_code=409, content={'detail': 'Your role is still not approved.'})
     
     if user.is_student() and (update_info.phone or update_info.linked_in_account):
         return JSONResponse(content="You can not change phone or linked account", status_code=401)
@@ -172,6 +184,9 @@ def show_current_user_data_based_on_role(authorization: str = Header(None)):
 
     id=token_params[0]
     role=token_params[2]
+    # Verify if role is approved
+    if not is_user_approved_by_admin(id):
+        return JSONResponse(status_code=409, content={'detail': 'Your role is still not approved.'})
 
     return users_service.view_current_user_info(id, role)
 

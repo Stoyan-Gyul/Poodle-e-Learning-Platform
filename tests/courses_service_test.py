@@ -36,7 +36,7 @@ class CoursesService_Should(TestCase):
         mock_read_query.return_value=[(1, 'Core Python', 'This is core modul',8.0, None, 1, 0, 'software developement', 'Learn software'),
                                       (2, 'OOP', 'This is OOP modul',8.0, None, 1, 1, 'software developement', 'Learn software'),
                                       (4, 'General Python', 'This is general',8.0, None, 1, 0, 'software developement', 'General view')]
-        result=list(courses_service.view_teacher_course(1))
+        result=list(courses_service.view_teacher_courses(1))
         self.assertEqual(3, len(result))
         self.assertIsInstance(result[0],ViewTeacherCourse)
 

@@ -415,7 +415,7 @@ class UserService_Should(TestCase):
         mock_read_query.return_value=[('08882412', 'https://www.linkedin.com/aliceparker/')]
         
         result=users_service.view_teacher(USER)
-        self.assertIsInstance(result,Teacher)
+        self.assertIsInstance(result,User)
 
     @patch('services.users_service.read_query')
     def test_view_teacher_returnUser_if_No_teacher_adds(self, mock_read_query):

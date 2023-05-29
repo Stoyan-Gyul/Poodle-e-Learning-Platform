@@ -4,7 +4,7 @@ from fastapi.responses import JSONResponse
 from data.models import  ViewStudentCourse, Course, CourseUpdate, Section
 from services import  courses_service
 from data.common.responses import InternalServerError, NotFound, Forbidden
-from data.common.auth import get_user_or_raise_401
+from data.common.auth import get_user_or_raise_401, is_user_approved_by_admin
 
 
 course_router = APIRouter(prefix="/courses")
@@ -23,6 +23,9 @@ def view_enrolled_courses(title: str | None = None,
 
     user = get_user_or_raise_401(authorization)
     id=user.id
+    # Verify if role is approved
+    if not is_user_approved_by_admin(user.id):
+        return JSONResponse(status_code=409, content={'detail': 'Your role is still not approved.'})
 
     if user.is_student():
         return courses_service.view_enrolled_courses(id, title, tag)
@@ -42,6 +45,9 @@ def view_all_courses(title: str | None = None,
 
     user = get_user_or_raise_401(authorization)
     id=user.id
+    # Verify if role is approved
+    if not is_user_approved_by_admin(user.id):
+        return JSONResponse(status_code=409, content={'detail': 'Your role is still not approved.'})
     
     if user.is_student():
         return courses_service.view_students_courses(title, tag)
@@ -56,6 +62,9 @@ def course_rating(course_id: int, rating: int=Body(embed=True, ge=0, le=10), aut
         raise HTTPException(status_code=403)
     user = get_user_or_raise_401(authorization)
     student_id=user.id
+    # Verify if role is approved
+    if not is_user_approved_by_admin(user.id):
+        return JSONResponse(status_code=409, content={'detail': 'Your role is still not approved.'})
 
     if user.is_student():
         result=courses_service.course_rating(rating, course_id, student_id)
@@ -68,6 +77,9 @@ def course_rating(course_id: int, rating: int=Body(embed=True, ge=0, le=10), aut
 @course_router.get('/reports', tags=['Courses'])
 def get_reports_for_all_owned_courses(authorization: str = Header()):
     user = get_user_or_raise_401(authorization)
+    # Verify if role is approved
+    if not is_user_approved_by_admin(user.id):
+        return JSONResponse(status_code=409, content={'detail': 'Your role is still not approved.'})
     result = courses_service.get_all_reports(user.id)
 
     return result
@@ -86,7 +98,10 @@ def get_course(course_id: int, authorization: str = Header()):
 @course_router.get('/{course_id}/reports', tags=['Courses'])
 def get_reports_by_course_id(course_id: int, authorization: str = Header()):
     user = get_user_or_raise_401(authorization)
-
+    # Verify if role is approved
+    if not is_user_approved_by_admin(user.id):
+        return JSONResponse(status_code=409, content={'detail': 'Your role is still not approved.'})
+    
     course = courses_service.get_course_by_id(course_id)
     if course is None:
         return NotFound(f'Course {course_id} does not exist!')
@@ -102,6 +117,10 @@ def get_reports_by_course_id(course_id: int, authorization: str = Header()):
 @course_router.post('/', status_code=status.HTTP_201_CREATED, tags=['Courses'])
 def create_course(course: Course, authorization: str = Header()):
     user = get_user_or_raise_401(authorization)
+    # Verify if role is approved
+    if not is_user_approved_by_admin(user.id):
+        return JSONResponse(status_code=409, content={'detail': 'Your role is still not approved.'})
+
     if not user.is_teacher():
         return Forbidden('Only a teacher can create courses.')
 
@@ -113,7 +132,10 @@ def create_course(course: Course, authorization: str = Header()):
 @course_router.put('/{course_id}', tags=['Courses'])
 def update_course(course_id: int, data: CourseUpdate, authorization: str = Header()):
     user = get_user_or_raise_401(authorization)
-
+    # Verify if role is approved
+    if not is_user_approved_by_admin(user.id):
+        return JSONResponse(status_code=409, content={'detail': 'Your role is still not approved.'})
+    
     course = courses_service.get_course_by_id(course_id)
     if course is None:
         return NotFound(f'Course {course_id} does not exist!')
@@ -131,7 +153,10 @@ def update_course(course_id: int, data: CourseUpdate, authorization: str = Heade
 @course_router.post('/{course_id}', status_code=status.HTTP_201_CREATED, tags=['Courses'])
 def create_section(course_id: int, section: Section, authorization: str = Header()):
     user = get_user_or_raise_401(authorization)
-
+    # Verify if role is approved
+    if not is_user_approved_by_admin(user.id):
+        return JSONResponse(status_code=409, content={'detail': 'Your role is still not approved.'})
+    
     course = courses_service.get_course_by_id(course_id)
     if course is None:
         return NotFound(f'Course {course_id} does not exist!')
@@ -148,7 +173,10 @@ def create_section(course_id: int, section: Section, authorization: str = Header
 @course_router.put('/{course_id}/sections/{section_id}',tags=['Courses'])
 def update_section(course_id: int, section_id: int, section: Section, authorization: str = Header()):
     user = get_user_or_raise_401(authorization)
-
+    # Verify if role is approved
+    if not is_user_approved_by_admin(user.id):
+        return JSONResponse(status_code=409, content={'detail': 'Your role is still not approved.'})
+    
     course = courses_service.get_course_by_id(course_id)
     if course is None:
         return NotFound(f'Course {course_id} does not exist!')
