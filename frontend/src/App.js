@@ -6,6 +6,7 @@ import LoginPage from './LoginPage';
 import SignupPage from './SignupPage';
 import DashboardPage from './DashboardPage';
 import ProfilePage from './ProfilePage';
+import UserCoursesPage from './UserCoursesPage';
 import { AuthProvider } from './AuthContext';
 
 const theme = createTheme();
@@ -21,6 +22,7 @@ const App = () => {
             <Route path="/signup" element={<SignupPage />} />
             <Route path="/dashboard" element={<DashboardPage />} />
             <Route path="/profile" element={<ProfilePage/>} />
+            <Route path="/courses" element={<UserCoursesPage/>} />
           </Routes>
         </AuthProvider>
       </Router>
