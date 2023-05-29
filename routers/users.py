@@ -190,7 +190,7 @@ def show_current_user_data_based_on_role(authorization: str = Header(None)):
 
     return users_service.view_current_user_info(id, role)
 
-@user_router.put('/{user_id}/approuvals', tags=['Users'])
+@user_router.put('/{user_id}/admin_approvals', tags=['Users'])
 def admin_approves_users(user_id: int, authorization: str = Header(None)):
     '''Admin approves user role'''
     
@@ -204,7 +204,7 @@ def admin_approves_users(user_id: int, authorization: str = Header(None)):
         return JSONResponse(status_code=409, content={'detail': 'Something went wrong.Try again.'})
     
 
-@user_router.put('/{user_id}/disapprouvals', tags=['Users'])
+@user_router.put('/{user_id}/admin_disapprovals', tags=['Users'])
 def admin_approves_users(user_id: int, authorization: str = Header(None)):
     '''Admin disapproves user role'''
     

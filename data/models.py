@@ -15,6 +15,7 @@ class User(BaseModel):
     linked_in_account: str | None
     verification_token: str | None
     is_verified: str | None
+    is_approved: int | None
 
     def is_admin(self):
         return self.role == Role.ADMIN
