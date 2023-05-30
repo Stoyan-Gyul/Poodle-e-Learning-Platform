@@ -213,13 +213,19 @@ def view_section(course_id: int,section_id: int, authorization: str = Header()):
     user = get_user_or_raise_401(authorization)
     user_id=user.id
     # Verify if role is approved
-    if not is_user_approved_by_admin(user.id):
+    if not is_user_approved_by_admin(user_id):
         return JSONResponse(status_code=409, content={'detail': 'Your role is still not approved.'})
+    #verify if user enrolled in course
+    if not courses_service.is_student_enrolled_in_course(course_id, user_id):
+        return JSONResponse(status_code=404, content={'detail': 'This student is not enrolled in this course.'})
     # verify if course has section
     if not courses_service.has_course_section(course_id, section_id):
         return JSONResponse(status_code=404, content={'detail': 'This course has not this section'})
+    section=courses_service.view_section(course_id, section_id, user_id)
+    if section is None:
+        return JSONResponse(status_code=500, content={'detail': 'Something went wrong. Try again.'})
     
-    return courses_service.view_section(section_id, user_id)
+    return section
     
 
 @course_router.delete('/{course_id}/student_removals/{student_id}', tags=['Courses'])
