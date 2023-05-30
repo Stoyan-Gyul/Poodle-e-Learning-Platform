@@ -1,4 +1,4 @@
-from fastapi import APIRouter, HTTPException, status, Header, Body
+from fastapi import APIRouter, HTTPException, status, Header, Body, UploadFile
 from pydantic import BaseModel
 from fastapi.responses import JSONResponse
 from data.models import  ViewStudentCourse, Course, CourseUpdate, Section
@@ -119,7 +119,7 @@ def get_reports_by_course_id(course_id: int, authorization: str = Header()):
 
 
 @course_router.post('/', status_code=status.HTTP_201_CREATED, tags=['Courses'])
-def create_course(course: Course, authorization: str = Header()):
+def create_course(course: Course, authorization: str = Header(None)):
     user = get_user_or_raise_401(authorization)
     # Verify if role is approved
     if not is_user_approved_by_admin(user.id):
@@ -152,6 +152,15 @@ def update_course(course_id: int, data: CourseUpdate, authorization: str = Heade
         return InternalServerError('Failed to update the course.')
 
     return updated_course
+
+@course_router.put('/pic/{course_id}', tags=['Courses'])
+def upload_pic_to_course(course_id: int, pic: UploadFile):
+    
+    
+    picture_data = pic.file.read()
+    courses_service.upload_pic(course_id, picture_data)
+    return JSONResponse(status_code=200, content={"detail": "Picture uploaded successfully"}) 
+
 
 
 @course_router.post('/{course_id}', status_code=status.HTTP_201_CREATED, tags=['Courses'])
