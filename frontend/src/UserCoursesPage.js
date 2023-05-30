@@ -86,20 +86,24 @@ const UserCoursesPage = () => {
                     </Typography>
                   </div>
                   <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100px' }}>
-                    <div
-                      style={{
-                        width: '100px',
-                        height: '100px',
-                        border: '1px solid black',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                      }}
-                    >
-                      <Typography variant="body2" color="textSecondary">
-                        Course Pic
-                      </Typography>
-                    </div>
+                    {course.home_page_pic ? (
+                      <img src={`data:image/jpeg;base64,${course.home_page_pic}`} alt="Course Pic" style={{ width: '100px', height: '100px' }} />
+                    ) : (
+                      <div
+                        style={{
+                          width: '100px',
+                          height: '100px',
+                          border: '1px solid black',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                        }}
+                      >
+                        <Typography variant="body2" color="textSecondary">
+                          No Image
+                        </Typography>
+                      </div>
+                    )}
                   </div>
                   <div style={{ marginTop: '1rem', textAlign: 'center' }}>
                     <Button variant="contained" color="secondary" onClick={() => unsubscribeFromCourse(course.id)}>
@@ -117,3 +121,4 @@ const UserCoursesPage = () => {
 };
 
 export default UserCoursesPage;
+
