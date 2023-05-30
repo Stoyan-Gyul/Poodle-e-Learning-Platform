@@ -1,15 +1,16 @@
-import React from 'react';
-import { Grid, Box, Typography, IconButton, InputBase, Avatar, Menu, MenuItem } from '@mui/material';
+import React, { useEffect, useState } from 'react';
+import { Grid, Box, Typography, Paper, IconButton, InputBase, Avatar, Menu, MenuItem } from '@mui/material';
 import { styled } from '@mui/system';
-import { HomeOutlined, PersonOutlined, BookOutlined, SearchOutlined } from '@mui/icons-material';
+import { HomeOutlined, PersonOutlined, BookOutlined, SearchOutlined, AddCircleOutline } from '@mui/icons-material';
 import { Link, useNavigate } from 'react-router-dom';
 
-import logoImage from './images/logo.png'; // Assuming your logo image file is named 'logo.png' and located in the 'images' folder within your 'src' folder
+import logoImage from './images/logo.png';
+import { fetchAllCourses } from './API_requests'; // Import the fetchAllCourses function
 
 const LogoIcon = styled(Avatar)(({ theme }) => ({
   width: theme.spacing(8),
   height: theme.spacing(8),
-  marginBottom: theme.spacing(2), // Add margin bottom to create space between the logo icon and the menu items
+  marginBottom: theme.spacing(2),
 }));
 
 const SearchContainer = styled('div')(({ theme }) => ({
@@ -51,9 +52,45 @@ const VerticalLine = styled('div')(({ theme }) => ({
   transform: 'translateX(-50%)',
 }));
 
+const CourseList = ({ courses }) => {
+  return (
+    <Box mt={4} px={4}>
+      <Grid container spacing={2}>
+        {courses.map((course) => (
+          <Grid item key={course.id} xs={12} sm={6}>
+            <Paper elevation={3} sx={{ p: 2, mb: 2, height: '100%', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
+              <div>
+                <Typography variant="h6" gutterBottom>
+                  {course.title}
+                </Typography>
+                <Typography variant="body2" gutterBottom>
+                  {course.description}
+                </Typography>
+                <Typography variant="body2" gutterBottom>
+                  Rating: {course.course_rating}
+                </Typography>
+                <Typography variant="body2" gutterBottom>
+                  Expertise Area: {course.expertise_area}
+                </Typography>
+                <Typography variant="body2" gutterBottom>
+                  Objective: {course.objective}
+                </Typography>
+                {/* Add the rest of the course data */}
+              </div>
+              <div style={{ flex: 1 }}></div>
+            </Paper>
+          </Grid>
+        ))}
+      </Grid>
+    </Box>
+  );
+};
+
 const Dashboard = () => {
   const navigate = useNavigate();
-  const [anchorEl, setAnchorEl] = React.useState(null);
+  const [anchorEl, setAnchorEl] = useState(null);
+  const [courses, setCourses] = useState([]);
+  const userRole = localStorage.getItem('role');
 
   const handleMenuOpen = (event) => {
     setAnchorEl(event.currentTarget);
@@ -73,19 +110,37 @@ const Dashboard = () => {
     handleMenuClose();
   };
 
+  const handleCreateCourseClick = () => {
+    navigate('/create-course');
+    handleMenuClose();
+  };
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const fetchedCourses = await fetchAllCourses();
+        setCourses(fetchedCourses);
+      } catch (error) {
+        console.error('Error fetching courses:', error);
+      }
+    };
+
+    fetchData();
+  }, []);
+
   return (
     <Box sx={{ flexGrow: 1 }}>
       <Grid container>
         {/* Left Section */}
         <Grid item xs={2.5}>
           <Box textAlign="center" mt={4} ml={13}>
-            <LogoIcon alt="Logo Icon" src={logoImage} /> {/* Use the imported logo image */}
+            <LogoIcon alt="Logo Icon" src={logoImage} />
           </Box>
           <Box mt={4}>
             <Box mb={2}>
-              <MenuItem 
+              <MenuItem
                 onClick={handleMenuClose}
-                component={Link} // Add Link component to enable navigation
+                component={Link}
                 to="/"
                 sx={{
                   display: 'flex',
@@ -103,8 +158,8 @@ const Dashboard = () => {
               </MenuItem>
             </Box>
             <Box mb={2}>
-              <MenuItem 
-                onClick={handleProfileClick} // Call handleProfileClick on click event
+              <MenuItem
+                onClick={handleProfileClick}
                 sx={{
                   display: 'flex',
                   alignItems: 'center',
@@ -120,8 +175,8 @@ const Dashboard = () => {
                 Profile
               </MenuItem>
             </Box>
-            <Box>
-              <MenuItem 
+            <Box mb={2}>
+              <MenuItem
                 onClick={handleCoursesClick}
                 sx={{
                   display: 'flex',
@@ -138,6 +193,27 @@ const Dashboard = () => {
                 My Courses
               </MenuItem>
             </Box>
+            {userRole === 'teacher' && (
+              <Box mb={2}>
+                <MenuItem
+                  component={Link}
+                  to="/create-course"
+                  sx={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    paddingLeft: '20px',
+                    '&:hover': {
+                      backgroundColor: '#1976d2',
+                    },
+                  }}
+                >
+                  <IconButton>
+                    <AddCircleOutline />
+                  </IconButton>
+                  Create New Course
+                </MenuItem>
+              </Box>
+            )}
           </Box>
         </Grid>
 
@@ -155,10 +231,15 @@ const Dashboard = () => {
               </SearchIconContainer>
               <SearchInput placeholder="Search..." />
             </SearchContainer>
+            {/* temporary added for visivility */}
+            <Typography variant="body1" component="p">
+                User ID: {localStorage.getItem('user_id')}
+            </Typography>
+            <Typography variant="body1" component="p">
+                Role: {localStorage.getItem('role')}
+            </Typography>
           </Box>
-          <Box mt={4} px={4}>
-            {/* Rest of the content in the right section */}
-          </Box>
+          <CourseList courses={courses} />
         </Grid>
       </Grid>
     </Box>

@@ -208,7 +208,7 @@ class ViewStudentCourse(BaseModel):
     title: str
     description: str
     course_rating: float | None
-    home_page_pic: None
+    home_page_pic: bytes | None
     expertise_area: str
     objective: str
     
@@ -247,14 +247,6 @@ class ViewTeacherCourse(BaseModel):
             expertise_area=expertise_area,
             objective=objective
             )
-    
-class ViewUser(BaseModel):
-    password: str | None
-    first_name: str | None
-    last_name: str | None
-    role: str | None
-    phone: int | None
-    linked_in_account: str | None
 
 
 class ViewAdminCourse(BaseModel):

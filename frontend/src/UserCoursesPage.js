@@ -1,116 +1,119 @@
 import React, { useEffect, useState } from 'react';
-import { Typography, Box, CircularProgress, Paper, Grid } from '@mui/material';
-import { styled } from '@mui/system';
+import { Typography, Box, IconButton, CircularProgress, Paper, Grid, Button } from '@mui/material';
+import { Link } from 'react-router-dom';
+import { ArrowBack } from '@mui/icons-material';
 import logoImage from './images/logo.png';
-
-const Header = styled('header')({
-  position: 'absolute',
-  top: '0',
-  left: '0',
-  right: '0',
-  display: 'flex',
-  justifyContent: 'flex-start',
-  alignItems: 'center',
-  width: '100%',
-  backgroundColor: '#e8f0fe', // Replace with your desired background color
-  padding: '0.1rem',
-  borderTop: '1px solid #7d68a1',
-});
-
-const LogoImage = styled('img')({
-  width: '50px',
-  height: '50px',
-  borderRadius: '50%',
-});
+import { fetchEnrolledCourses, handleUnsubscribeFromCourse } from './API_requests.js';
+import { Header, LogoImage } from './common.js';
+import { common } from '@mui/material/colors';
 
 const UserCoursesPage = () => {
   const [courses, setCourses] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
 
-  const fetchEnrolledCourses = async () => {
-    const authToken = localStorage.getItem('authToken');
-
+  const unsubscribeFromCourse = async (courseId) => {
     try {
-      const response = await fetch('http://localhost:8000/courses/enrolled_courses', {
-        headers: {
-          Authorization: `Bearer ${authToken}`,
-        },
-      });
-      const data = await response.json();
+      const response = await handleUnsubscribeFromCourse(courseId);
+      console.log('Unsubscribe response:', response);
 
-      if (Array.isArray(data)) {
-        setCourses(data);
-      } else {
-        setCourses([]);
+      if (response.status === 200) {
+        setTimeout(() => {
+          window.location.href = '/user-courses';
+        }, 500);
       }
-
-      setIsLoading(false);
     } catch (error) {
-      console.log('Error fetching enrolled courses:', error);
-      setIsLoading(false);
+      console.error('Error unsubscribing from course:', error);
     }
   };
 
   useEffect(() => {
-    fetchEnrolledCourses();
+    const fetchData = async () => {
+      try {
+        const enrolledCourses = await fetchEnrolledCourses();
+
+        setCourses(enrolledCourses);
+        setIsLoading(false);
+      } catch (error) {
+        setIsLoading(false);
+        console.error(error);
+      }
+    };
+
+    fetchData();
   }, []);
 
   return (
-  <>
-    <Header>
+    <>
+      <Header>
         <a href="/">
           <LogoImage src={logoImage} alt="Logo" />
         </a>
-    </Header>
-    <Box sx={{ flexGrow: 1, marginTop: '4rem' }}>
-      <Typography variant="h4" align="center" gutterBottom>
-        My Courses
-      </Typography>
-      {isLoading ? (
-        <Box display="flex" justifyContent="center" alignItems="center" height="200px">
-          <CircularProgress />
+      </Header>
+      <Box sx={{ flexGrow: 1, marginTop: '4rem', textAlign: 'left' }}>
+        <Box display="flex" alignItems="center" justifyContent="center" mb={2}>
+          <IconButton component={Link} to="/dashboard" sx={{ marginRight: 'auto' }}>
+            <ArrowBack />
+          </IconButton>
+          <Typography variant="h4" component="h1" align="center" gutterBottom>
+            My Courses
+          </Typography>
+          <Box sx={{ width: '630px' }} /> {/* Add an empty box for spacing */}
         </Box>
-      ) : (
-        <Grid container spacing={2}>
-          {courses.map((course) => (
-            <Grid item key={course.id} xs={12} sm={6} md={4}>
-              <Paper elevation={3} sx={{ padding: '1rem', display: 'flex' }}>
-                <div style={{ flex: '1' }}>
-                  <Typography variant="h6" gutterBottom>
-                    {course.title}
-                  </Typography>
-                  <Typography variant="body1" gutterBottom>
-                    {course.description}
-                  </Typography>
-                  <Typography variant="body2" gutterBottom>
-                    Rating: {course.course_rating}
-                  </Typography>
-                  <Typography variant="body2" gutterBottom>
-                    Expertise Area: {course.expertise_area}
-                  </Typography>
-                  <Typography variant="body2" gutterBottom>
-                    Objective: {course.objective}
-                  </Typography>
-                </div>
-                <div style={{ flex: '1', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                  <div style={{ width: '100px', height: '100px', border: '1px solid black', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                    <Typography variant="body2" color="textSecondary">
-                      Course Pic
+        {isLoading ? (
+          <Box display="flex" justifyContent="center" alignItems="center" height="200px">
+            <CircularProgress />
+          </Box>
+        ) : (
+          <Grid container spacing={2}>
+            {courses.map((course) => (
+              <Grid item key={course.id} xs={12} sm={6} md={4}>
+                <Paper elevation={3} sx={{ padding: '1rem', display: 'flex', flexDirection: 'column', height: '100%' }}>
+                  <div style={{ flex: '1', display: 'flex', flexDirection: 'column' }}>
+                    <Typography variant="h6" gutterBottom>
+                      {course.title}
+                    </Typography>
+                    <Typography variant="body2" gutterBottom>
+                      {course.description}
+                    </Typography>
+                    <Typography variant="body2" gutterBottom>
+                      Rating: {course.course_rating}
+                    </Typography>
+                    <Typography variant="body2" gutterBottom>
+                      Expertise Area: {course.expertise_area}
+                    </Typography>
+                    <Typography variant="body2" gutterBottom>
+                      Objective: {course.objective}
                     </Typography>
                   </div>
-                </div>
-              </Paper>
-            </Grid>
-          ))}
-        </Grid>
-      )}
-    </Box>
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100px' }}>
+                    <div
+                      style={{
+                        width: '100px',
+                        height: '100px',
+                        border: '1px solid black',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                      }}
+                    >
+                      <Typography variant="body2" color="textSecondary">
+                        Course Pic
+                      </Typography>
+                    </div>
+                  </div>
+                  <div style={{ marginTop: '1rem', textAlign: 'center' }}>
+                    <Button variant="contained" color="secondary" onClick={() => unsubscribeFromCourse(course.id)}>
+                      Unsubscribe
+                    </Button>
+                  </div>
+                </Paper>
+              </Grid>
+            ))}
+          </Grid>
+        )}
+      </Box>
     </>
   );
 };
 
 export default UserCoursesPage;
-
-
-
-

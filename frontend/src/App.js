@@ -7,7 +7,9 @@ import SignupPage from './SignupPage';
 import DashboardPage from './DashboardPage';
 import ProfilePage from './ProfilePage';
 import UserCoursesPage from './UserCoursesPage';
+import CreateCoursePage from './CreateNewCourse';
 import { AuthProvider } from './AuthContext';
+import { UserProvider } from './UserContext';
 
 const theme = createTheme();
 
@@ -16,6 +18,7 @@ const App = () => {
     <ThemeProvider theme={theme}>
       <Router>
         <AuthProvider>
+        <UserProvider>
           <Routes>
             <Route path="/" element={<HomePage />} />
             <Route path="/login" element={<LoginPage />} />
@@ -23,7 +26,9 @@ const App = () => {
             <Route path="/dashboard" element={<DashboardPage />} />
             <Route path="/profile" element={<ProfilePage/>} />
             <Route path="/courses" element={<UserCoursesPage/>} />
+            <Route path="/create-course" element={<CreateCoursePage/>} />
           </Routes>
+          </UserProvider>
         </AuthProvider>
       </Router>
     </ThemeProvider>

@@ -2,9 +2,10 @@ import React, { useState, useContext } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Box, Button, Container, IconButton, FormControl, MenuItem, Select, TextField, Typography } from '@mui/material';
 import { ArrowBack } from '@mui/icons-material';
-import { AuthContext } from './AuthContext';
 import logoImage from './images/logo.png';
 import { Header, LogoImage } from './common.js';
+import { signup, apiLogin } from './API_requests';
+import { AuthContext } from './AuthContext';
 
 const SignupPage = () => {
   const [email, setEmail] = useState('');
@@ -19,92 +20,49 @@ const SignupPage = () => {
   const handleRoleChange = (event) => {
     setRole(event.target.value);
   };
-
   const { setAuthToken } = useContext(AuthContext);
   const navigate = useNavigate();
 
   const handleSignup = async () => {
-
     // Check if all fields are filled in
     if (!email || !password || !first_name || !last_name || !role) {
       setError('Please fill in all required fields.');
       return;
     }
-
+  
     // Additional validation based on role
     if (role === 'teacher' && (!phone || !linkedin)) {
       setError('Please fill in all required fields.');
       return;
     }
-
+  
     try {
-      const userData = {
+      await signup({
         email,
         password,
         first_name,
         last_name,
         role,
-      };
-
-      if (role === 'teacher') {
-        userData.phone = phone;
-        userData.linkedin = linkedin;
-      }
-
-      const response = await fetch('http://localhost:8000/users/', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(userData),
+        phone: role === 'teacher' ? phone : undefined,
+        linkedin: role === 'teacher' ? linkedin : undefined,
       });
+  
+      // Signup successful
+      const token = await apiLogin(email, password);
+  
+      // Save the token to local storage
+      localStorage.setItem('authToken', token);
+  
+      // Set the token in the app state
+      setAuthToken(token);
+  
+      // Redirect to Dashboard
+      navigate('/dashboard');
 
-      if (response.ok) {
-        // Signup successful
-        await handleLogin();
-      } else {
-        // Signup failed
-        // Handle the error and display an appropriate message to the user
-        const errorData = await response.json();
-        const errorMessage = errorData.detail || 'Signup failed';
-        setError(errorMessage)
-      }
     } catch (error) {
       // Handle any network or server errors
       console.error('Error occurred while signing up:', error);
-    }
-  };
-
-  const handleLogin = async () => {
-    try {
-      // Make the API request and get the token
-      const loginResponse = await fetch('http://localhost:8000/users/login', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          email,
-          password,
-        }),
-      });
-
-      if (loginResponse.ok) {
-        // Login successful
-        const { token } = await loginResponse.json();
-
-        // Set the token in the local storage
-        setAuthToken(token);
-
-        // Redirect to Dashboard
-        navigate('/dashboard');
-      } else {
-        // Login failed
-        console.log('Login failed');
-      }
-    } catch (error) {
-      // Handle any network or server errors
-      console.error('Error occurred while logging in:', error);
+      setError('Signup failed');
     }
   };
 
