@@ -311,7 +311,7 @@ def view_admin_courses( title: str = None,
 
 def is_student_enrolled_in_course(course_id: int, student_id: int)->bool:
     '''Verify if student is enrolled in course'''
-    
+
     return any(
         read_query(
             'SELECT * FROM users_have_courses WHERE courses_id=?  AND users_id=?',
@@ -324,7 +324,22 @@ def admin_removes_student_from_course(course_id: int,student_id: int)-> bool:
     if update_query(sql,(course_id, student_id)):
         return True
     return False
-    
+
+
+def has_course_section(course_id: int, section_id: int)->bool:
+    ''' Verify if course has this section'''
+
+    sql='''SELECT 1 FROM sections WHERE courses_id=? AND id=?'''
+    return any(read_query(sql, (course_id,section_id)))
+
+
+def view_section(section_id: int, user_id: int)->Section:
+    sql='''SELECT * FROM sections'''
+    data=read_query(sql, (section_id,))
+    user_id=user_id
+    return Section.from_query_result(*data[0])
+
+
 def _course_rating_change_transaction(course_id: int)-> bool:
     ''' Calculate and change new course rating'''
     # calculates average course rating

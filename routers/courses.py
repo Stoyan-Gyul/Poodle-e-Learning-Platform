@@ -194,6 +194,24 @@ def update_section(course_id: int, section_id: int, section: Section, authorizat
     else:
         return courses_service.update_section(existing_section, section)
     
+@course_router.get('/{course_id}/sections/{section_id}', tags=['Courses'])
+def view_section(course_id: int,section_id: int, authorization: str = Header()):
+    ''' View section of a course'''
+
+    if authorization is None:
+        raise HTTPException(status_code=403) 
+
+    user = get_user_or_raise_401(authorization)
+    user_id=user.id
+    # Verify if role is approved
+    if not is_user_approved_by_admin(user.id):
+        return JSONResponse(status_code=409, content={'detail': 'Your role is still not approved.'})
+    # verify if course has section
+    if not courses_service.has_course_section(course_id, section_id):
+        return JSONResponse(status_code=404, content={'detail': 'This course has not this section'})
+    
+    return courses_service.view_section(section_id, user_id)
+    
 
 @course_router.delete('/{course_id}/student_removals/{student_id}', tags=['Courses'])
 def admin_removes_student_from_course(course_id: int, student_id: int, authorization: str = Header()):
