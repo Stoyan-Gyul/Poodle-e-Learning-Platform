@@ -2,13 +2,14 @@
 from data.database import read_query, insert_query, update_query
 from data.models import Report, Course, Section, CourseUpdate
 from data.models import ViewPublicCourse, ViewStudentCourse, ViewTeacherCourse, ViewAdminCourse
-
+from fastapi import UploadFile
+import base64
 
 def view_public_courses(rating: float = None,
                         tag: str  = None) -> list[ViewPublicCourse] :
     ''' View only title, description and tag of public course and search them by rating and tag'''
 
-    sql='''SELECT c.title,  c.description, c.course_rating, t.expertise_area 
+    sql='''SELECT c.id, c.title,  c.description, c.course_rating, t.expertise_area 
            FROM courses as c 
            JOIN courses_have_tags as ct 
            ON c.id=ct.courses_id 
@@ -31,14 +32,14 @@ def view_enrolled_courses(id: int,
                           tag: str  = None) -> list[ViewStudentCourse]:
     '''View public and enrolled courses of logged student and search them by title and tag'''
 
-    sql='''SELECT c.id, c.title, c.description, c.course_rating, c.home_page_pic, t.expertise_area, o.description as objectiv 
+    sql='''SELECT c.id, c.title, c.description, c.course_rating, c.home_page_pic, t.expertise_area, o.description 
            FROM courses AS c
            JOIN courses_have_tags AS ct ON c.id = ct.courses_id
            JOIN tags AS t ON t.id = ct.tags_id
 		   JOIN courses_have_objectives as co ON c.id=co.courses_id
 		   JOIN objectives as o ON o.id=co.objectives_id
            JOIN users_have_courses AS uc ON c.id = uc.courses_id
-           WHERE c.is_active = 1 AND uc.users_id = ?'''
+           WHERE c.is_active = 1 AND uc.status != 2 AND uc.users_id = ?'''
     
     where_clauses=[]
     if title:
@@ -50,7 +51,15 @@ def view_enrolled_courses(id: int,
         sql+= ' AND ' + ' AND '.join(where_clauses)
 
     data=read_query(sql, (id,))
-    return (ViewStudentCourse.from_query_result(*obj) for obj in data)
+
+    courses = []
+    for obj in data:
+        course = ViewStudentCourse.from_query_result(*obj)
+        if course.home_page_pic is not None:
+            course.home_page_pic = base64.b64encode(course.home_page_pic).decode('utf-8')
+        courses.append(course)
+
+    return courses
 
 
 def view_students_courses( title: str = None,
@@ -75,7 +84,16 @@ def view_students_courses( title: str = None,
         sql+= ' AND ' + ' AND '.join(where_clauses)
 
     data=read_query(sql)
-    return (ViewStudentCourse.from_query_result(*obj) for obj in data)
+
+    courses = []
+    for obj in data:
+        course = ViewStudentCourse.from_query_result(*obj)
+        if course.home_page_pic is not None:
+            course.home_page_pic = base64.b64encode(course.home_page_pic).decode('utf-8')
+        courses.append(course)
+
+    return courses
+
 
 
 def view_teacher_courses(id: int, 
@@ -101,7 +119,15 @@ def view_teacher_courses(id: int,
         sql+= ' AND ' + ' AND '.join(where_clauses)
 
     data=read_query(sql, (id,))
-    return (ViewTeacherCourse.from_query_result(*obj) for obj in data)
+
+    courses = []
+    for obj in data:
+        course = ViewTeacherCourse.from_query_result(*obj)
+        if course.home_page_pic is not None:
+            course.home_page_pic = base64.b64encode(course.home_page_pic).decode('utf-8')
+        courses.append(course)
+
+    return courses
 
 
 def course_rating(rating: int , course_id: int, student_id: int)-> bool:
@@ -181,7 +207,15 @@ def get_course_by_id(course_id: int):
     sql_params = (course_id,)
     data = read_query(sql, sql_params)
 
-    return next((Course.from_query_result(*row) for row in data), None)
+    if data is None:
+        return None
+    else:
+        course = Course.from_query_result(id=data[0][0], title=data[0][1], description=data[0][2], home_page_pic=data[0][3], owner_id=data[0][4], is_active=data[0][5], is_premium=data[0][6], expertise_area=data[0][7], objective=data[0][8])
+        if course.home_page_pic is not None:
+            course.home_page_pic = base64.b64encode(course.home_page_pic).decode('utf-8')
+
+        return course
+
 
 
 def create_course(course: Course):
@@ -228,6 +262,16 @@ def update_course(course_update: CourseUpdate, course: Course):
         course.is_premium = course_update.is_premium
 
     return course
+
+def upload_pic(course_id: int, pic: UploadFile):
+
+    if pic is None or course_id is None:
+        return None
+
+    sql = "UPDATE courses SET home_page_pic = ? WHERE id = ?"
+    sql_p = (pic, course_id)
+    return update_query(sql, sql_p)
+
 
 
 def course_exists(id: int):
@@ -306,7 +350,15 @@ def view_admin_courses( title: str = None,
         sql+= ' AND ' + ' AND '.join(where_clauses)
 
     data=read_query(sql)
-    return (ViewAdminCourse.from_query_result(*obj) for obj in data)
+    courses = []
+    for obj in data:
+        course = ViewAdminCourse.from_query_result(*obj)
+        if course.home_page_pic is not None:
+            course.home_page_pic = base64.b64encode(course.home_page_pic).decode('utf-8')
+        courses.append(course)
+
+    return courses
+
 
 
 def is_student_enrolled_in_course(course_id: int, student_id: int)->bool:
