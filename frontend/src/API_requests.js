@@ -1,8 +1,8 @@
-
+import axios from 'axios';
 
 const authToken = localStorage.getItem('authToken');
-const user_id = 57
-const role = 'teacher'
+const user_id = localStorage.getItem('user_id')
+const role = localStorage.getItem('role')
 
 export const apiLogin = async (email, password) => {
   // Make the POST request to your backend API
@@ -173,6 +173,36 @@ export const createCourse = async (courseData) => {
     throw error;
   }
 };
+
+
+
+export const uploadPicToCourse = async (courseId, file) => {
+  try {
+    const formData = new FormData();
+    formData.append('pic', file);
+
+    const response = await axios.put(`http://localhost:8000/courses/pic/${courseId}`, formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    });
+
+    if (response.status === 200) {
+      console.log('Picture uploaded successfully:', response.data);
+    } else {
+      throw new Error('Failed to upload picture');
+    }
+  } catch (error) {
+    console.error('Error uploading picture:', error);
+  }
+};
+
+
+
+
+
+
+
 
 
 
