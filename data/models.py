@@ -71,7 +71,7 @@ class Course(BaseModel):
     id: int | None
     title: constr(min_length=1)
     description: constr(min_length=1)
-    home_page_pic: None
+    home_page_pic: bytes | None
     owner_id: int
     is_active: constr(regex=Regex.ACTIVE_HIDDEN)
     is_premium: constr(regex=Regex.PREMIUM_PUBLIC)
@@ -189,14 +189,16 @@ class TeacherAdds(BaseModel):
             )
 
 class ViewPublicCourse(BaseModel):
+    id: int | None
     title: str
     description: str
     course_rating: float | None
     expertise_area: str
 
     @classmethod
-    def from_query_result(cls, title, description, course_rating, expertise_area):
+    def from_query_result(cls, id, title, description, course_rating, expertise_area):
         return cls(
+            id=id,
             title=title,
             description=description,
             course_rating=course_rating,
@@ -211,7 +213,7 @@ class ViewStudentCourse(BaseModel):
     home_page_pic: bytes | None
     expertise_area: str
     objective: str
-    
+
     @classmethod
     def from_query_result(cls, id, title, description, course_rating, home_page_pic, expertise_area, objective):
         return cls(
@@ -223,12 +225,13 @@ class ViewStudentCourse(BaseModel):
             expertise_area=expertise_area,
             objective=objective
             )
+    
 class ViewTeacherCourse(BaseModel):
     id: int
     title: str
     description: str
     course_rating: float | None
-    home_page_pic: None
+    home_page_pic: bytes | None
     is_active: str
     is_premium: str
     expertise_area: str
@@ -254,7 +257,7 @@ class ViewAdminCourse(BaseModel):
     title: str
     description: str
     course_rating: float | None
-    home_page_pic: None
+    home_page_pic: bytes | None
     is_active: str
     is_premium: str
     expertise_area: str
