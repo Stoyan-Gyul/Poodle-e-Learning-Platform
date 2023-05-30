@@ -4,7 +4,7 @@ import { Box, Button, Container, IconButton, TextField, FormControl, InputLabel,
 import { ArrowBack } from '@mui/icons-material';
 import logoImage from './images/logo.png';
 import { Header, LogoImage } from './common.js';
-import { createCourse } from './API_requests';
+import { createCourse, uploadPicToCourse } from './API_requests';
 
 const CreateCoursePage = () => {
   const [title, setTitle] = useState('');
@@ -13,7 +13,9 @@ const CreateCoursePage = () => {
   const [visibility, setVisibility] = useState('public');
   const [expertiseArea, setExpertiseArea] = useState('');
   const [objective, setObjective] = useState('');
+  const [picFile, setPicFile] = useState(null);
   const [error, setError] = useState('');
+  const [successMessage, setSuccessMessage] = useState('');
 
   const handleCreateCourse = async () => {
     // Check if all fields are filled in
@@ -21,7 +23,7 @@ const CreateCoursePage = () => {
       setError('Please fill in all required fields.');
       return;
     }
-
+  
     try {
       const owner_id = 58;
       const courseData = {
@@ -33,16 +35,27 @@ const CreateCoursePage = () => {
         expertise_area: expertiseArea,
         objective,
       };
-
-      await createCourse(courseData);
-
+  
+      const response = await createCourse(courseData);
+    
+      const courseId = response.id;
+      await uploadPicToCourse(courseId, picFile);
+  
       // Course creation successful
       console.log('Course created successfully!');
-      // You can redirect to a success page or perform any other actions here
+
+      setSuccessMessage('Course created successfully!');
+
     } catch (error) {
       // Handle any errors that occurred during course creation
       console.error('Error occurred while creating the course:', error);
     }
+  };
+  
+
+  const handlePicFileChange = (event) => {
+    const file = event.target.files[0];
+    setPicFile(file);
   };
 
   return (
@@ -117,6 +130,7 @@ const CreateCoursePage = () => {
                 shrink: true,
               }}
             />
+            <input type="file" accept="image/*" onChange={handlePicFileChange} />
             <Button variant="contained" color="primary" size="large" fullWidth onClick={handleCreateCourse}>
               Create Course
             </Button>
@@ -125,12 +139,27 @@ const CreateCoursePage = () => {
                 {error}
               </Typography>
             )}
+            {successMessage && (
+              <Box
+                sx={{
+                  backgroundColor: '#e6f7f2',
+                  padding: '8px',
+                  borderRadius: '4px',
+                  display: 'flex',
+                  justifyContent: 'center',
+                }}
+              >
+                <Typography variant="body1" component="p" color="success">
+                  {successMessage}
+                </Typography>
+              </Box>
+            )}
           </Box>
         </Box>
       </Container>
     </>
   );
+
 };
 
-export default CreateCoursePage;
-
+  export default CreateCoursePage; 
