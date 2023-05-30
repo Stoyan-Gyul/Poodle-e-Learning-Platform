@@ -333,14 +333,55 @@ def has_course_section(course_id: int, section_id: int)->bool:
     return any(read_query(sql, (course_id,section_id)))
 
 
-def view_section(section_id: int, user_id: int)->Section:
-    '''View section by user AND increase the progress'''
-    sql='''SELECT * FROM sections'''
+def view_section(course_id: int, section_id: int, user_id: int)->Section | None:
+    '''View section by user AND increase the progress of student if for first time'''
+    sql='''SELECT * FROM sections WHERE id=?'''
     data=read_query(sql, (section_id,))
-    #increase the progess
-    user_id=user_id
-    return Section.from_query_result(*data[0])
+    if is_section_viewed(section_id, user_id):
+        return Section.from_query_result(*data[0])
+    #increase the progess of student
+    if validate_section(course_id, user_id, section_id):
+        return Section.from_query_result(*data[0])
+    
+ 
+def is_section_viewed(section_id: int, user_id: int)-> bool:
+    '''Verify if student viewed the section'''
 
+    sql='''SELECT 1 FROM users_has_sections WHERE sections_id=? AND users_id=?'''
+    return any(read_query(sql, (section_id, user_id)))
+
+def validate_section(course_id: int, user_id:int, section_id: int)-> bool:
+    ''' Increase student progress'''
+
+    total_number_sections=number_sections_per_course(course_id)
+
+    sql='''INSERT INTO users_has_sections (users_id, sections_id) VALUES (?, ?)'''
+    if update_query(sql, (user_id, section_id)):
+        viewed_sections=number_views_per_student(course_id, user_id)
+        progress=round((viewed_sections/total_number_sections)*100, 0)
+        # update course progress
+        if update_query('''UPDATE users_have_courses 
+                           SET progress = ? 
+                           WHERE (`users_id` = ?) and (`courses_id` = ?)''', 
+                        (progress, user_id, course_id)):
+            return True
+    return False
+
+def number_sections_per_course(course_id: int)-> int:
+    ''' Calculates the number of sections in the course'''
+
+    sql='''SELECT count(id) FROM sections WHERE courses_id=?'''
+    data=read_query(sql, (course_id,))
+    return data[0][0]
+
+def number_views_per_student(course_id: int, user_id: int)-> int:
+    ''' Calculates the number sections view per course by student'''
+
+    sql='''SELECT count(users_id) 
+           FROM users_has_sections 
+           WHERE users_id=? AND sections_id in (SELECT id FROM sections WHERE courses_id=?)'''
+    data=read_query(sql, (user_id, course_id))
+    return data[0][0]
 
 def _course_rating_change_transaction(course_id: int)-> bool:
     ''' Calculate and change new course rating'''
