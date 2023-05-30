@@ -334,8 +334,10 @@ def has_course_section(course_id: int, section_id: int)->bool:
 
 
 def view_section(section_id: int, user_id: int)->Section:
+    '''View section by user AND increase the progress'''
     sql='''SELECT * FROM sections'''
     data=read_query(sql, (section_id,))
+    #increase the progess
     user_id=user_id
     return Section.from_query_result(*data[0])
 
