@@ -224,9 +224,9 @@ SET UNIQUE_CHECKS=@OLD_UNIQUE_CHECKS;
 -- Insert data into the courses table
 INSERT INTO courses (id, title, description, home_page_pic, owner_id, is_active, is_premium, course_rating)
 VALUES
-    (1, 'Core Python', 'This is core module', '1', 1, 0, 8.0),
-    (2, 'OOP', 'This is OOP module', '1', 1, 1, 6.5),
-    (4, 'General Python', 'This is general', '1', 1, 0, 7.0);
+    (1, 'Core Python', 'This is core module', NULL, '1', 1, 0, 8.0),
+    (2, 'OOP', 'This is OOP module', NULL, '1', 1, 1, 6.5),
+    (4, 'General Python', 'This is general', NULL, '1', 1, 0, 7.0);
 
 
 -- Insert data into the courses_have_objectives table
