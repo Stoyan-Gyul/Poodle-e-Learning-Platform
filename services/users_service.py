@@ -323,8 +323,9 @@ def approve_enrollment(student_id: int, course_id: int)-> bool:
         return True
     return False
 
-def view_all_pending_approval_students(teacher_id):
-
+def view_all_pending_approval_students(teacher_id: int)-> list[ViewUserCourse]:
+    '''Teacher views all pending course enrollement for his/her course'''
+    
     if teacher_id is None:
         return None
 

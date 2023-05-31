@@ -212,6 +212,7 @@ def admin_approves_users(user_id: int, authorization: str = Header(None)):
     
     return JSONResponse(status_code=409, content={'detail': 'You are not administator.'})
 
+
 @user_router.put('/{student_id}/teacher_approval/{course_id}', tags=['Users'])
 def teacher_approves_enrollment_from_student(student_id: int, course_id:int, authorization: str = Header(None)):
     '''Teacher approves enrollment from a student for their course'''
@@ -228,6 +229,10 @@ def teacher_approves_enrollment_from_student(student_id: int, course_id:int, aut
         return JSONResponse(status_code=409, content={'detail': 'This student is not enrolled in this course.'})
     
     user = get_user_or_raise_401(authorization)
+    # Verify if role is approved
+    if not is_user_approved_by_admin(user.id):
+        return JSONResponse(status_code=409, content={'detail': 'Your role is still not approved.'})
+    
     teacher_email=users_service.get_teacher_info_with_course_id(course_id)[0][0]
     teacher=users_service.find_by_email(teacher_email)
     if teacher:
@@ -236,7 +241,18 @@ def teacher_approves_enrollment_from_student(student_id: int, course_id:int, aut
                 return JSONResponse(status_code=200, content={'message': 'The student enrollement is approved.'})
     return JSONResponse(status_code=409, content={'detail': 'You are not teacher or do not own this course.'})
 
+
 @user_router.get('/pending_approval/students/{teacher_id}', tags=['Users'])
-def view_all_pending_approvall_students(teacher_id:int, autorization: str = Header(None)):
+def view_all_pending_approval_students(teacher_id:int, authorization: str = Header(None)):
+    ''' Teacher views pending approval for his/her course'''
+    if authorization is None:
+        raise HTTPException(status_code=403)
+    user = get_user_or_raise_401(authorization)
+    # Verify if role is approved
+    if not is_user_approved_by_admin(user.id):
+        return JSONResponse(status_code=409, content={'detail': 'Your role is still not approved.'})
+    
+    if user.is_teacher():
     #not all checks completed
-    return users_service.view_all_pending_approval_students(teacher_id)
+        return users_service.view_all_pending_approval_students(teacher_id)
+    return JSONResponse(status_code=409, content={'detail': 'You are not teacher.'})
