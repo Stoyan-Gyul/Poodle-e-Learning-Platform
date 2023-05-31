@@ -95,7 +95,6 @@ def view_students_courses( title: str = None,
     return courses
 
 
-
 def view_teacher_courses(id: int, 
                           title: str = None,
                           tag: str  = None) -> list[ViewTeacherCourse]:
@@ -154,7 +153,6 @@ def course_rating(rating: int , course_id: int, student_id: int)-> bool:
         return None # student is not enrolled in this course
     
 
-
 def get_all_reports(user_id: int):
     sql = '''SELECT u.users_id, u.courses_id, u.status, u.rating, u.progress
             FROM users_have_courses u
@@ -197,7 +195,6 @@ def get_course_by_id(course_id: int):
             course.home_page_pic = base64.b64encode(course.home_page_pic).decode('utf-8')
 
         return course
-
 
 
 def create_course(course: Course):
@@ -253,7 +250,6 @@ def upload_pic(course_id: int, pic: UploadFile):
     sql = "UPDATE courses SET home_page_pic = ? WHERE id = ?"
     sql_p = (pic, course_id)
     return update_query(sql, sql_p)
-
 
 
 def course_exists(id: int):
@@ -342,7 +338,6 @@ def view_admin_courses( title: str = None,
     return courses
 
 
-
 def is_student_enrolled_in_course(course_id: int, student_id: int)->bool:
     '''Verify if student is enrolled in course'''
 
@@ -350,6 +345,7 @@ def is_student_enrolled_in_course(course_id: int, student_id: int)->bool:
         read_query(
             'SELECT * FROM users_have_courses WHERE courses_id=?  AND users_id=?',
             (course_id, student_id)))
+
 
 def admin_removes_student_from_course(course_id: int,student_id: int)-> bool:
     ''' Admin removes student from course'''
@@ -381,12 +377,13 @@ def view_section(course_id: int, section_id: int, user_id: int)->Section | None:
     if validate_section(course_id, user_id, section_id):
         return Section.from_query_result(*data[0])
     
- 
+
 def is_section_viewed(section_id: int, user_id: int)-> bool:
     '''Verify if student viewed the section'''
 
     sql='''SELECT 1 FROM users_has_sections WHERE sections_id=? AND users_id=?'''
     return any(read_query(sql, (section_id, user_id)))
+
 
 def validate_section(course_id: int, user_id:int, section_id: int)-> bool:
     ''' Increase student progress'''
@@ -405,12 +402,14 @@ def validate_section(course_id: int, user_id:int, section_id: int)-> bool:
             return True
     return False
 
+
 def number_sections_per_course(course_id: int)-> int:
     ''' Calculates the number of sections in the course'''
 
     sql='''SELECT count(id) FROM sections WHERE courses_id=?'''
     data=read_query(sql, (course_id,))
     return data[0][0]
+
 
 def number_views_per_student(course_id: int, user_id: int)-> int:
     ''' Calculates the number sections view per course by student'''
@@ -420,6 +419,7 @@ def number_views_per_student(course_id: int, user_id: int)-> int:
            WHERE users_id=? AND sections_id in (SELECT id FROM sections WHERE courses_id=?)'''
     data=read_query(sql, (user_id, course_id))
     return data[0][0]
+
 
 def _course_rating_change_transaction(course_id: int)-> bool:
     ''' Calculate and change new course rating'''
@@ -444,3 +444,18 @@ def _course_rating_change_transaction(course_id: int)-> bool:
             return False # transaction not successful
     return False
 
+
+def number_premium_courses_par_student(user_id: int)-> int:
+    '''Get number of premium courses a student is enrolled in'''
+
+    sql='''SELECT count(courses_id) 
+           FROM users_have_courses 
+           WHERE users_id=? AND courses_id in (SELECT id FROM courses WHERE is_premium=1)'''
+    
+    return read_query(sql, (user_id,))[0][0]
+
+
+def is_course_premium(course_id: int)-> bool:
+    '''Verify if course is premium'''
+    sql='''SELECT 1 FROM courses WHERE is_premium=1 AND id=?'''
+    return any(read_query(sql, (course_id,)))

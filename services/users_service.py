@@ -122,7 +122,7 @@ def validate_token(token):
 def subscribe_to_course(user_id: int, course_id:int):
     if user_id is None or course_id is None:
         return None
-    
+    #status 0 = sub, 1 = enrolled, 2 = unsubscribed
     sql = "INSERT INTO users_have_courses (users_id, courses_id, status) VALUES (?, ?, ?)"
     sql_params = (user_id, course_id, 0)
 
@@ -145,8 +145,6 @@ def view_teacher(user: User)-> User:
     sql_params = (id,)
     data = read_query(sql, sql_params)
     if data:
-        # teacher_adds=TeacherAdds.from_query_result(*data[0])
-        # return Teacher(user=user, teacher_adds=teacher_adds)
         return User(id=user.id,
                     email=user.email,
                     password=user.password,
@@ -196,10 +194,6 @@ def update_user(user: User, update_info: UpdateData) -> bool | None:
                     WHERE id = ?''',
                     (merged.password, merged.first_name, merged.last_name, merged.role, merged.id))
 
-# def is_course_owner(user_id, course_id: int):
-#         owner_id = read_query('''SELECT owner_id FROM courses
-# WHERE id = ?''', (course_id,))
-#         return user_id == owner_id
 
 def send_verification_email(email: str, verification_link: str):
     smtp_host = "smtp.office365.com"
@@ -325,7 +319,7 @@ def approve_enrollment(student_id: int, course_id: int)-> bool:
 
 def view_all_pending_approval_students(teacher_id: int)-> list[ViewUserCourse]:
     '''Teacher views all pending course enrollement for his/her course'''
-    
+
     if teacher_id is None:
         return None
 
@@ -340,3 +334,5 @@ def view_all_pending_approval_students(teacher_id: int)-> list[ViewUserCourse]:
     data = read_query(sql, sql_params)
 
     return [ViewUserCourse.from_query_result(*obj) for obj in data]
+
+

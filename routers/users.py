@@ -63,34 +63,43 @@ def login(data: LoginData):
     else:
         return JSONResponse(status_code=400, content={'message': 'Invalid login data'})
 
+
 @user_router.put('/{user_id}/courses/{course_id}/subscribe', tags=['Users'])
 def subscribe_to_course(user_id: int, course_id: int, authorization: str = Header(None)):
-
+    '''Student subscribes to course'''
     if authorization is None:
         raise HTTPException(status_code=403)
     
-    token = authorization.split(" ")[1] if authorization.startswith("Bearer ") else None
+    if courses_service.is_student_enrolled_in_course(course_id, user_id): #check if student enrolled in course
+        return JSONResponse(status_code=409, content={'detail': 'This student is ALREADY enrolled in this course.'})
 
-    user_info = users_service.validate_token(token)
+    user = get_user_or_raise_401(authorization)
+
+    # token = authorization.split(" ")[1] if authorization.startswith("Bearer ") else None
+    # user_info = users_service.validate_token(token)
 
     # Verify if role is approved
-    if not is_user_approved_by_admin(user_info[0]):
+    if not is_user_approved_by_admin(user.id):
         return JSONResponse(status_code=409, content={'detail': 'Your role is still not approved.'})
 
-    if not user_info:
+    # if not user:
+    #     raise HTTPException(status_code=403)
+    
+    if not courses_service.course_exists(course_id): 
+        return JSONResponse(status_code=404, content={'detail':f'Course {course_id} does not exist'})
+
+    if not user.id == user_id:
         raise HTTPException(status_code=403)
     
-    if not user_info[0] == user_id:
-        raise HTTPException(status_code=403)
-    
-    user = users_service.find_by_id(user_id)
+    # user = users_service.find_by_id(user_id)
     if user is None:
         raise HTTPException(status_code=404, detail=f"User {user_id} does not exist")
-
-    #course = courses_service.find_by_id(course_id)
-    # if course is None:
-    #     raise HTTPException(status_code=404, detail=f"Course {course_id} does not exist")
     
+    # prevent user to subscribe to more than 5 premium courses
+    if courses_service.is_course_premium(course_id): 
+        if courses_service.number_premium_courses_par_student(user_id)==5:
+            return JSONResponse(status_code=409, content={'detail': 'The student can not enrolle in more than 5 premium courses.'})
+
     if users_service.subscribe_to_course(user_id, course_id):
         data = users_service.get_teacher_info_with_course_id(course_id)
 
