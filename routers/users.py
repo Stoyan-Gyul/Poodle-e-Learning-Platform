@@ -105,12 +105,17 @@ def subscribe_to_course(user_id: int, course_id: int, authorization: str = Heade
     
         return Response(content = "You have enrolled in this course. Your enrollment is pending approval by the teacher.", status_code=200)
 
+
 @user_router.put('/{user_id}/courses/{course_id}/unsubscribe', tags=['Users'])
 def unsubscribe_from_course(user_id: int, course_id: int, authorization: str = Header(None)):
-    
+    '''Student unsubscribe from this course'''
     if authorization is None:
         raise HTTPException(status_code=403)
     
+    if not courses_service.is_student_enrolled_in_course(course_id, user_id): #check if student enrolled in course
+        return JSONResponse(status_code=409, content={'detail': 'This student is not enrolled in this course.'})
+    
+
     token = authorization.split(" ")[1] if authorization.startswith("Bearer ") else None
 
     user_info = users_service.validate_token(token)
@@ -129,12 +134,10 @@ def unsubscribe_from_course(user_id: int, course_id: int, authorization: str = H
     if user is None:
         raise HTTPException(status_code=404, detail=f"User {user_id} does not exist")
 
-    #course = courses_service.find_by_id(course_id)
-    # if course is None:
-    #     raise HTTPException(status_code=404, detail=f"Course {course_id} does not exist")
+    if users_service.unsubscribe_from_course(user_id, course_id):
+        return JSONResponse(status_code=200, content={'detail':"You have been unsubscribed from this course."})
+    return JSONResponse(status_code=500, content={'detail': 'Something went wrong.Try again.'})
 
-    users_service.unsubscribe_from_course(user_id, course_id)
-    return Response(content="You have been unsubscribed from this course.", status_code=200)
 
 @user_router.get('/', tags=['Users'], response_model=User)
 def view_user(authorization: str = Header()) -> User:
@@ -208,7 +211,7 @@ def admin_approves_users(user_id: int, authorization: str = Header(None)):
     if user.is_admin():
         if users_service.admin_disapproves_user(user_id):
             return JSONResponse(status_code=200, content={'message': 'The user is disapproved.'})
-        return JSONResponse(status_code=409, content={'detail': 'Something went wrong.Try again.'})
+        return JSONResponse(status_code=500, content={'detail': 'Something went wrong.Try again.'})
     
     return JSONResponse(status_code=409, content={'detail': 'You are not administator.'})
 
