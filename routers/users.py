@@ -1,7 +1,7 @@
 from fastapi import APIRouter, HTTPException, Header, Response, status
 from fastapi.responses import JSONResponse, FileResponse
 from data.models import User, LoginData, UpdateData, TeacherAdds, Course
-from services import users_service, courses_service
+from services import users_service
 from services.users_service import Teacher
 from data.common.auth import get_user_params_or_raise_error, get_user_or_raise_401, is_user_approved_by_admin
 import uuid
@@ -172,7 +172,6 @@ def update_user(update_info: UpdateData, authorization: str = Header(None)):
     else:
         return JSONResponse(content="Failed to update profile", status_code=400)
 
-
 @user_router.get('/all', tags=['Users'])
 def view_all_users_by_admin(email: str = None,
                             last_name: str = None, authorization: str = Header(None)):
@@ -212,3 +211,14 @@ def admin_approves_users(user_id: int, authorization: str = Header(None)):
         return JSONResponse(status_code=409, content={'detail': 'Something went wrong.Try again.'})
     
     return JSONResponse(status_code=409, content={'detail': 'You are not administator.'})
+
+@user_router.put('/{student_id}/teacher_approval/{course_id}', tags=['Users'])
+def teacher_approves_enrollment_from_student(student_id: int, course_id:int, autorization: str = Header(None)):
+    '''Teacher approves enrollment from a student for their course'''
+    #not all checks completed
+    return users_service.approve_enrollment(student_id, course_id)
+
+@user_router.get('/pending_approval/students/{teacher_id}', tags=['Users'])
+def view_all_pending_approvall_students(teacher_id:int, autorization: str = Header(None)):
+    #not all checks completed
+    return users_service.view_all_pending_approval_students(teacher_id)
