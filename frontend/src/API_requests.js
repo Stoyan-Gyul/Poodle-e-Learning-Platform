@@ -174,8 +174,6 @@ export const createCourse = async (courseData) => {
   }
 };
 
-
-
 export const uploadPicToCourse = async (courseId, file) => {
   try {
     const formData = new FormData();
@@ -196,6 +194,41 @@ export const uploadPicToCourse = async (courseId, file) => {
     console.error('Error uploading picture:', error);
   }
 };
+
+export const fetchPendingApprovalsForStudents = async (teacherId) => {
+  try {
+    const response = await fetch(`http://localhost:8000/users/pending_approval/students/${teacherId}`);
+    if (!response.ok) {
+      throw new Error('Failed to fetch data');
+    }
+    const data = await response.json();
+    return data;
+  } catch (error) {
+    throw new Error(error);
+  }
+};
+  
+export const handleApproveEnrollment = async(studentId, courseId) => {
+  const authorization = `Bearer ${authToken}`; 
+
+    try {
+      const response = await fetch(`http://localhost:8000/users/${studentId}/teacher_approval/${courseId}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: authorization
+        },
+      });
+      
+      if (!response.ok) {
+        throw new Error('Failed to approve enrollment');
+      }
+    } catch (error) {
+      throw new Error(error.message);
+    }
+};
+
+
 
 
 
