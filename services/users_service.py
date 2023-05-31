@@ -1,4 +1,4 @@
-from data.models import User, TeacherAdds, UpdateData
+from data.models import User, TeacherAdds, UpdateData, ViewUserCourse
 from pydantic import BaseModel
 from data.database import read_query, insert_query, update_query
 import bcrypt
@@ -239,29 +239,6 @@ def verify_email(email:str, token:str) -> bool:
         return update_query(sql, sql_params)
     else:
         return False
-
-def view_current_user_info(id:int, role: str):
-    if id is None or role is None:
-        return None
-    
-    if role == 'student':
-        sql = "SELECT first_name, last_name, role FROM users WHERE id = ?;"
-        sql_params = (id,)
-        data = read_query(sql, sql_params)
-
-        if data:
-            return ViewUser(first_name=data[0][0], last_name=data[0][1], role=data[0][2])
-        else:
-            return None
-    elif role == 'teacher':
-        sql = "SELECT users.first_name, users.last_name, users.role, teachers.phone_number, teachers.linked_in_account FROM users JOIN teachers ON users.id = teachers.users_id WHERE users.id = ?"
-        sql_params = (id,)
-        data = read_query(sql, sql_params)
-
-        if data:
-            return ViewUser(first_name=data[0][0], last_name=data[0][1], role=data[0][2], phone=data[0][3], linked_in_account=data[0][4])
-        else:
-            return None
         
 def admin_approves_user(user_id: int)->bool:
     '''Admin approves user role'''
@@ -332,3 +309,30 @@ def view_admin(email: str = None, last_name: str = None)->list[User]:
 
     data=read_query(sql, (id,))
     return (User.from_query_result_for_admin(*obj) for obj in data)
+
+def approve_enrollment(student_id, course_id):
+    
+    if student_id is None or course_id is None:
+        return None
+    
+    #status 0 = sub, 1 = enrolled, 2 = unsubscribed
+    sql = "UPDATE users_have_courses SET status = ? WHERE users_id = ? AND courses_id = ?"
+    sql_params = (1, student_id, course_id)
+    return update_query(sql, sql_params)
+
+def view_all_pending_approval_students(teacher_id):
+
+    if teacher_id is None:
+        return None
+
+    sql = '''SELECT u.id, u.first_name, u.last_name, c.id, c.title
+        FROM courses AS c
+        JOIN users_have_courses AS uc ON c.id = uc.courses_id
+        JOIN users AS u ON u.id = uc.users_id
+        WHERE uc.status = 0 AND c.owner_id = ?'''
+
+    sql_params = (teacher_id,)
+
+    data = read_query(sql, sql_params)
+
+    return [ViewUserCourse.from_query_result(*obj) for obj in data]
