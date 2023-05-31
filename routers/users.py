@@ -88,12 +88,13 @@ def subscribe_to_course(user_id: int, course_id: int, authorization: str = Heade
     if not courses_service.course_exists(course_id): 
         return JSONResponse(status_code=404, content={'detail':f'Course {course_id} does not exist'})
 
+    if user is None:
+        raise HTTPException(status_code=404, detail=f"User {user_id} does not exist")
+    
     if not user.id == user_id:
         raise HTTPException(status_code=403)
     
     # user = users_service.find_by_id(user_id)
-    if user is None:
-        raise HTTPException(status_code=404, detail=f"User {user_id} does not exist")
     
     # prevent user to subscribe to more than 5 premium courses
     if courses_service.is_course_premium(course_id): 
@@ -124,24 +125,24 @@ def unsubscribe_from_course(user_id: int, course_id: int, authorization: str = H
     if not courses_service.is_student_enrolled_in_course(course_id, user_id): #check if student enrolled in course
         return JSONResponse(status_code=409, content={'detail': 'This student is not enrolled in this course.'})
     
+    user = get_user_or_raise_401(authorization)
 
-    token = authorization.split(" ")[1] if authorization.startswith("Bearer ") else None
-
-    user_info = users_service.validate_token(token)
+    # token = authorization.split(" ")[1] if authorization.startswith("Bearer ") else None
+    # user_info = users_service.validate_token(token)
 
     # Verify if role is approved
-    if not is_user_approved_by_admin(user_info[0]):
+    if not is_user_approved_by_admin(user.id):
         return JSONResponse(status_code=409, content={'detail': 'Your role is still not approved.'})
 
-    if not user_info:
-        raise HTTPException(status_code=403)
-    
-    if not user_info[0] == user_id:
-        raise HTTPException(status_code=403)
-    
-    user = users_service.find_by_id(user_id)
+    # if not user_info:
+    #     raise HTTPException(status_code=403)
     if user is None:
         raise HTTPException(status_code=404, detail=f"User {user_id} does not exist")
+    
+    if not user.id == user_id:
+        raise HTTPException(status_code=403)
+    
+    # user = users_service.find_by_id(user_id)
 
     if users_service.unsubscribe_from_course(user_id, course_id):
         return JSONResponse(status_code=200, content={'detail':"You have been unsubscribed from this course."})
