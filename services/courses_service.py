@@ -354,8 +354,12 @@ def is_student_enrolled_in_course(course_id: int, student_id: int)->bool:
 def admin_removes_student_from_course(course_id: int,student_id: int)-> bool:
     ''' Admin removes student from course'''
 
-    sql='''DELETE FROM users_have_courses WHERE (courses_id = ?) and (users_id = ?)'''
-    if update_query(sql,(course_id, student_id)):
+    # sql='''DELETE FROM users_have_courses WHERE (courses_id = ?) and (users_id = ?)'''
+    # if update_query(sql,(course_id, student_id)):
+        #status 0 = sub, 1 = enrolled, 2 = unsubscribed
+    sql = "UPDATE users_have_courses SET status = ? WHERE users_id = ? AND courses_id = ?"
+    sql_params = (2, student_id, course_id)
+    if update_query(sql, sql_params):
         return True
     return False
 
