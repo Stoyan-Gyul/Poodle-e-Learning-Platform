@@ -3,13 +3,14 @@ import { Typography, Box, IconButton, CircularProgress, Paper, Grid, Button } fr
 import { Link } from 'react-router-dom';
 import { ArrowBack } from '@mui/icons-material';
 import logoImage from './images/logo.png';
-import { fetchEnrolledCourses, handleUnsubscribeFromCourse } from './API_requests.js';
+import { fetchEnrolledCourses, fetchAllCourses, handleUnsubscribeFromCourse } from './API_requests.js';
 import { Header, LogoImage } from './common.js';
 import { common } from '@mui/material/colors';
 
 const UserCoursesPage = () => {
   const [courses, setCourses] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
+  const userRole = localStorage.getItem('role');
 
   const unsubscribeFromCourse = async (courseId) => {
     try {
@@ -29,9 +30,13 @@ const UserCoursesPage = () => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const enrolledCourses = await fetchEnrolledCourses();
-
-        setCourses(enrolledCourses);
+        if (userRole === 'student') {
+          const enrolledCourses = await fetchEnrolledCourses();
+          setCourses(enrolledCourses);
+        } else if (userRole === 'teacher') {
+          const allCourses = await fetchAllCourses();
+          setCourses(allCourses);
+        }
         setIsLoading(false);
       } catch (error) {
         setIsLoading(false);
@@ -40,7 +45,8 @@ const UserCoursesPage = () => {
     };
 
     fetchData();
-  }, []);
+  }, [userRole]);
+
 
   return (
     <>
@@ -106,9 +112,15 @@ const UserCoursesPage = () => {
                     )}
                   </div>
                   <div style={{ marginTop: '1rem', textAlign: 'center' }}>
-                    <Button variant="contained" color="secondary" onClick={() => unsubscribeFromCourse(course.id)}>
-                      Unsubscribe
-                    </Button>
+                    {userRole === 'student' ? (
+                      <Button variant="contained" color="secondary" onClick={() => unsubscribeFromCourse(course.id)}>
+                        Unsubscribe
+                      </Button>
+                    ) : (
+                      <Button variant="contained" color="primary" component={Link} to={`/edit-course/${course.id}`}>
+                        Edit
+                      </Button>
+                    )}
                   </div>
                 </Paper>
               </Grid>
@@ -118,7 +130,7 @@ const UserCoursesPage = () => {
       </Box>
     </>
   );
-};
+};  
 
 export default UserCoursesPage;
 
