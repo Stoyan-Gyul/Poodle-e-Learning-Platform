@@ -2,6 +2,9 @@ import React, { useEffect, useState } from 'react';
 import { Grid, Box, Typography, Paper, IconButton, InputBase, Avatar, Menu, MenuItem } from '@mui/material';
 import { styled } from '@mui/system';
 import { HomeOutlined, PersonOutlined, BookOutlined, SearchOutlined, AddCircleOutline } from '@mui/icons-material';
+import AssignmentTurnedInOutlinedIcon from '@mui/icons-material/AssignmentTurnedInOutlined';
+
+
 import { Link, useNavigate } from 'react-router-dom';
 
 import logoImage from './images/logo.png';
@@ -90,6 +93,8 @@ const Dashboard = () => {
   const navigate = useNavigate();
   const [anchorEl, setAnchorEl] = useState(null);
   const [courses, setCourses] = useState([]);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [filteredCourses, setFilteredCourses] = useState([]);
   const userRole = localStorage.getItem('role');
 
   const handleMenuOpen = (event) => {
@@ -115,6 +120,15 @@ const Dashboard = () => {
     handleMenuClose();
   };
 
+  const handlePendingApprovalsClick = () => {
+    navigate('/pending-approvals');
+    handleMenuClose();
+  };
+
+  const handleSearch = (event) => {
+    setSearchQuery(event.target.value);
+  };
+
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -127,6 +141,19 @@ const Dashboard = () => {
 
     fetchData();
   }, []);
+
+  useEffect(() => {
+    const filterCourses = () => {
+      const filtered = courses.filter((course) => {
+        const { title, expertise_area } = course;
+        const searchTerm = searchQuery.toLowerCase();
+        return title.toLowerCase().includes(searchTerm) || expertise_area.toLowerCase().includes(searchTerm);
+      });
+      setFilteredCourses(filtered);
+    };
+
+    filterCourses();
+  }, [searchQuery, courses]);
 
   return (
     <Box sx={{ flexGrow: 1 }}>
@@ -214,14 +241,34 @@ const Dashboard = () => {
                 </MenuItem>
               </Box>
             )}
+            {userRole === 'teacher' && (
+              <Box mb={2}>
+                <MenuItem
+                  onClick={handlePendingApprovalsClick}
+                  sx={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    paddingLeft: '20px',
+                    '&:hover': {
+                      backgroundColor: '#1976d2',
+                    },
+                  }}
+                >
+                  <IconButton>
+                    <AssignmentTurnedInOutlinedIcon />
+                  </IconButton>
+                  Pending Approvals
+                </MenuItem>
+              </Box>
+            )}
           </Box>
         </Grid>
-
+  
         {/* Vertical Line */}
         <Grid item xs={1}>
           <VerticalLine />
         </Grid>
-
+  
         {/* Right Section */}
         <Grid item xs={8}>
           <Box display="flex" justifyContent="flex-end" mt={4} pr={4}>
@@ -229,21 +276,26 @@ const Dashboard = () => {
               <SearchIconContainer>
                 <SearchOutlined />
               </SearchIconContainer>
-              <SearchInput placeholder="Search..." />
+              <SearchInput
+                placeholder="Search..."
+                value={searchQuery}
+                onChange={handleSearch}
+              />
             </SearchContainer>
-            {/* temporary added for visivility */}
+            {/* temporary added for visibility */}
             <Typography variant="body1" component="p">
-                User ID: {localStorage.getItem('user_id')}
+              User ID: {localStorage.getItem('user_id')}
             </Typography>
             <Typography variant="body1" component="p">
-                Role: {localStorage.getItem('role')}
+              Role: {localStorage.getItem('role')}
             </Typography>
           </Box>
-          <CourseList courses={courses} />
+          <CourseList courses={filteredCourses} />
         </Grid>
       </Grid>
     </Box>
   );
+  
 };
 
 export default Dashboard;
