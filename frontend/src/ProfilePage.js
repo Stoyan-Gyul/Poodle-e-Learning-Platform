@@ -1,6 +1,5 @@
-
 import React, { useState, useEffect } from 'react';
-import {Box, Container, Typography, IconButton, TextField, Button, Grid,} from '@mui/material';
+import { Box, Container, Typography, IconButton, TextField, Button, Grid } from '@mui/material';
 import { ArrowBack } from '@mui/icons-material';
 import { Link } from 'react-router-dom';
 import logoImage from './images/logo.png';
@@ -20,7 +19,7 @@ const ProfilePage = () => {
   useEffect(() => {
     const fetchUserData = async () => {
       try {
-        const response = await fetch('http://localhost:8000/users/current', {
+        const response = await fetch('http://localhost:8000/users/', {
           headers: {
             Authorization: `Bearer ${localStorage.getItem('authToken')}`,
           },
@@ -31,7 +30,6 @@ const ProfilePage = () => {
 
           setFirstName(currentUser.first_name);
           setLastName(currentUser.last_name);
-          setPassword(currentUser.password);
           setPhone(currentUser.phone);
           setlinked_in_account(currentUser.linked_in_account);
           setUserRole(currentUser.role);
@@ -50,6 +48,7 @@ const ProfilePage = () => {
 
   const handleEditMode = () => {
     setIsEditMode(true);
+    setPassword(''); // Clear the password field when entering edit mode
   };
 
   const handleSaveProfile = async (e) => {
@@ -58,9 +57,6 @@ const ProfilePage = () => {
     // Retrieve the authentication token from local storage
     const authToken = localStorage.getItem('authToken');
 
-    // Perform the update profile logic here
-    // You can make an API request to update the user's profile information
-    // You can also handle validation and error handling
 
     try {
       // Make the API request to update the profile
@@ -71,7 +67,7 @@ const ProfilePage = () => {
           Authorization: `Bearer ${authToken}`, // Include the authentication token in the header
         },
         body: JSON.stringify({
-          password,
+          password: password !== '' ? password : undefined, // Only include the password if it's not empty
           first_name,
           last_name,
           phone,
@@ -104,7 +100,7 @@ const ProfilePage = () => {
             type="password"
             fullWidth
             disabled={!isEditMode}
-            value={password || ''}
+            value={password}
             onChange={(e) => setPassword(e.target.value)}
           />
         </Grid>
@@ -127,7 +123,7 @@ const ProfilePage = () => {
 
   return (
     <>
-    <Header>
+      <Header>
         <a href="/">
           <LogoImage src={logoImage} alt="Logo" />
         </a>
@@ -142,92 +138,80 @@ const ProfilePage = () => {
               Profile
             </Typography>
           </div>
-      <form onSubmit={handleSaveProfile}>
-        <Grid container spacing={2}>
-          <Grid item xs={12}>
-            <TextField
-              label="First Name"
-              fullWidth
-              disabled={!isEditMode}
-              value={first_name}
-              onChange={(e) => setFirstName(e.target.value)}
-            />
-          </Grid>
-          <Grid item xs={12}>
-            <TextField
-              label="Last Name"
-              fullWidth
-              disabled={!isEditMode}
-              value={last_name}
-              onChange={(e) => setLastName(e.target.value)}
-            />
-          </Grid>
-          {renderPasswordField()}
-          {userRole === 'teacher' && (
-            <>
+          <form onSubmit={handleSaveProfile}>
+            <Grid container spacing={2}>
               <Grid item xs={12}>
                 <TextField
-                  label="Phone"
+                  label="First Name"
                   fullWidth
                   disabled={!isEditMode}
-                  value={phone}
-                  onChange={(e) => setPhone(e.target.value)}
+                  value={first_name}
+                  onChange={(e) => setFirstName(e.target.value)}
                 />
               </Grid>
               <Grid item xs={12}>
                 <TextField
-                  label="Linked Account"
+                  label="Last Name"
                   fullWidth
                   disabled={!isEditMode}
-                  value={linked_in_account}
-                  onChange={(e) => setlinked_in_account(e.target.value)}
+                  value={last_name}
+                  onChange={(e) => setLastName(e.target.value)}
                 />
               </Grid>
-            </>
-          )}
-          {!isEditMode && (
-            <Grid item xs={12}>
-              <Button
-                variant="contained"
-                color="primary"
-                fullWidth
-                onClick={handleEditMode}
-              >
-                Edit Profile
-              </Button>
+              {renderPasswordField()}
+              {userRole === 'teacher' && (
+                <>
+                  <Grid item xs={12}>
+                    <TextField
+                      label="Phone"
+                      fullWidth
+                      disabled={!isEditMode}
+                      value={phone}
+                      onChange={(e) => setPhone(e.target.value)}
+                    />
+                  </Grid>
+                  <Grid item xs={12}>
+                    <TextField
+                      label="Linked Account"
+                      fullWidth
+                      disabled={!isEditMode}
+                      value={linked_in_account}
+                      onChange={(e) => setlinked_in_account(e.target.value)}
+                    />
+                  </Grid>
+                </>
+              )}
+              {!isEditMode && (
+                <Grid item xs={12}>
+                  <Button variant="contained" color="primary" fullWidth onClick={handleEditMode}>
+                    Edit Profile
+                  </Button>
+                </Grid>
+              )}
+              {isEditMode && (
+                <Grid item xs={12}>
+                  <Button type="submit" variant="contained" color="primary" fullWidth>
+                    Save Profile
+                  </Button>
+                </Grid>
+              )}
             </Grid>
+          </form>
+          {successMessage && (
+            <Typography variant="body1" component="p" color="success" align="center">
+              {successMessage}
+            </Typography>
           )}
-          {isEditMode && (
-            <Grid item xs={12}>
-              <Button
-                type="submit"
-                variant="contained"
-                color="primary"
-                fullWidth
-              >
-                Save Profile
-              </Button>
-            </Grid>
+          {errorMessage && (
+            <Typography variant="body1" component="p" color="error" align="center">
+              {errorMessage}
+            </Typography>
           )}
-        </Grid>
-      </form>
-      {successMessage && (
-        <Typography variant="body1" component="p" color="success" align="center">
-          {successMessage}
-        </Typography>
-      )}
-      {errorMessage && (
-        <Typography variant="body1" component="p" color="error" align="center">
-          {errorMessage}
-        </Typography>
-      )}
-    </Container>
-    </div>
+        </Container>
+      </div>
     </>
   );
 };
 
 export default ProfilePage;
-
-
 
