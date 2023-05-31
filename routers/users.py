@@ -253,6 +253,5 @@ def view_all_pending_approval_students(teacher_id:int, authorization: str = Head
         return JSONResponse(status_code=409, content={'detail': 'Your role is still not approved.'})
     
     if user.is_teacher():
-    #not all checks completed
         return users_service.view_all_pending_approval_students(teacher_id)
     return JSONResponse(status_code=409, content={'detail': 'You are not teacher.'})
