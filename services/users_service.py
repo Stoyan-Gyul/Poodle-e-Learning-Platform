@@ -10,9 +10,9 @@ import smtplib
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 
-class Teacher(BaseModel):
-    user: User
-    teacher_adds: TeacherAdds
+# class Teacher(BaseModel):
+#     user: User
+#     teacher_adds: TeacherAdds
 
 main_salt = bcrypt.gensalt()
 secret_key = secrets.token_hex(32)
@@ -137,7 +137,7 @@ def unsubscribe_from_course(user_id: int, course_id:int):
 
     return update_query(sql, sql_params)
 
-def view_teacher(user: User)-> User | Teacher:
+def view_teacher(user: User)-> User:
     ''' View account information as per the role -  teacher'''
 
     id=user.id
@@ -295,6 +295,7 @@ def admin_disapproves_user(user_id: int)->bool:
     return False
 
 def view_admin(email: str = None, last_name: str = None)->list[User]:
+    ''' Admin view all users'''
     sql='''SELECT id, email, password, first_name, last_name, role, phone_number, linked_in_account, verification_token, is_verified, is_approved 
            FROM users 
            LEFT JOIN teachers as t ON id=t.users_id'''
@@ -310,15 +311,17 @@ def view_admin(email: str = None, last_name: str = None)->list[User]:
     data=read_query(sql, (id,))
     return (User.from_query_result_for_admin(*obj) for obj in data)
 
-def approve_enrollment(student_id, course_id):
-    
+def approve_enrollment(student_id: int, course_id: int)-> bool:
+    ''' Teacher approve student enrollement in his/her course'''
     if student_id is None or course_id is None:
         return None
     
     #status 0 = sub, 1 = enrolled, 2 = unsubscribed
     sql = "UPDATE users_have_courses SET status = ? WHERE users_id = ? AND courses_id = ?"
     sql_params = (1, student_id, course_id)
-    return update_query(sql, sql_params)
+    if update_query(sql, sql_params):
+        return True
+    return False
 
 def view_all_pending_approval_students(teacher_id):
 

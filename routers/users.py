@@ -1,8 +1,8 @@
 from fastapi import APIRouter, HTTPException, Header, Response, status
 from fastapi.responses import JSONResponse, FileResponse
 from data.models import User, LoginData, UpdateData, TeacherAdds, Course
-from services import users_service
-from services.users_service import Teacher
+from services import users_service, courses_service
+# from services.users_service import Teacher
 from data.common.auth import get_user_params_or_raise_error, get_user_or_raise_401, is_user_approved_by_admin
 import uuid
 
@@ -99,7 +99,7 @@ def subscribe_to_course(user_id: int, course_id: int, authorization: str = Heade
         teahcer_last_name = data[0][2]
         class_name = data[0][3]
 
-        verification_link =f"http://localhost:8000/users/{user_id}/approval/{course_id}"
+        verification_link =f"http://localhost:8000/users/{user_id}/teacher_approval/{course_id}"
 
         users_service.send_student_enrolled_in_course_email_to_teacher(teacher_email, verification_link, teacher_first_name, teahcer_last_name, class_name)
     
@@ -137,7 +137,7 @@ def unsubscribe_from_course(user_id: int, course_id: int, authorization: str = H
     return Response(content="You have been unsubscribed from this course.", status_code=200)
 
 @user_router.get('/', tags=['Users'], response_model=User)
-def view_user(authorization: str = Header()) -> User | Teacher:
+def view_user(authorization: str = Header()) -> User:
     ''' View account information depending on role - student or teacher or admin'''
     if authorization is None:
         raise HTTPException(status_code=403)
@@ -213,10 +213,28 @@ def admin_approves_users(user_id: int, authorization: str = Header(None)):
     return JSONResponse(status_code=409, content={'detail': 'You are not administator.'})
 
 @user_router.put('/{student_id}/teacher_approval/{course_id}', tags=['Users'])
-def teacher_approves_enrollment_from_student(student_id: int, course_id:int, autorization: str = Header(None)):
+def teacher_approves_enrollment_from_student(student_id: int, course_id:int, authorization: str = Header(None)):
     '''Teacher approves enrollment from a student for their course'''
-    #not all checks completed
-    return users_service.approve_enrollment(student_id, course_id)
+    if authorization is None:
+        raise HTTPException(status_code=403)
+    
+    if not courses_service.course_exists(course_id): # check if course exists
+        return JSONResponse(status_code=404, content={'detail': 'This course does not exist.'})
+    
+    if not users_service.find_by_id(student_id): #check if user exists
+        return JSONResponse(status_code=404, content={'detail': 'This user does not exist.'})
+    
+    if not courses_service.is_student_enrolled_in_course(course_id, student_id): #check if student enrolled in course
+        return JSONResponse(status_code=409, content={'detail': 'This student is not enrolled in this course.'})
+    
+    user = get_user_or_raise_401(authorization)
+    teacher_email=users_service.get_teacher_info_with_course_id(course_id)[0][0]
+    teacher=users_service.find_by_email(teacher_email)
+    if teacher:
+        if teacher.id == user.id:#check if teacher is course owner
+            if users_service.approve_enrollment(student_id, course_id):
+                return JSONResponse(status_code=200, content={'message': 'The student enrollement is approved.'})
+    return JSONResponse(status_code=409, content={'detail': 'You are not teacher or do not own this course.'})
 
 @user_router.get('/pending_approval/students/{teacher_id}', tags=['Users'])
 def view_all_pending_approvall_students(teacher_id:int, autorization: str = Header(None)):
