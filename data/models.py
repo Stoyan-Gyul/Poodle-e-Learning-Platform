@@ -278,3 +278,14 @@ class ViewAdminCourse(BaseModel):
             objective=objective,
             number_students=number_students
             )
+
+class ViewUserCourse(BaseModel):
+    user_id: int
+    user_first_name: str
+    user_last_name: str
+    course_id: int
+    course_title: str
+
+    @classmethod
+    def from_query_result(cls, user_id, user_first_name, user_last_name, course_id, course_title):
+        return cls(user_id=user_id, user_first_name=user_first_name, user_last_name=user_last_name, course_id=course_id, course_title=course_title)
