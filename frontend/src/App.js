@@ -8,6 +8,7 @@ import DashboardPage from './DashboardPage';
 import ProfilePage from './ProfilePage';
 import UserCoursesPage from './UserCoursesPage';
 import CreateCoursePage from './CreateNewCourse';
+import PendingStudentsPage from './PendingStudentsPage';
 import { AuthProvider } from './AuthContext';
 import { UserProvider } from './UserContext';
 
@@ -27,6 +28,7 @@ const App = () => {
             <Route path="/profile" element={<ProfilePage/>} />
             <Route path="/courses" element={<UserCoursesPage/>} />
             <Route path="/create-course" element={<CreateCoursePage/>} />
+            <Route path="/pending-approvals" element={<PendingStudentsPage/>} />
           </Routes>
           </UserProvider>
         </AuthProvider>
