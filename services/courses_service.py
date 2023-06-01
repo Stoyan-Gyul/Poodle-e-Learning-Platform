@@ -4,6 +4,10 @@ from data.models import Report, Course, Section, CourseUpdate
 from data.models import ViewPublicCourse, ViewStudentCourse, ViewTeacherCourse, ViewAdminCourse, UserRating
 from fastapi import UploadFile
 import base64
+import smtplib
+from email.mime.multipart import MIMEMultipart
+from email.mime.text import MIMEText
+
 
 def view_public_courses(rating: float = None,
                         tag: str  = None) -> list[ViewPublicCourse] :
@@ -493,5 +497,44 @@ def admin_removes_course(course_id: int)-> bool:
     '''Admin hide a course. Return True if status to non active change si non False'''
     # course status: active -1, hidden -0
     sql='''UPDATE courses SET is_active = 0 WHERE (id = ?)'''
-    if update_query(sql, (course_id,)): return True
+    if update_query(sql, (course_id,)):
+        if students_notification_by_email(course_id):
+            return True
     return False
+
+def students_notification_by_email(course_id: int)-> bool:
+    '''Notification of students enrolled in hidden course'''
+    sql='''SELECT u.email, u.first_name, u.last_name, c.title FROM users_have_courses as uc
+           JOIN users as u on uc.users_id=u.id 
+           JOIN courses as c ON uc.courses_id=c.id WHERE uc.courses_id=?'''
+    data=read_query(sql, (course_id,))
+    for obj in data:
+        if send_email_to_student_for_hidden_course(obj[0],obj[1],obj[2],obj[3]):
+            return True
+        return False
+
+def send_email_to_student_for_hidden_course(student_email: int, student_first_name: str, student_last_name: str, course_title: str)-> bool:
+    '''Send email to student that the course is not more available'''
+    smtp_host = "smtp.office365.com"
+    smtp_port = 587
+    smtp_username = "poodle.learning@outlook.com"
+    smtp_password = "1234@alpha"  # Use your Outlook.com account password
+
+    message = MIMEMultipart()
+    message["From"] = "poodle.learning@outlook.com"
+    message["To"] = student_email
+    message["Subject"] = "Hidden course notification"
+
+    body = f"Dear {student_first_name} {student_last_name},\n\n"
+    body += f"We would like to inform you that class: '{course_title}' has been hidden.\n"
+    body += f"You cannot enroll in this course anymore.\n\n"
+    body += "Thank you for your understanding!\n"
+
+    message.attach(MIMEText(body, "plain"))
+
+    with smtplib.SMTP(smtp_host, smtp_port) as server:
+        server.starttls()
+        server.login(smtp_username, smtp_password)
+        server.sendmail(message["From"], message["To"], message.as_string())
+
+        return True
