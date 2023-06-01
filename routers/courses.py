@@ -263,4 +263,4 @@ def admin_views_students_ratings(course_id: int, authorization: str = Header()):
             history=courses_service.rating_history(course_id)
             if history:
                 return history
-            return NotFound(f'There is no rating for course {course_id}')
+            return NotFound(f'There is no students in course {course_id}')

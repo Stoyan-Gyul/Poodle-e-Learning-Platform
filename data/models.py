@@ -294,7 +294,7 @@ class ViewUserCourse(BaseModel):
     
 class UserRating(BaseModel):
     student_email: str
-    rating: int
+    rating: int | None
 
     @classmethod
     def from_query_result(cls, student_email, rating):

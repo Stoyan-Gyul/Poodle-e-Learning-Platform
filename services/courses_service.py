@@ -468,14 +468,16 @@ def number_premium_courses_par_student(user_id: int)-> int:
 
 def is_course_premium(course_id: int)-> bool:
     '''Verify if course is premium'''
-    
+
     sql='''SELECT 1 FROM courses WHERE is_premium=1 AND id=?'''
     return any(read_query(sql, (course_id,)))
 
-def rating_history(course_id: int)-> list[UserRating]:
-    '''Students ratings for a course '''
+def rating_history(course_id: int)-> list[UserRating] | None:
+    '''Students ratings for a course or None if no enrolled'''
 
     sql='''SELECT u.email, uc.rating FROM users_have_courses as uc
            JOIN users as u on uc.users_id=u.id WHERE courses_id=?'''
     data=read_query(sql, (course_id,))
-    return (UserRating.from_query_result(*obj) for obj in data)
+    if data:
+        return (UserRating.from_query_result(*obj) for obj in data)
+    return None
