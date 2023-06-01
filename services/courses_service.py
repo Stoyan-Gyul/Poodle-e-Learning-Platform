@@ -481,3 +481,17 @@ def rating_history(course_id: int)-> list[UserRating] | None:
     if data:
         return (UserRating.from_query_result(*obj) for obj in data)
     return None
+
+def is_course_active(course_id: int)-> bool:
+    '''Verify if the course is active'''
+    sql='''SELECT is_active FROM courses WHERE id=?'''
+    data=read_query(sql, (course_id,))
+    if data[0][0]: return True
+    return False
+
+def admin_removes_course(course_id: int)-> bool:
+    '''Admin hide a course. Return True if status to non active change si non False'''
+    # course status: active -1, hidden -0
+    sql='''UPDATE courses SET is_active = 0 WHERE (id = ?)'''
+    if update_query(sql, (course_id,)): return True
+    return False

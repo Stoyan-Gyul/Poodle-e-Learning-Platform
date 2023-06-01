@@ -3,7 +3,7 @@ from pydantic import BaseModel
 from fastapi.responses import JSONResponse
 from data.models import  ViewStudentCourse, Course, CourseUpdate, Section
 from services import  courses_service
-from data.common.responses import InternalServerError, NotFound, Forbidden
+from data.common.responses import InternalServerError, NotFound, Forbidden, Conflict
 from data.common.auth import get_user_or_raise_401, is_user_approved_by_admin
 
 
@@ -264,3 +264,21 @@ def admin_views_students_ratings(course_id: int, authorization: str = Header()):
             if history:
                 return history
             return NotFound(f'There is no students in course {course_id}')
+        
+@course_router.put('/{course_id}/removals', tags=['Courses'])
+def admin_removes_course(course_id: int, authorization: str = Header()):
+        '''Admin only removes/hide  a course'''
+        if authorization is None:
+            raise HTTPException(status_code=403)
+        
+        course = courses_service.get_course_by_id(course_id)
+        if course is None:
+            return NotFound(f'Course {course_id} does not exist!')
+        
+        if courses_service.is_course_active(course_id):
+            user = get_user_or_raise_401(authorization)
+            if user.is_admin():
+                if courses_service.admin_removes_course(course_id):
+                    return JSONResponse(status_code=200, content={'message':f'Course {course_id} has been hidden.'})
+                return JSONResponse(status_code=500, content={'detail':'Something went wrong. Try again.'})
+        return Conflict(f'Course {course_id} is already hidden!')
