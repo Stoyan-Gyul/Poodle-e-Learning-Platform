@@ -38,6 +38,8 @@ def view_enrolled_courses(title: str | None = None,
 def view_all_courses(title: str | None = None,
                      rating: float = None,
                      tag: str | None = None,
+                     teacher: str = None,
+                     student: str  = None,
                      authorization: str =Header(None)):
     ''' View all courses depending on role - anonymous, student, teacher, admin'''
     if not authorization:
@@ -56,7 +58,7 @@ def view_all_courses(title: str | None = None,
         return courses_service.view_teacher_courses(id, title, tag)
     
     elif user.is_admin():
-        return courses_service.view_admin_courses(title, tag)
+        return courses_service.view_admin_courses(title, tag, teacher, student)
     
 
 @course_router.put('/{course_id}/ratings', tags=['Courses'])

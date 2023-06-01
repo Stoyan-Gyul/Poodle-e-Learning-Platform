@@ -307,8 +307,10 @@ def update_section(old: Section, new: Section):
     return merged
 
 def view_admin_courses( title: str = None,
-                           tag: str  = None)-> list[ViewAdminCourse]:
-    '''View all public and premium courses available for admin and search them by title and tag'''
+                           tag: str  = None,
+                           teacher: str = None,
+                           student: str  = None)-> list[ViewAdminCourse]:
+    '''View all public and premium courses available for admin and search them by title and tag, teacher email and student email'''
     
     sql='''SELECT c.id, c.title, c.description, c.course_rating, c.home_page_pic, c.is_active, c.is_premium, t.expertise_area, o.description as objectiv, uc.number_students
            FROM courses AS c
@@ -323,9 +325,15 @@ def view_admin_courses( title: str = None,
         where_clauses.append(f"c.title like '%{title}%'")
     if tag:
         where_clauses.append(f"t.expertise_area like '%{tag}%'")
-    
+    if teacher:
+        sql+=' JOIN users as u ON c.owner_id=u.id'
+        where_clauses.append(f"u.email like '%{teacher}%'")
+    if student:
+        sql+=''' JOIN users_have_courses as us ON us.courses_id=c.id
+                 JOIN users as u1 ON us.users_id=u1.id'''
+        where_clauses.append(f"u1.email like '%{student}%'")
     if where_clauses:
-        sql+= ' AND ' + ' AND '.join(where_clauses)
+        sql+= ' WHERE ' + ' AND '.join(where_clauses)
 
     data=read_query(sql)
     courses = []
