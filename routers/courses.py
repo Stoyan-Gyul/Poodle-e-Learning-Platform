@@ -280,5 +280,5 @@ def admin_removes_course(course_id: int, authorization: str = Header()):
             if user.is_admin():
                 if courses_service.admin_removes_course(course_id):
                     return JSONResponse(status_code=200, content={'message':f'Course {course_id} has been hidden.'})
-                return JSONResponse(status_code=500, content={'detail':'Something went wrong. Try again.'})
+                return JSONResponse(status_code=500, content={'detail':'Something went wrong. The course has been hiden but notifications were not sent.'})
         return Conflict(f'Course {course_id} is already hidden!')

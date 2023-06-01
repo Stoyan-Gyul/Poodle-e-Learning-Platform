@@ -509,9 +509,11 @@ def students_notification_by_email(course_id: int)-> bool:
            JOIN courses as c ON uc.courses_id=c.id WHERE uc.courses_id=?'''
     data=read_query(sql, (course_id,))
     for obj in data:
-        if send_email_to_student_for_hidden_course(obj[0],obj[1],obj[2],obj[3]):
-            return True
-        return False
+        try:
+            send_email_to_student_for_hidden_course(obj[0],obj[1],obj[2],obj[3])
+        except:
+            return False
+        return True
 
 def send_email_to_student_for_hidden_course(student_email: int, student_first_name: str, student_last_name: str, course_title: str)-> bool:
     '''Send email to student that the course is not more available'''
@@ -526,8 +528,8 @@ def send_email_to_student_for_hidden_course(student_email: int, student_first_na
     message["Subject"] = "Hidden course notification"
 
     body = f"Dear {student_first_name} {student_last_name},\n\n"
-    body += f"We would like to inform you that class: '{course_title}' has been hidden.\n"
-    body += f"You cannot enroll in this course anymore.\n\n"
+    body += f"We would like to inform you that class '{course_title}' has been removed.\n"
+    body += f"You cannot see this course anymore.\n\n"
     body += "Thank you for your understanding!\n"
 
     message.attach(MIMEText(body, "plain"))
