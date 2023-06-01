@@ -248,3 +248,19 @@ def admin_removes_student_from_course(course_id: int, student_id: int, authoriza
     
     return JSONResponse(status_code=409, content={'detail': 'You are not administator.'})
 
+@course_router.get('/{course_id}/rating_histories', tags=['Courses'])
+def admin_views_students_ratings(course_id: int, authorization: str = Header()):
+        '''Admin only view students ratings for a course'''
+        if authorization is None:
+            raise HTTPException(status_code=403)
+        
+        course = courses_service.get_course_by_id(course_id)
+        if course is None:
+            return NotFound(f'Course {course_id} does not exist!')
+        
+        user = get_user_or_raise_401(authorization)
+        if user.is_admin():
+            history=courses_service.rating_history(course_id)
+            if history:
+                return history
+            return NotFound(f'There is no rating for course {course_id}')

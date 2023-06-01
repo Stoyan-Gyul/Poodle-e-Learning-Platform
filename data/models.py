@@ -291,3 +291,12 @@ class ViewUserCourse(BaseModel):
     @classmethod
     def from_query_result(cls, user_id, user_first_name, user_last_name, course_id, course_title):
         return cls(user_id=user_id, user_first_name=user_first_name, user_last_name=user_last_name, course_id=course_id, course_title=course_title)
+    
+class UserRating(BaseModel):
+    student_email: str
+    rating: int
+
+    @classmethod
+    def from_query_result(cls, student_email, rating):
+        return cls(student_email=student_email, 
+                   rating=rating)

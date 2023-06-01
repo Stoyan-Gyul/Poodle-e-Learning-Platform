@@ -1,7 +1,7 @@
 
 from data.database import read_query, insert_query, update_query
 from data.models import Report, Course, Section, CourseUpdate
-from data.models import ViewPublicCourse, ViewStudentCourse, ViewTeacherCourse, ViewAdminCourse
+from data.models import ViewPublicCourse, ViewStudentCourse, ViewTeacherCourse, ViewAdminCourse, UserRating
 from fastapi import UploadFile
 import base64
 
@@ -175,7 +175,9 @@ def get_reports_by_id(course_id: int):
     return (Report.from_query_result(*row) for row in data)
 
 
-def get_course_by_id(course_id: int):
+def get_course_by_id(course_id: int)-> Course | None:
+    ''' Get the course by id or return None if no exist'''
+
     sql = '''
             SELECT c.id, c.title, c.description, c.home_page_pic, c.owner_id, c.is_active, c.is_premium, t.expertise_area, o.description
             FROM courses AS c
@@ -187,7 +189,8 @@ def get_course_by_id(course_id: int):
     sql_params = (course_id,)
     data = read_query(sql, sql_params)
 
-    if data is None:
+    # if data is None:
+    if not data:
         return None
     else:
         course = Course.from_query_result(id=data[0][0], title=data[0][1], description=data[0][2], home_page_pic=data[0][3], owner_id=data[0][4], is_active=data[0][5], is_premium=data[0][6], expertise_area=data[0][7], objective=data[0][8])
@@ -465,5 +468,14 @@ def number_premium_courses_par_student(user_id: int)-> int:
 
 def is_course_premium(course_id: int)-> bool:
     '''Verify if course is premium'''
+    
     sql='''SELECT 1 FROM courses WHERE is_premium=1 AND id=?'''
     return any(read_query(sql, (course_id,)))
+
+def rating_history(course_id: int)-> list[UserRating]:
+    '''Students ratings for a course '''
+
+    sql='''SELECT u.email, uc.rating FROM users_have_courses as uc
+           JOIN users as u on uc.users_id=u.id WHERE courses_id=?'''
+    data=read_query(sql, (course_id,))
+    return (UserRating.from_query_result(*obj) for obj in data)
