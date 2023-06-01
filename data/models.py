@@ -216,7 +216,7 @@ class ViewStudentCourse(BaseModel):
     progress: float | None
 
     @classmethod
-    def from_query_result(cls, id, title, description, course_rating, home_page_pic, expertise_area, objective, progress):
+    def from_query_result(cls, id, title, description, course_rating, home_page_pic, expertise_area, objective, progress=None):
         return cls(
             id=id,
             title=title,
