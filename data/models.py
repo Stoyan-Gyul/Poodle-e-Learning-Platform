@@ -213,9 +213,10 @@ class ViewStudentCourse(BaseModel):
     home_page_pic: bytes | None
     expertise_area: str
     objective: str
+    progress: float | None
 
     @classmethod
-    def from_query_result(cls, id, title, description, course_rating, home_page_pic, expertise_area, objective):
+    def from_query_result(cls, id, title, description, course_rating, home_page_pic, expertise_area, objective, progress):
         return cls(
             id=id,
             title=title,
@@ -223,7 +224,8 @@ class ViewStudentCourse(BaseModel):
             course_rating=course_rating,
             home_page_pic=home_page_pic,
             expertise_area=expertise_area,
-            objective=objective
+            objective=objective,
+            progress=progress
             )
     
 class ViewTeacherCourse(BaseModel):

@@ -32,7 +32,7 @@ def view_enrolled_courses(id: int,
                           tag: str  = None) -> list[ViewStudentCourse]:
     '''View public and enrolled courses of logged student and search them by title and tag'''
 
-    sql='''SELECT c.id, c.title, c.description, c.course_rating, c.home_page_pic, t.expertise_area, o.description 
+    sql='''SELECT c.id, c.title, c.description, c.course_rating, c.home_page_pic, t.expertise_area, o.description, uc.progress 
            FROM courses AS c
            JOIN courses_have_tags AS ct ON c.id = ct.courses_id
            JOIN tags AS t ON t.id = ct.tags_id
