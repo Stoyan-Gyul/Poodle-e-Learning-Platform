@@ -176,9 +176,9 @@ class Report(BaseModel):
             progress=progress if progress is not None else 0
             )
 
-class TeacherAdds(BaseModel):
-    phone_number: str | None
-    linked_in_account: str | None
+# class TeacherAdds(BaseModel):
+#     phone_number: str | None
+#     linked_in_account: str | None
     
 
     @classmethod

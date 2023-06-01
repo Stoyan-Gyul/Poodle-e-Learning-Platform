@@ -1,6 +1,6 @@
 from fastapi import APIRouter, HTTPException, Header, Response, status
 from fastapi.responses import JSONResponse, FileResponse
-from data.models import User, LoginData, UpdateData, TeacherAdds, Course
+from data.models import User, LoginData, UpdateData, Course
 from services import users_service, courses_service
 # from services.users_service import Teacher
 from data.common.auth import get_user_params_or_raise_error, get_user_or_raise_401, is_user_approved_by_admin

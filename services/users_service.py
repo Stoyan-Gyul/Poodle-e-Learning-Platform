@@ -1,4 +1,4 @@
-from data.models import User, TeacherAdds, UpdateData, ViewUserCourse
+from data.models import User, UpdateData, ViewUserCourse
 from pydantic import BaseModel
 from data.database import read_query, insert_query, update_query
 import bcrypt
@@ -119,7 +119,8 @@ def validate_token(token):
         return None
     
 
-def subscribe_to_course(user_id: int, course_id:int):
+def subscribe_to_course(user_id: int, course_id:int)-> bool:
+    ''' Student subscribe to course'''
     if user_id is None or course_id is None:
         return None
     #status 0 = sub, 1 = enrolled, 2 = unsubscribed
@@ -128,10 +129,11 @@ def subscribe_to_course(user_id: int, course_id:int):
 
     return update_query(sql, sql_params)
 
-def unsubscribe_from_course(user_id: int, course_id:int):
+def unsubscribe_from_course(user_id: int, course_id:int)-> bool:
+    ''' Student unsubscribe to course'''
     if user_id is None or course_id is None:
         return None
-    
+    #status 0 = sub, 1 = enrolled, 2 = unsubscribed
     sql = "UPDATE users_have_courses SET status = ? WHERE users_id = ? AND courses_id = ?"
     sql_params = (2, user_id, course_id)
 
