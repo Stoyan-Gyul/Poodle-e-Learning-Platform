@@ -1,17 +1,13 @@
 from fastapi import APIRouter, HTTPException, status, Header, Body, UploadFile
 from pydantic import BaseModel
 from fastapi.responses import JSONResponse
-from data.models import  ViewStudentCourse, Course, CourseUpdate, Section
+from data.models import  ViewStudentCourse, Course, CourseResponseModel, CourseUpdate, Section
 from services import  courses_service
-from data.common.responses import InternalServerError, NotFound, Forbidden
+from data.common.responses import InternalServerError, NotFound, Forbidden, BadRequest, Conflict
 from data.common.auth import get_user_or_raise_401, is_user_approved_by_admin
 
 
 course_router = APIRouter(prefix="/courses")
-
-class CourseResponseModel(BaseModel):
-    course: Course
-    sections: list[Section]
 
 @course_router.get('/enrolled_courses', tags=['Courses'], response_model=list[ViewStudentCourse])
 def view_enrolled_courses(title: str | None = None,
@@ -29,10 +25,10 @@ def view_enrolled_courses(title: str | None = None,
 
     if user.is_student():
         return courses_service.view_enrolled_courses(id, title, tag)
-        
+
     else:
         return JSONResponse(status_code=409,content={'detail': 'Only students can view their enrolled courses!'} )
-    
+
 
 @course_router.get('/', tags=['Courses'])
 def view_all_courses(title: str | None = None,
@@ -57,7 +53,7 @@ def view_all_courses(title: str | None = None,
     
     elif user.is_admin():
         return courses_service.view_admin_courses(title, tag)
-    
+
 
 @course_router.put('/{course_id}/ratings', tags=['Courses'])
 def course_rating(course_id: int, rating: int=Body(embed=True, ge=0, le=10), authorization: str =Header(None)):
@@ -88,6 +84,7 @@ def get_reports_for_all_owned_courses(authorization: str = Header()):
 
     return result
 
+
 @course_router.get('/{course_id}', tags=['Courses'])
 def get_course(course_id: int, authorization: str = Header()):
     get_user_or_raise_401(authorization)
@@ -99,13 +96,14 @@ def get_course(course_id: int, authorization: str = Header()):
             course=course, 
             sections=courses_service.get_sections_by_course(course_id))
 
+
 @course_router.get('/{course_id}/reports', tags=['Courses'])
 def get_reports_by_course_id(course_id: int, authorization: str = Header()):
     user = get_user_or_raise_401(authorization)
     # Verify if role is approved
     if not is_user_approved_by_admin(user.id):
         return JSONResponse(status_code=409, content={'detail': 'Your role is still not approved.'})
-    
+
     course = courses_service.get_course_by_id(course_id)
     if course is None:
         return NotFound(f'Course {course_id} does not exist!')
@@ -121,14 +119,24 @@ def get_reports_by_course_id(course_id: int, authorization: str = Header()):
 @course_router.post('/', status_code=status.HTTP_201_CREATED, tags=['Courses'])
 def create_course(course: Course, authorization: str = Header(None)):
     user = get_user_or_raise_401(authorization)
-    # Verify if role is approved
     if not is_user_approved_by_admin(user.id):
-        return JSONResponse(status_code=409, content={'detail': 'Your role is still not approved.'})
-
+        return Conflict('Your role is still not approved.')
     if not user.is_teacher():
         return Forbidden('Only a teacher can create courses.')
 
-    created_course = courses_service.create_course(course)
+    if course.tag_ids == []:
+        return BadRequest('Must contain at least one tag')
+    if course.objective_ids == []:
+        return BadRequest('Must contain at least one objective')
+
+    tags = courses_service.get_tags(course.tag_ids)
+    if len(tags) < len(course.tag_ids):
+        return BadRequest('Must contain existing tags')
+    objectives = courses_service.get_objectives(course.objective_ids)
+    if len(objectives) < len(course.objective_ids):
+        return BadRequest('Must contain existing objectives')
+
+    created_course = courses_service.create_course(course, user)
 
     return CourseResponseModel(course=created_course, sections=[])
 
@@ -136,7 +144,6 @@ def create_course(course: Course, authorization: str = Header(None)):
 @course_router.put('/{course_id}', tags=['Courses'])
 def update_course(course_id: int, data: CourseUpdate, authorization: str = Header()):
     user = get_user_or_raise_401(authorization)
-    # Verify if role is approved
     if not is_user_approved_by_admin(user.id):
         return JSONResponse(status_code=409, content={'detail': 'Your role is still not approved.'})
     
@@ -153,14 +160,12 @@ def update_course(course_id: int, data: CourseUpdate, authorization: str = Heade
 
     return updated_course
 
+
 @course_router.put('/pic/{course_id}', tags=['Courses'])
 def upload_pic_to_course(course_id: int, pic: UploadFile):
-    
-    
     picture_data = pic.file.read()
     courses_service.upload_pic(course_id, picture_data)
     return JSONResponse(status_code=200, content={"detail": "Picture uploaded successfully"}) 
-
 
 
 @course_router.post('/{course_id}', status_code=status.HTTP_201_CREATED, tags=['Courses'])
@@ -202,7 +207,8 @@ def update_section(course_id: int, section_id: int, section: Section, authorizat
         return NotFound(f'Section {section_id} does not exist!')
     else:
         return courses_service.update_section(existing_section, section)
-    
+
+
 @course_router.get('/{course_id}/sections/{section_id}', tags=['Courses'])
 def view_section(course_id: int,section_id: int, authorization: str = Header()):
     ''' View section of a course'''
@@ -226,7 +232,7 @@ def view_section(course_id: int,section_id: int, authorization: str = Header()):
         return JSONResponse(status_code=500, content={'detail': 'Something went wrong. Try again.'})
     
     return section
-    
+
 
 @course_router.delete('/{course_id}/student_removals/{student_id}', tags=['Courses'])
 def admin_removes_student_from_course(course_id: int, student_id: int, authorization: str = Header()):
@@ -243,6 +249,6 @@ def admin_removes_student_from_course(course_id: int, student_id: int, authoriza
         if courses_service.admin_removes_student_from_course(course_id,student_id):
             return JSONResponse(status_code=200, content={'message': f'The student with ID:{student_id} is removed from course with ID:{course_id}.'})
         return JSONResponse(status_code=409, content={'detail': 'Something went wrong.Try again.'})
-    
+
     return JSONResponse(status_code=409, content={'detail': 'You are not administator.'})
 

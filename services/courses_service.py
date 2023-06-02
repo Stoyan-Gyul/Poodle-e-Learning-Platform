@@ -1,6 +1,6 @@
 
 from data.database import read_query, insert_query, update_query
-from data.models import Report, Course, Section, CourseUpdate
+from data.models import Report, Course, Section, CourseUpdate, Objective, Tag, User
 from data.models import ViewPublicCourse, ViewStudentCourse, ViewTeacherCourse, ViewAdminCourse
 from fastapi import UploadFile
 import base64
@@ -195,21 +195,76 @@ def get_course_by_id(course_id: int):
             course.home_page_pic = base64.b64encode(course.home_page_pic).decode('utf-8')
 
         return course
+    
 
 
-def create_course(course: Course):
+# def create_objective(objective: Objective):
+#     generated_id = insert_query('''INSERT INTO objectives(description)
+#                                    VALUES (?)''', (objective, ))
+#     objective.id = generated_id
+
+#     return objective
+
+
+# def insert_existing_objective_in_course(objective: Objective, course: Course):
+#     generated_id = insert_query('''INSERT INTO courses_have_objectives(objectives_id, courses_id)
+#              VALUES(?, ?)''', (objective.id, course.id))
+
+#     return objective, course
+
+
+def get_tags(ids: list[int]):
+    ids_joined = ','.join(str(id) for id in ids)
+    data = read_query(f'''
+            SELECT id, expertise_area
+            FROM tags 
+            WHERE id IN ({ids_joined})''')
+
+    return [Tag.from_query_result(*row) for row in data]
+
+
+def get_objectives(ids: list[int]):
+    ids_joined = ','.join(str(id) for id in ids)
+    data = read_query(f'''
+            SELECT id, description
+            FROM objectives 
+            WHERE id IN ({ids_joined})''')
+
+    return [Objective.from_query_result(*row) for row in data]
+
+
+def insert_tags_in_course(course_id: int, tag_ids: list[int]):
+    relations = ','.join(
+        f'({course_id},{tag_id})' for tag_id in tag_ids)
+    insert_query(
+        f'INSERT INTO courses_have_tags(courses_id, tags_id) VALUES {relations}')
+
+
+def insert_objectives_in_course(course_id: int, objective_ids: list[int]):
+    relations = ','.join(
+        f'({course_id},{objective_id})' for objective_id in objective_ids)
+    insert_query(
+        f'INSERT INTO courses_have_objectives(courses_id, objectives_id) VALUES {relations}')
+
+
+
+def create_course(course: Course, owner: User):
     sql = '''INSERT into courses(title, description, home_page_pic, owner_id, is_active, is_premium)
             VALUES (?, ?, ?, ?, ?, ?)'''
     sql_params = (course.title, 
                   course.description, 
                   course.home_page_pic, 
-                  course.owner_id, 
+                  owner.id, 
                   1 if course.is_active == 'active' else 0, 
                   1 if course.is_premium == 'premium' else 0
                  )
     generated_id = insert_query(sql, sql_params)
 
     course.id = generated_id
+    course.owner_id = owner.id
+
+    insert_tags_in_course(course.id, course.tag_ids)
+    insert_objectives_in_course(course.id, course.objective_ids)
 
     return course
 

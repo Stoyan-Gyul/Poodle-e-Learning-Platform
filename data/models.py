@@ -72,14 +72,14 @@ class Course(BaseModel):
     title: constr(min_length=1)
     description: constr(min_length=1)
     home_page_pic: bytes | None
-    owner_id: int
+    owner_id: int | None
     is_active: constr(regex=Regex.ACTIVE_HIDDEN)
     is_premium: constr(regex=Regex.PREMIUM_PUBLIC)
-    expertise_area: str | None
-    objective: str | None
+    tag_ids: list[int] = []
+    objective_ids: list[int] = []
 
     @classmethod
-    def from_query_result(cls, id, title, description, home_page_pic, owner_id, is_active, is_premium, expertise_area, objective):
+    def from_query_result(cls, id, title, description, home_page_pic, owner_id, is_active, is_premium, tag_ids, objective_ids):
         return cls(
             id=id,
             title=title,
@@ -88,8 +88,8 @@ class Course(BaseModel):
             owner_id=owner_id,
             is_active=CourseStatus.ACTIVE if is_active else CourseStatus.HIDDEN,
             is_premium=CourseType.PREMIUM if is_premium else CourseType.PUBLIC,
-            expertise_area = expertise_area,
-            objective = objective
+            tag_ids = tag_ids,
+            objective_ids = objective_ids
             )
 
 
@@ -131,6 +131,11 @@ class Section(BaseModel):
             )
 
 
+class CourseResponseModel(BaseModel):
+    course: Course
+    sections: list[Section]
+
+
 class Objective(BaseModel):
     id: int | None
     description = constr(min_length=1)
@@ -156,8 +161,8 @@ class Tag(BaseModel):
 
 
 class StatusLevelMaps:
-    INT_TO_STR = {0: StudentStatus.UNSUBSCRIBED, 1: StudentStatus.PENDING, 2: StudentStatus.UNSUBSCRIBED}
-    STR_TO_INT = {StudentStatus.UNSUBSCRIBED: 0, StudentStatus.PENDING: 1, StudentStatus.UNSUBSCRIBED: 2}
+    INT_TO_STR = {0: StudentStatus.UNSUBSCRIBED, 1: StudentStatus.PENDING, 2: StudentStatus.SUBSCRIBED}
+    STR_TO_INT = {StudentStatus.UNSUBSCRIBED: 0, StudentStatus.PENDING: 1, StudentStatus.SUBSCRIBED: 2}
 
 class Report(BaseModel):
     user_id: int
