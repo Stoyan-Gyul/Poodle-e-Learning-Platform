@@ -1,14 +1,12 @@
 import React, { useEffect, useState } from 'react';
-import { Grid, Box, Typography, Paper, IconButton, InputBase, Avatar, Menu, MenuItem } from '@mui/material';
+import { Grid, Box, Button, Typography, Paper, IconButton, InputBase, Avatar, Menu, MenuItem } from '@mui/material';
 import { styled } from '@mui/system';
 import { HomeOutlined, PersonOutlined, BookOutlined, SearchOutlined, AddCircleOutline } from '@mui/icons-material';
-import AssignmentTurnedInOutlinedIcon from '@mui/icons-material/AssignmentTurnedInOutlined';
-
-
+import { SvgIcon } from '@mui/material';
 import { Link, useNavigate } from 'react-router-dom';
-
 import logoImage from './images/logo.png';
-import { fetchAllCourses } from './API_requests'; // Import the fetchAllCourses function
+import { fetchAllCourses, handleSubscribeToCourse } from './API_requests'; // Import the fetchAllCourses 
+import PendingActionsIcon from '@mui/icons-material/PendingActions';
 
 const LogoIcon = styled(Avatar)(({ theme }) => ({
   width: theme.spacing(8),
@@ -55,32 +53,112 @@ const VerticalLine = styled('div')(({ theme }) => ({
   transform: 'translateX(-50%)',
 }));
 
+const subscribeToCourse = async (courseId) => {
+  try {
+    const response = await handleSubscribeToCourse(courseId);
+    console.log('Subscribe response:', response);
+
+    if (response.status === 200) {
+      setTimeout(() => {
+        window.location.href = '/dashboard';
+      }, 500);
+    }
+  } catch (error) {
+    console.error('Error subscribing to course:', error);
+  }
+
+};
+
 const CourseList = ({ courses }) => {
+  const [selectedPaper, setSelectedPaper] = useState(null); 
+  const userRole = localStorage.getItem('role');
+
+  const handlePaperClick = (courseId) => {
+    setSelectedPaper(courseId);
+  };
+
+  const StarIcon = (props) => (
+    <SvgIcon {...props}>
+      <path
+        d="M12 0L15.09 7.14218L22 8.46534L17 14.0779L17.9 21.0578L12 17.8765L6.1 21.0578L7 14.0779L2 8.46534L8.91 7.14218L12 0Z"
+        fill="currentColor"
+        stroke="black"
+        strokeWidth="1"
+      />
+    </SvgIcon>
+  );
+
+
   return (
     <Box mt={4} px={4}>
       <Grid container spacing={2}>
         {courses.map((course) => (
           <Grid item key={course.id} xs={12} sm={6}>
-            <Paper elevation={3} sx={{ p: 2, mb: 2, height: '100%', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
-              <div>
-                <Typography variant="h6" gutterBottom>
-                  {course.title}
-                </Typography>
-                <Typography variant="body2" gutterBottom>
-                  {course.description}
-                </Typography>
+            <Paper 
+            elevation={3}
+            sx={{
+              padding: '1rem',
+              display: 'flex',
+              flexDirection: 'column',
+              height: '100%',
+              transition: 'transform 0.3s ease',
+              transform: selectedPaper === course.id ? 'scale(1.05)' : 'scale(1)',
+              cursor: 'pointer',
+              '&:hover': {
+                transform: 'scale(1.05)',
+              },
+            }}
+            onClick={() => handlePaperClick(course.id)}
+          >
+            <div style={{ height: '50%', position: 'relative' }}>
+              {course.home_page_pic ? (
+                <img
+                  src={`data:image/jpeg;base64,${course.home_page_pic}`}
+                  alt="Course Pic"
+                  style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                />
+              ) : (
+                <div
+                  style={{
+                    width: '100%',
+                    height: '100%',
+                    border: '1px solid black',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                  }}
+                >
+                  <Typography variant="body2" color="textSecondary">
+                    No Image
+                  </Typography>
+                </div>
+              )}
+            </div>
+            <div style={{ flexGrow: 1, display: 'flex', flexDirection: 'column' }}>
+              <Typography variant="h6" gutterBottom>
+                {course.title}
+              </Typography>
+              <Typography variant="body2" gutterBottom>
+                {course.description}
+              </Typography>
+              <div style={{ display: 'flex', alignItems: 'center', marginTop: 'auto' }}>
+              <StarIcon sx={{ color: 'yellow', marginRight: '0.5rem' }} />
                 <Typography variant="body2" gutterBottom>
                   Rating: {course.course_rating}
                 </Typography>
-                <Typography variant="body2" gutterBottom>
-                  Expertise Area: {course.expertise_area}
-                </Typography>
-                <Typography variant="body2" gutterBottom>
-                  Objective: {course.objective}
-                </Typography>
-                {/* Add the rest of the course data */}
               </div>
-              <div style={{ flex: 1 }}></div>
+            </div>
+            <div style={{ marginTop: '1rem', textAlign: 'center' }}>
+                    {userRole === 'student' ? (
+                      <Button variant="contained" color="primary" onClick={() => subscribeToCourse(course.id)}>
+                        Subscribe
+                      </Button>
+                    ) : (
+                      <Button variant="contained" color="primary" component={Link} to={`/edit-course/${course.id}`}>
+                        Edit
+                      </Button>
+                    )}
+                  </div>
             </Paper>
           </Grid>
         ))}
@@ -255,7 +333,7 @@ const Dashboard = () => {
                   }}
                 >
                   <IconButton>
-                    <AssignmentTurnedInOutlinedIcon />
+                    <PendingActionsIcon />
                   </IconButton>
                   Pending Approvals
                 </MenuItem>
