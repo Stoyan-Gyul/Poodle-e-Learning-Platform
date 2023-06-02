@@ -1,9 +1,9 @@
 from fastapi import APIRouter, HTTPException, Header, Response, status
 from fastapi.responses import JSONResponse, FileResponse
-from data.models import User, LoginData, UpdateData, TeacherAdds, Course
+from data.models import User, LoginData, UpdateData, Course
 from services import users_service, courses_service
 # from services.users_service import Teacher
-from data.common.auth import get_user_params_or_raise_error, get_user_or_raise_401, is_user_approved_by_admin
+from data.common.auth import  get_user_or_raise_401, is_user_approved_by_admin
 import uuid
 
 user_router = APIRouter(prefix="/users")
@@ -75,16 +75,10 @@ def subscribe_to_course(user_id: int, course_id: int, authorization: str = Heade
 
     user = get_user_or_raise_401(authorization)
 
-    # token = authorization.split(" ")[1] if authorization.startswith("Bearer ") else None
-    # user_info = users_service.validate_token(token)
-
     # Verify if role is approved
     if not is_user_approved_by_admin(user.id):
         return JSONResponse(status_code=409, content={'detail': 'Your role is still not approved.'})
 
-    # if not user:
-    #     raise HTTPException(status_code=403)
-    
     if not courses_service.course_exists(course_id): 
         return JSONResponse(status_code=404, content={'detail':f'Course {course_id} does not exist'})
 
@@ -93,8 +87,6 @@ def subscribe_to_course(user_id: int, course_id: int, authorization: str = Heade
     
     if not user.id == user_id:
         raise HTTPException(status_code=403)
-    
-    # user = users_service.find_by_id(user_id)
     
     # prevent user to subscribe to more than 5 premium courses
     if courses_service.is_course_premium(course_id): 
@@ -127,22 +119,15 @@ def unsubscribe_from_course(user_id: int, course_id: int, authorization: str = H
     
     user = get_user_or_raise_401(authorization)
 
-    # token = authorization.split(" ")[1] if authorization.startswith("Bearer ") else None
-    # user_info = users_service.validate_token(token)
-
     # Verify if role is approved
     if not is_user_approved_by_admin(user.id):
         return JSONResponse(status_code=409, content={'detail': 'Your role is still not approved.'})
 
-    # if not user_info:
-    #     raise HTTPException(status_code=403)
     if user is None:
         raise HTTPException(status_code=404, detail=f"User {user_id} does not exist")
     
     if not user.id == user_id:
         raise HTTPException(status_code=403)
-    
-    # user = users_service.find_by_id(user_id)
 
     if users_service.unsubscribe_from_course(user_id, course_id):
         return JSONResponse(status_code=200, content={'detail':"You have been unsubscribed from this course."})
@@ -211,7 +196,7 @@ def admin_approves_users(user_id: int, authorization: str = Header(None)):
     return JSONResponse(status_code=409, content={'detail': 'You are not administator.'})
 
 @user_router.put('/{user_id}/admin_disapprovals', tags=['Users'])
-def admin_approves_users(user_id: int, authorization: str = Header(None)):
+def admin_disapproves_users(user_id: int, authorization: str = Header(None)):
     '''Admin disapproves user role'''
     
     if authorization is None:
@@ -224,7 +209,6 @@ def admin_approves_users(user_id: int, authorization: str = Header(None)):
         return JSONResponse(status_code=500, content={'detail': 'Something went wrong.Try again.'})
     
     return JSONResponse(status_code=409, content={'detail': 'You are not administator.'})
-
 
 @user_router.put('/{student_id}/teacher_approval/{course_id}', tags=['Users'])
 def teacher_approves_enrollment_from_student(student_id: int, course_id:int, authorization: str = Header(None)):

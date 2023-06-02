@@ -1,4 +1,4 @@
-from data.models import User, TeacherAdds, UpdateData, ViewUserCourse
+from data.models import User, UpdateData, ViewUserCourse
 from pydantic import BaseModel
 from data.database import read_query, insert_query, update_query
 import bcrypt
@@ -9,10 +9,6 @@ import secrets
 import smtplib
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
-
-# class Teacher(BaseModel):
-#     user: User
-#     teacher_adds: TeacherAdds
 
 main_salt = bcrypt.gensalt()
 secret_key = secrets.token_hex(32)
@@ -118,20 +114,29 @@ def validate_token(token):
         # Handle invalid token error
         return None
     
+def subscribe_to_course(user_id: int, course_id:int)-> bool:
+    ''' Student subscribe to course'''
+    select_sql = "SELECT * FROM users_have_courses WHERE users_id = ? AND courses_id = ?"
+    select_params = (user_id, course_id)
+    existing_record = read_query(select_sql, select_params)
 
-def subscribe_to_course(user_id: int, course_id:int):
+    if existing_record:
+        # If the user was already subscribed but unsubscribed (status = 2), modify the record
+        if existing_record is not None:
+            update_sql = "UPDATE users_have_courses SET status = ? WHERE users_id = ? AND courses_id = ?"
+            update_params = (0, user_id, course_id)
+            return update_query(update_sql, update_params)
+    else:
+        # Insert a new record for subscription
+        insert_sql = "INSERT INTO users_have_courses (users_id, courses_id, status) VALUES (?, ?, ?)"
+        insert_params = (user_id, course_id, 0)
+        return update_query(insert_sql, insert_params)
+
+def unsubscribe_from_course(user_id: int, course_id:int)-> bool:
+    ''' Student unsubscribe to course'''
     if user_id is None or course_id is None:
         return None
     #status 0 = sub, 1 = enrolled, 2 = unsubscribed
-    sql = "INSERT INTO users_have_courses (users_id, courses_id, status) VALUES (?, ?, ?)"
-    sql_params = (user_id, course_id, 0)
-
-    return update_query(sql, sql_params)
-
-def unsubscribe_from_course(user_id: int, course_id:int):
-    if user_id is None or course_id is None:
-        return None
-    
     sql = "UPDATE users_have_courses SET status = ? WHERE users_id = ? AND courses_id = ?"
     sql_params = (2, user_id, course_id)
 
@@ -194,7 +199,6 @@ def update_user(user: User, update_info: UpdateData) -> bool | None:
                     WHERE id = ?''',
                     (merged.password, merged.first_name, merged.last_name, merged.role, merged.id))
 
-
 def send_verification_email(email: str, verification_link: str):
     smtp_host = "smtp.office365.com"
     smtp_port = 587
@@ -242,7 +246,6 @@ def admin_approves_user(user_id: int)->bool:
         return True
     return False
 
-
 def get_teacher_info_with_course_id(course_id:int) -> list: 
         if course_id is None:
             return None
@@ -278,7 +281,6 @@ def send_student_enrolled_in_course_email_to_teacher(teacher_email: str, verific
         server.sendmail(message["From"], message["To"], message.as_string())
 
     return "Verification email sent successfully."
-
 
 def admin_disapproves_user(user_id: int)->bool:
     '''Admin disapproves user role'''

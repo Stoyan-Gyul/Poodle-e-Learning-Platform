@@ -34,6 +34,8 @@ def view_enrolled_courses(title: str | None = None,
 def view_all_courses(title: str | None = None,
                      rating: float = None,
                      tag: str | None = None,
+                     teacher: str = None,
+                     student: str  = None,
                      authorization: str =Header(None)):
     ''' View all courses depending on role - anonymous, student, teacher, admin'''
     if not authorization:
@@ -46,14 +48,14 @@ def view_all_courses(title: str | None = None,
         return JSONResponse(status_code=409, content={'detail': 'Your role is still not approved.'})
     
     if user.is_student():
-        return courses_service.view_students_courses(title, tag)
+        return courses_service.view_students_courses(id, title, tag)
 
     elif user.is_teacher():
         return courses_service.view_teacher_courses(id, title, tag)
     
     elif user.is_admin():
-        return courses_service.view_admin_courses(title, tag)
-
+        return courses_service.view_admin_courses(title, tag, teacher, student)
+    
 
 @course_router.put('/{course_id}/ratings', tags=['Courses'])
 def course_rating(course_id: int, rating: int=Body(embed=True, ge=0, le=10), authorization: str =Header(None)):
@@ -87,7 +89,9 @@ def get_reports_for_all_owned_courses(authorization: str = Header()):
 
 @course_router.get('/{course_id}', tags=['Courses'])
 def get_course(course_id: int, authorization: str = Header()):
+
     get_user_or_raise_401(authorization)
+
     course = courses_service.get_course_by_id(course_id)
     if course is None:
         return NotFound(f'Course {course_id} does not exist!')
@@ -138,7 +142,7 @@ def create_course(course: Course, authorization: str = Header(None)):
 
     created_course = courses_service.create_course(course, user)
 
-    return CourseResponseModel(course=created_course, sections=[])
+    return created_course
 
 
 @course_router.put('/{course_id}', tags=['Courses'])
@@ -162,7 +166,15 @@ def update_course(course_id: int, data: CourseUpdate, authorization: str = Heade
 
 
 @course_router.put('/pic/{course_id}', tags=['Courses'])
-def upload_pic_to_course(course_id: int, pic: UploadFile):
+def upload_pic_to_course(course_id: int, pic: UploadFile, authorization: str = Header(None),):
+    
+    if authorization is None:
+            raise HTTPException(status_code=403)
+        
+    course = courses_service.get_course_by_id(course_id)
+    if course is None:
+            return NotFound(f'Course {course_id} does not exist!')
+    
     picture_data = pic.file.read()
     courses_service.upload_pic(course_id, picture_data)
     return JSONResponse(status_code=200, content={"detail": "Picture uploaded successfully"}) 
@@ -252,3 +264,37 @@ def admin_removes_student_from_course(course_id: int, student_id: int, authoriza
 
     return JSONResponse(status_code=409, content={'detail': 'You are not administator.'})
 
+@course_router.get('/{course_id}/rating_histories', tags=['Courses'])
+def admin_views_students_ratings(course_id: int, authorization: str = Header()):
+        '''Admin only view students ratings for a course'''
+        if authorization is None:
+            raise HTTPException(status_code=403)
+        
+        course = courses_service.get_course_by_id(course_id)
+        if course is None:
+            return NotFound(f'Course {course_id} does not exist!')
+        
+        user = get_user_or_raise_401(authorization)
+        if user.is_admin():
+            history=courses_service.rating_history(course_id)
+            if history:
+                return history
+            return NotFound(f'There is no students in course {course_id}')
+        
+@course_router.put('/{course_id}/removals', tags=['Courses'])
+def admin_removes_course(course_id: int, authorization: str = Header()):
+        '''Admin only removes/hide  a course'''
+        if authorization is None:
+            raise HTTPException(status_code=403)
+        
+        course = courses_service.get_course_by_id(course_id)
+        if course is None:
+            return NotFound(f'Course {course_id} does not exist!')
+        
+        if courses_service.is_course_active(course_id):
+            user = get_user_or_raise_401(authorization)
+            if user.is_admin():
+                if courses_service.admin_removes_course(course_id):
+                    return JSONResponse(status_code=200, content={'message':f'Course {course_id} has been hidden.'})
+                return JSONResponse(status_code=500, content={'detail':'Something went wrong. The course has been hiden but notifications were not sent.'})
+        return Conflict(f'Course {course_id} is already hidden!')

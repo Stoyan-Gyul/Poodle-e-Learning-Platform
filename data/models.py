@@ -181,9 +181,9 @@ class Report(BaseModel):
             progress=progress if progress is not None else 0
             )
 
-class TeacherAdds(BaseModel):
-    phone_number: str | None
-    linked_in_account: str | None
+# class TeacherAdds(BaseModel):
+#     phone_number: str | None
+#     linked_in_account: str | None
     
 
     @classmethod
@@ -218,9 +218,10 @@ class ViewStudentCourse(BaseModel):
     home_page_pic: bytes | None
     expertise_area: str
     objective: str
+    progress: float | None
 
     @classmethod
-    def from_query_result(cls, id, title, description, course_rating, home_page_pic, expertise_area, objective):
+    def from_query_result(cls, id, title, description, course_rating, home_page_pic, expertise_area, objective, progress=None):
         return cls(
             id=id,
             title=title,
@@ -228,7 +229,8 @@ class ViewStudentCourse(BaseModel):
             course_rating=course_rating,
             home_page_pic=home_page_pic,
             expertise_area=expertise_area,
-            objective=objective
+            objective=objective,
+            progress=progress
             )
     
 class ViewTeacherCourse(BaseModel):
@@ -294,3 +296,12 @@ class ViewUserCourse(BaseModel):
     @classmethod
     def from_query_result(cls, user_id, user_first_name, user_last_name, course_id, course_title):
         return cls(user_id=user_id, user_first_name=user_first_name, user_last_name=user_last_name, course_id=course_id, course_title=course_title)
+    
+class UserRating(BaseModel):
+    student_email: str
+    rating: int | None
+
+    @classmethod
+    def from_query_result(cls, student_email, rating):
+        return cls(student_email=student_email, 
+                   rating=rating)

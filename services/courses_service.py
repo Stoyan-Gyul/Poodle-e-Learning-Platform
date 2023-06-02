@@ -1,9 +1,13 @@
 
 from data.database import read_query, insert_query, update_query
 from data.models import Report, Course, Section, CourseUpdate, Objective, Tag, User
-from data.models import ViewPublicCourse, ViewStudentCourse, ViewTeacherCourse, ViewAdminCourse
+from data.models import ViewPublicCourse, ViewStudentCourse, ViewTeacherCourse, ViewAdminCourse, UserRating
 from fastapi import UploadFile
 import base64
+import smtplib
+from email.mime.multipart import MIMEMultipart
+from email.mime.text import MIMEText
+
 
 def view_public_courses(rating: float = None,
                         tag: str  = None) -> list[ViewPublicCourse] :
@@ -32,7 +36,7 @@ def view_enrolled_courses(id: int,
                           tag: str  = None) -> list[ViewStudentCourse]:
     '''View public and enrolled courses of logged student and search them by title and tag'''
 
-    sql='''SELECT c.id, c.title, c.description, c.course_rating, c.home_page_pic, t.expertise_area, o.description 
+    sql='''SELECT c.id, c.title, c.description, c.course_rating, c.home_page_pic, t.expertise_area, o.description, uc.progress 
            FROM courses AS c
            JOIN courses_have_tags AS ct ON c.id = ct.courses_id
            JOIN tags AS t ON t.id = ct.tags_id
@@ -61,8 +65,7 @@ def view_enrolled_courses(id: int,
 
     return courses
 
-
-def view_students_courses( title: str = None,
+def view_students_courses( user_id: int,  title: str = None,
                            tag: str  = None) -> list[ViewStudentCourse]:
     '''View all public and premium courses available for students and search them by title and tag'''
 
@@ -72,8 +75,11 @@ def view_students_courses( title: str = None,
            JOIN tags AS t ON t.id = ct.tags_id
 		   JOIN courses_have_objectives as co ON c.id=co.courses_id
 		   JOIN objectives as o ON o.id=co.objectives_id
-           WHERE c.is_active = 1'''
-    
+           LEFT JOIN `e-learning`.users_have_courses AS uhc ON c.id = uhc.courses_id AND uhc.users_id = ?
+           WHERE c.is_active = 1 AND (uhc.users_id IS NULL OR uhc.status = 2)
+           '''
+    sql_params = (user_id,)
+
     where_clauses=[]
     if title:
         where_clauses.append(f"c.title like '%{title}%'")
@@ -83,7 +89,7 @@ def view_students_courses( title: str = None,
     if where_clauses:
         sql+= ' AND ' + ' AND '.join(where_clauses)
 
-    data=read_query(sql)
+    data=read_query(sql, sql_params)
 
     courses = []
     for obj in data:
@@ -93,7 +99,6 @@ def view_students_courses( title: str = None,
         courses.append(course)
 
     return courses
-
 
 def view_teacher_courses(id: int, 
                           title: str = None,
@@ -128,7 +133,6 @@ def view_teacher_courses(id: int,
 
     return courses
 
-
 def course_rating(rating: int , course_id: int, student_id: int)-> bool:
     ''' Student can rate his enrolled course only one time'''
     try:
@@ -152,7 +156,6 @@ def course_rating(rating: int , course_id: int, student_id: int)-> bool:
     except:
         return None # student is not enrolled in this course
     
-
 def get_all_reports(user_id: int):
     sql = '''SELECT u.users_id, u.courses_id, u.status, u.rating, u.progress
             FROM users_have_courses u
@@ -164,7 +167,6 @@ def get_all_reports(user_id: int):
 
     return (Report.from_query_result(*row) for row in data)
 
-
 def get_reports_by_id(course_id: int):
     sql = '''SELECT users_id, courses_id, status, rating, progress 
             FROM users_have_courses 
@@ -174,8 +176,9 @@ def get_reports_by_id(course_id: int):
 
     return (Report.from_query_result(*row) for row in data)
 
+def get_course_by_id(course_id: int)-> Course | None:
+    ''' Get the course by id or return None if no exist'''
 
-def get_course_by_id(course_id: int):
     sql = '''
             SELECT c.id, c.title, c.description, c.home_page_pic, c.owner_id, c.is_active, c.is_premium, t.expertise_area, o.description
             FROM courses AS c
@@ -187,7 +190,8 @@ def get_course_by_id(course_id: int):
     sql_params = (course_id,)
     data = read_query(sql, sql_params)
 
-    if data is None:
+    # if data is None:
+    if not data:
         return None
     else:
         course = Course.from_query_result(id=data[0][0], title=data[0][1], description=data[0][2], home_page_pic=data[0][3], owner_id=data[0][4], is_active=data[0][5], is_premium=data[0][6], expertise_area=data[0][7], objective=data[0][8])
@@ -195,22 +199,6 @@ def get_course_by_id(course_id: int):
             course.home_page_pic = base64.b64encode(course.home_page_pic).decode('utf-8')
 
         return course
-    
-
-
-# def create_objective(objective: Objective):
-#     generated_id = insert_query('''INSERT INTO objectives(description)
-#                                    VALUES (?)''', (objective, ))
-#     objective.id = generated_id
-
-#     return objective
-
-
-# def insert_existing_objective_in_course(objective: Objective, course: Course):
-#     generated_id = insert_query('''INSERT INTO courses_have_objectives(objectives_id, courses_id)
-#              VALUES(?, ?)''', (objective.id, course.id))
-
-#     return objective, course
 
 
 def get_tags(ids: list[int]):
@@ -268,7 +256,6 @@ def create_course(course: Course, owner: User):
 
     return course
 
-
 def update_course(course_update: CourseUpdate, course: Course):
     sql = ('''
             UPDATE courses
@@ -305,7 +292,6 @@ def upload_pic(course_id: int, pic: UploadFile):
     sql = "UPDATE courses SET home_page_pic = ? WHERE id = ?"
     sql_p = (pic, course_id)
     return update_query(sql, sql_p)
-
 
 def course_exists(id: int):
     return any(
@@ -362,8 +348,10 @@ def update_section(old: Section, new: Section):
     return merged
 
 def view_admin_courses( title: str = None,
-                           tag: str  = None)-> list[ViewAdminCourse]:
-    '''View all public and premium courses available for admin and search them by title and tag'''
+                           tag: str  = None,
+                           teacher: str = None,
+                           student: str  = None)-> list[ViewAdminCourse]:
+    '''View all public and premium courses available for admin and search them by title and tag, teacher email and student email'''
     
     sql='''SELECT c.id, c.title, c.description, c.course_rating, c.home_page_pic, c.is_active, c.is_premium, t.expertise_area, o.description as objectiv, uc.number_students
            FROM courses AS c
@@ -378,9 +366,15 @@ def view_admin_courses( title: str = None,
         where_clauses.append(f"c.title like '%{title}%'")
     if tag:
         where_clauses.append(f"t.expertise_area like '%{tag}%'")
-    
+    if teacher:
+        sql+=' JOIN users as u ON c.owner_id=u.id'
+        where_clauses.append(f"u.email like '%{teacher}%'")
+    if student:
+        sql+=''' JOIN users_have_courses as us ON us.courses_id=c.id
+                 JOIN users as u1 ON us.users_id=u1.id'''
+        where_clauses.append(f"u1.email like '%{student}%'")
     if where_clauses:
-        sql+= ' AND ' + ' AND '.join(where_clauses)
+        sql+= ' WHERE ' + ' AND '.join(where_clauses)
 
     data=read_query(sql)
     courses = []
@@ -512,5 +506,71 @@ def number_premium_courses_par_student(user_id: int)-> int:
 
 def is_course_premium(course_id: int)-> bool:
     '''Verify if course is premium'''
+
     sql='''SELECT 1 FROM courses WHERE is_premium=1 AND id=?'''
     return any(read_query(sql, (course_id,)))
+
+def rating_history(course_id: int)-> list[UserRating] | None:
+    '''Students ratings for a course or None if no enrolled'''
+
+    sql='''SELECT u.email, uc.rating FROM users_have_courses as uc
+           JOIN users as u on uc.users_id=u.id WHERE courses_id=?'''
+    data=read_query(sql, (course_id,))
+    if data:
+        return (UserRating.from_query_result(*obj) for obj in data)
+    return None
+
+def is_course_active(course_id: int)-> bool:
+    '''Verify if the course is active'''
+    sql='''SELECT is_active FROM courses WHERE id=?'''
+    data=read_query(sql, (course_id,))
+    if data[0][0]: return True
+    return False
+
+def admin_removes_course(course_id: int)-> bool:
+    '''Admin hide a course. Return True if status to non active change si non False'''
+    # course status: active -1, hidden -0
+    sql='''UPDATE courses SET is_active = 0 WHERE (id = ?)'''
+    if update_query(sql, (course_id,)):
+        if students_notification_by_email(course_id):
+            return True
+    return False
+
+def students_notification_by_email(course_id: int)-> bool:
+    '''Notification of students enrolled in hidden course'''
+    sql='''SELECT u.email, u.first_name, u.last_name, c.title FROM users_have_courses as uc
+           JOIN users as u on uc.users_id=u.id 
+           JOIN courses as c ON uc.courses_id=c.id WHERE uc.courses_id=?'''
+    data=read_query(sql, (course_id,))
+    for obj in data:
+        try:
+            send_email_to_student_for_hidden_course(obj[0],obj[1],obj[2],obj[3])
+        except:
+            return False
+        return True
+
+def send_email_to_student_for_hidden_course(student_email: int, student_first_name: str, student_last_name: str, course_title: str)-> bool:
+    '''Send email to student that the course is not more available'''
+    smtp_host = "smtp.office365.com"
+    smtp_port = 587
+    smtp_username = "poodle.learning@outlook.com"
+    smtp_password = "1234@alpha"  # Use your Outlook.com account password
+
+    message = MIMEMultipart()
+    message["From"] = "poodle.learning@outlook.com"
+    message["To"] = student_email
+    message["Subject"] = "Hidden course notification"
+
+    body = f"Dear {student_first_name} {student_last_name},\n\n"
+    body += f"We would like to inform you that class '{course_title}' has been removed.\n"
+    body += f"You cannot see this course anymore.\n\n"
+    body += "Thank you for your understanding!\n"
+
+    message.attach(MIMEText(body, "plain"))
+
+    with smtplib.SMTP(smtp_host, smtp_port) as server:
+        server.starttls()
+        server.login(smtp_username, smtp_password)
+        server.sendmail(message["From"], message["To"], message.as_string())
+
+        return True
