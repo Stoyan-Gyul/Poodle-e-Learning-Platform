@@ -4,13 +4,14 @@ import { Link } from 'react-router-dom';
 import { ArrowBack } from '@mui/icons-material';
 import logoImage from './images/logo.png';
 import { fetchEnrolledCourses, fetchAllCourses, handleUnsubscribeFromCourse } from './API_requests.js';
-import { Header, LogoImage } from './common.js';
-import { common } from '@mui/material/colors';
+import { Header, LogoImage, LogoutButton } from './common.js';
+import { SvgIcon } from '@mui/material';
 
 const UserCoursesPage = () => {
   const [courses, setCourses] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const userRole = localStorage.getItem('role');
+  const [selectedPaper, setSelectedPaper] = useState(null); 
 
   const unsubscribeFromCourse = async (courseId) => {
     try {
@@ -19,7 +20,7 @@ const UserCoursesPage = () => {
 
       if (response.status === 200) {
         setTimeout(() => {
-          window.location.href = '/user-courses';
+          window.location.href = '/courses';
         }, 500);
       }
     } catch (error) {
@@ -47,6 +48,20 @@ const UserCoursesPage = () => {
     fetchData();
   }, [userRole]);
 
+  const handlePaperClick = (courseId) => {
+    setSelectedPaper(courseId);
+  };
+
+  const StarIcon = (props) => (
+    <SvgIcon {...props}>
+      <path
+        d="M12 0L15.09 7.14218L22 8.46534L17 14.0779L17.9 21.0578L12 17.8765L6.1 21.0578L7 14.0779L2 8.46534L8.91 7.14218L12 0Z"
+        fill="currentColor"
+        stroke="black"
+        strokeWidth="1"
+      />
+    </SvgIcon>
+  );
 
   return (
     <>
@@ -54,17 +69,17 @@ const UserCoursesPage = () => {
         <a href="/">
           <LogoImage src={logoImage} alt="Logo" />
         </a>
+        <div style={{ marginLeft: 'auto' }}>
+          <LogoutButton>Logout</LogoutButton>
+        </div>
       </Header>
       <Box sx={{ flexGrow: 1, marginTop: '4rem', textAlign: 'left' }}>
-        <Box display="flex" alignItems="center" justifyContent="center" mb={2}>
-          <IconButton component={Link} to="/dashboard" sx={{ marginRight: 'auto' }}>
+        <IconButton component={Link} to="/dashboard" sx={{ marginRight: 'auto' }}>
             <ArrowBack />
-          </IconButton>
-          <Typography variant="h4" component="h1" align="center" gutterBottom>
-            My Courses
-          </Typography>
-          <Box sx={{ width: '630px' }} /> {/* Add an empty box for spacing */}
-        </Box>
+        </IconButton>
+        <Typography variant="h4" component="h1" align="center" gutterBottom>
+          My Courses
+        </Typography>
         {isLoading ? (
           <Box display="flex" justifyContent="center" alignItems="center" height="200px">
             <CircularProgress />
@@ -73,32 +88,34 @@ const UserCoursesPage = () => {
           <Grid container spacing={2}>
             {courses.map((course) => (
               <Grid item key={course.id} xs={12} sm={6} md={4}>
-                <Paper elevation={3} sx={{ padding: '1rem', display: 'flex', flexDirection: 'column', height: '100%' }}>
-                  <div style={{ flex: '1', display: 'flex', flexDirection: 'column' }}>
-                    <Typography variant="h6" gutterBottom>
-                      {course.title}
-                    </Typography>
-                    <Typography variant="body2" gutterBottom>
-                      {course.description}
-                    </Typography>
-                    <Typography variant="body2" gutterBottom>
-                      Rating: {course.course_rating}
-                    </Typography>
-                    <Typography variant="body2" gutterBottom>
-                      Expertise Area: {course.expertise_area}
-                    </Typography>
-                    <Typography variant="body2" gutterBottom>
-                      Objective: {course.objective}
-                    </Typography>
-                  </div>
-                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100px' }}>
+                <Paper
+                  elevation={3}
+                  sx={{
+                    padding: '1rem',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    height: '100%',
+                    transition: 'transform 0.3s ease',
+                    transform: selectedPaper === course.id ? 'scale(1.05)' : 'scale(1)',
+                    cursor: 'pointer',
+                    '&:hover': {
+                      transform: 'scale(1.05)',
+                    },
+                  }}
+                  onClick={() => handlePaperClick(course.id)}
+                >
+                  <div style={{ height: '50%', position: 'relative' }}>
                     {course.home_page_pic ? (
-                      <img src={`data:image/jpeg;base64,${course.home_page_pic}`} alt="Course Pic" style={{ width: '100px', height: '100px' }} />
+                      <img
+                        src={`data:image/jpeg;base64,${course.home_page_pic}`}
+                        alt="Course Pic"
+                        style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                      />
                     ) : (
                       <div
                         style={{
-                          width: '100px',
-                          height: '100px',
+                          width: '100%',
+                          height: '100%',
                           border: '1px solid black',
                           display: 'flex',
                           alignItems: 'center',
@@ -110,6 +127,20 @@ const UserCoursesPage = () => {
                         </Typography>
                       </div>
                     )}
+                  </div>
+                  <div style={{ flexGrow: 1, display: 'flex', flexDirection: 'column' }}>
+                    <Typography variant="h6" gutterBottom>
+                      {course.title}
+                    </Typography>
+                    <Typography variant="body2" gutterBottom>
+                      {course.description}
+                    </Typography>
+                    <div style={{ display: 'flex', alignItems: 'center', marginTop: 'auto' }}>
+                    <StarIcon sx={{ color: 'yellow', marginRight: '0.5rem' }} />
+                      <Typography variant="body2" gutterBottom>
+                        Rating: {course.course_rating}
+                      </Typography>
+                    </div>
                   </div>
                   <div style={{ marginTop: '1rem', textAlign: 'center' }}>
                     {userRole === 'student' ? (
@@ -130,7 +161,8 @@ const UserCoursesPage = () => {
       </Box>
     </>
   );
-};  
+};
 
 export default UserCoursesPage;
+
 

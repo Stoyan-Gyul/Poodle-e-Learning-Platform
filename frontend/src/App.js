@@ -9,8 +9,10 @@ import ProfilePage from './ProfilePage';
 import UserCoursesPage from './UserCoursesPage';
 import CreateCoursePage from './CreateNewCourse';
 import PendingStudentsPage from './PendingStudentsPage';
+import EditCoursePage from './EditCoursePage';
 import { AuthProvider } from './AuthContext';
 import { UserProvider } from './UserContext';
+
 
 const theme = createTheme();
 
@@ -28,6 +30,7 @@ const App = () => {
             <Route path="/profile" element={<ProfilePage/>} />
             <Route path="/courses" element={<UserCoursesPage/>} />
             <Route path="/create-course" element={<CreateCoursePage/>} />
+            <Route path="/edit-course/:courseId" element={<EditCoursePage/>} />
             <Route path="/pending-approvals" element={<PendingStudentsPage/>} />
           </Routes>
           </UserProvider>

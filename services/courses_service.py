@@ -65,8 +65,7 @@ def view_enrolled_courses(id: int,
 
     return courses
 
-
-def view_students_courses( title: str = None,
+def view_students_courses( user_id: int,  title: str = None,
                            tag: str  = None) -> list[ViewStudentCourse]:
     '''View all public and premium courses available for students and search them by title and tag'''
 
@@ -76,8 +75,11 @@ def view_students_courses( title: str = None,
            JOIN tags AS t ON t.id = ct.tags_id
 		   JOIN courses_have_objectives as co ON c.id=co.courses_id
 		   JOIN objectives as o ON o.id=co.objectives_id
-           WHERE c.is_active = 1'''
-    
+           LEFT JOIN `e-learning`.users_have_courses AS uhc ON c.id = uhc.courses_id AND uhc.users_id = ?
+           WHERE c.is_active = 1 AND (uhc.users_id IS NULL OR uhc.status = 2)
+           '''
+    sql_params = (user_id,)
+
     where_clauses=[]
     if title:
         where_clauses.append(f"c.title like '%{title}%'")
@@ -87,7 +89,7 @@ def view_students_courses( title: str = None,
     if where_clauses:
         sql+= ' AND ' + ' AND '.join(where_clauses)
 
-    data=read_query(sql)
+    data=read_query(sql, sql_params)
 
     courses = []
     for obj in data:
@@ -97,7 +99,6 @@ def view_students_courses( title: str = None,
         courses.append(course)
 
     return courses
-
 
 def view_teacher_courses(id: int, 
                           title: str = None,
@@ -132,7 +133,6 @@ def view_teacher_courses(id: int,
 
     return courses
 
-
 def course_rating(rating: int , course_id: int, student_id: int)-> bool:
     ''' Student can rate his enrolled course only one time'''
     try:
@@ -156,7 +156,6 @@ def course_rating(rating: int , course_id: int, student_id: int)-> bool:
     except:
         return None # student is not enrolled in this course
     
-
 def get_all_reports(user_id: int):
     sql = '''SELECT u.users_id, u.courses_id, u.status, u.rating, u.progress
             FROM users_have_courses u
@@ -168,7 +167,6 @@ def get_all_reports(user_id: int):
 
     return (Report.from_query_result(*row) for row in data)
 
-
 def get_reports_by_id(course_id: int):
     sql = '''SELECT users_id, courses_id, status, rating, progress 
             FROM users_have_courses 
@@ -177,7 +175,6 @@ def get_reports_by_id(course_id: int):
     data = read_query(sql, sql_params)
 
     return (Report.from_query_result(*row) for row in data)
-
 
 def get_course_by_id(course_id: int)-> Course | None:
     ''' Get the course by id or return None if no exist'''
@@ -203,7 +200,6 @@ def get_course_by_id(course_id: int)-> Course | None:
 
         return course
 
-
 def create_course(course: Course):
     sql = '''INSERT into courses(title, description, home_page_pic, owner_id, is_active, is_premium)
             VALUES (?, ?, ?, ?, ?, ?)'''
@@ -219,7 +215,6 @@ def create_course(course: Course):
     course.id = generated_id
 
     return course
-
 
 def update_course(course_update: CourseUpdate, course: Course):
     sql = ('''
@@ -257,7 +252,6 @@ def upload_pic(course_id: int, pic: UploadFile):
     sql = "UPDATE courses SET home_page_pic = ? WHERE id = ?"
     sql_p = (pic, course_id)
     return update_query(sql, sql_p)
-
 
 def course_exists(id: int):
     return any(

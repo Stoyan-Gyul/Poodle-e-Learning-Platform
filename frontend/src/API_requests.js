@@ -99,11 +99,52 @@ export const handleUnsubscribeFromCourse = async (courseId) => {
       
       return response.json();
     } catch (error) {
-      console.log('Error unsubscribing from course:', error);
+      console.log('Error unsubscribing from the course:', error);
       throw error;
     }
   };
 
+export const handleSubscribeToCourse = async (courseId) => {
+
+  try {
+    const response = await fetch(`http://localhost:8000/users/${user_id}/courses/${courseId}/subscribe`, {
+      method: 'PUT',
+      headers: {
+        Authorization: `Bearer ${authToken}`,
+      },
+    });
+  
+    if (!response.ok) {
+      throw new Error('Failed to Subscribe to the course');
+    }
+    
+    return response.json();
+  } catch (error) {
+    console.log('Error subscribing to the course:', error);
+    throw error;
+  }
+
+  };
+
+export const fetchCourseData = async (courseId) => {
+  try {
+    const response = await fetch(`http://localhost:8000/courses/${courseId}`, {
+      headers: {
+        Authorization: `Bearer ${authToken}`,
+      },
+    });
+  
+    if (!response.ok) {
+      throw new Error(`Failed to fetch course data for course ${courseId}`);
+    }
+  
+    return response.json();
+  } catch (error) {
+    console.error('Error fetching course data:', error);
+    throw error;
+  }
+};
+  
 export const fetchEnrolledCourses = async () => {
 
   try {
@@ -132,12 +173,17 @@ export const fetchEnrolledCourses = async () => {
 
 export const fetchAllCourses = async () => {
   try {
-    const response = await fetch(`http://localhost:8000/courses/`, {
+    const headers = {
+      'Content-Type': 'application/json',
+    };
+
+    if (authToken) {
+      headers.Authorization = `Bearer ${authToken}`;
+    }
+
+    const response = await fetch('http://localhost:8000/courses/', {
       method: 'GET',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${authToken}`,
-      },
+      headers,
     });
 
     if (!response.ok) {
@@ -150,6 +196,7 @@ export const fetchAllCourses = async () => {
     throw error;
   }
 };
+
 
 export const createCourse = async (courseData) => {
   try {
@@ -180,8 +227,10 @@ export const uploadPicToCourse = async (courseId, file) => {
     formData.append('pic', file);
 
     const response = await axios.put(`http://localhost:8000/courses/pic/${courseId}`, formData, {
+      method: 'PUT',
       headers: {
         'Content-Type': 'multipart/form-data',
+        Authorization: `Bearer ${authToken}`,
       },
     });
 
@@ -197,7 +246,14 @@ export const uploadPicToCourse = async (courseId, file) => {
 
 export const fetchPendingApprovalsForStudents = async (teacherId) => {
   try {
-    const response = await fetch(`http://localhost:8000/users/pending_approval/students/${teacherId}`);
+    const response = await fetch(`http://localhost:8000/users/pending_approval/students/${teacherId}`, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${authToken}`,
+      },
+    });
+    
     if (!response.ok) {
       throw new Error('Failed to fetch data');
     }
