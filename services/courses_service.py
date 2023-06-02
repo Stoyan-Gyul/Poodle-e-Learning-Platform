@@ -235,7 +235,6 @@ def insert_objectives_in_course(course_id: int, objective_ids: list[int]):
         f'INSERT INTO courses_have_objectives(courses_id, objectives_id) VALUES {relations}')
 
 
-
 def create_course(course: Course, owner: User):
     sql = '''INSERT into courses(title, description, home_page_pic, owner_id, is_active, is_premium)
             VALUES (?, ?, ?, ?, ?, ?)'''

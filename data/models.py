@@ -186,12 +186,12 @@ class Report(BaseModel):
 #     linked_in_account: str | None
     
 
-    @classmethod
-    def from_query_result(cls, phone_number, linked_in_account):
-        return cls(
-            phone_number=phone_number,
-            linked_in_account=linked_in_account
-            )
+    # @classmethod
+    # def from_query_result(cls, phone_number, linked_in_account):
+    #     return cls(
+    #         phone_number=phone_number,
+    #         linked_in_account=linked_in_account
+    #         )
 
 class ViewPublicCourse(BaseModel):
     id: int | None
