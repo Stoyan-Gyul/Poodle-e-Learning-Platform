@@ -52,7 +52,7 @@ def view_all_courses(title: str | None = None,
         return JSONResponse(status_code=409, content={'detail': 'Your role is still not approved.'})
     
     if user.is_student():
-        return courses_service.view_students_courses(title, tag)
+        return courses_service.view_students_courses(id, title, tag)
 
     elif user.is_teacher():
         return courses_service.view_teacher_courses(id, title, tag)
@@ -92,7 +92,9 @@ def get_reports_for_all_owned_courses(authorization: str = Header()):
 
 @course_router.get('/{course_id}', tags=['Courses'])
 def get_course(course_id: int, authorization: str = Header()):
+
     get_user_or_raise_401(authorization)
+
     course = courses_service.get_course_by_id(course_id)
     if course is None:
         return NotFound(f'Course {course_id} does not exist!')
@@ -132,7 +134,7 @@ def create_course(course: Course, authorization: str = Header(None)):
 
     created_course = courses_service.create_course(course)
 
-    return CourseResponseModel(course=created_course, sections=[])
+    return created_course
 
 
 @course_router.put('/{course_id}', tags=['Courses'])
@@ -156,8 +158,14 @@ def update_course(course_id: int, data: CourseUpdate, authorization: str = Heade
     return updated_course
 
 @course_router.put('/pic/{course_id}', tags=['Courses'])
-def upload_pic_to_course(course_id: int, pic: UploadFile):
+def upload_pic_to_course(course_id: int, pic: UploadFile, authorization: str = Header(None),):
     
+    if authorization is None:
+            raise HTTPException(status_code=403)
+        
+    course = courses_service.get_course_by_id(course_id)
+    if course is None:
+            return NotFound(f'Course {course_id} does not exist!')
     
     picture_data = pic.file.read()
     courses_service.upload_pic(course_id, picture_data)
