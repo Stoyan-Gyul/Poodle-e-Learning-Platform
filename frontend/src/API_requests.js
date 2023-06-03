@@ -284,6 +284,33 @@ export const handleApproveEnrollment = async(studentId, courseId) => {
     }
 };
 
+export const fetchReportByCourseId = async(courseId) => {
+  
+
+  try {
+    const response = await fetch(`http://localhost:8000/courses/${courseId}/reports`, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${authToken}`
+      },
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.detail);
+    }
+
+    // Handle successful response
+    const data = await response.json();
+    return data;
+  } catch (error) {
+    // Handle fetch error
+    console.error('Error fetching reports:', error);
+    throw error;
+  }
+}
+
 
 
 
