@@ -1,12 +1,14 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useContext } from 'react';
 import { Grid, Box, Button, Typography, Paper, IconButton, InputBase, Avatar, Menu, MenuItem } from '@mui/material';
 import { styled } from '@mui/system';
-import { HomeOutlined, PersonOutlined, BookOutlined, SearchOutlined, AddCircleOutline } from '@mui/icons-material';
+import { HomeOutlined, PersonOutlined, BookOutlined, SearchOutlined, AddCircleOutline} from '@mui/icons-material';
 import { SvgIcon } from '@mui/material';
 import { Link, useNavigate } from 'react-router-dom';
 import logoImage from './images/logo.png';
 import { fetchAllCourses, handleSubscribeToCourse } from './API_requests'; // Import the fetchAllCourses 
 import PendingActionsIcon from '@mui/icons-material/PendingActions';
+import { AuthContext } from './AuthContext';
+import LogoutIcon from '@mui/icons-material/Logout';
 
 const LogoIcon = styled(Avatar)(({ theme }) => ({
   width: theme.spacing(8),
@@ -57,12 +59,7 @@ const subscribeToCourse = async (courseId) => {
   try {
     const response = await handleSubscribeToCourse(courseId);
     console.log('Subscribe response:', response);
-
-    if (response.status === 200) {
-      setTimeout(() => {
-        window.location.href = '/dashboard';
-      }, 500);
-    }
+    window.location.reload();
   } catch (error) {
     console.error('Error subscribing to course:', error);
   }
@@ -144,7 +141,7 @@ const CourseList = ({ courses }) => {
               <div style={{ display: 'flex', alignItems: 'center', marginTop: 'auto' }}>
               <StarIcon sx={{ color: 'yellow', marginRight: '0.5rem' }} />
                 <Typography variant="body2" gutterBottom>
-                  Rating: {course.course_rating}
+                  Rating: {course.course_rating}/10
                 </Typography>
               </div>
             </div>
@@ -174,6 +171,7 @@ const Dashboard = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [filteredCourses, setFilteredCourses] = useState([]);
   const userRole = localStorage.getItem('role');
+  const { logout } = useContext(AuthContext);
 
   const handleMenuOpen = (event) => {
     setAnchorEl(event.currentTarget);
@@ -205,6 +203,11 @@ const Dashboard = () => {
 
   const handleSearch = (event) => {
     setSearchQuery(event.target.value);
+  };
+
+  const handleLogout = () => {
+    logout();
+    window.location.href = '/';
   };
 
   useEffect(() => {
@@ -339,6 +342,24 @@ const Dashboard = () => {
                 </MenuItem>
               </Box>
             )}
+            <Box mb={2}>
+              <MenuItem
+                onClick={handleLogout}
+                sx={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  paddingLeft: '20px',
+                  '&:hover': {
+                    backgroundColor: '#1976d2',
+                  },
+                }}
+              >
+                <IconButton>
+                  <LogoutIcon />
+                </IconButton>
+                Logout
+              </MenuItem>
+            </Box>
           </Box>
         </Grid>
   
@@ -359,7 +380,7 @@ const Dashboard = () => {
                 value={searchQuery}
                 onChange={handleSearch}
               />
-            </SearchContainer>
+              </SearchContainer>
             {/* temporary added for visibility */}
             <Typography variant="body1" component="p">
               User ID: {localStorage.getItem('user_id')}

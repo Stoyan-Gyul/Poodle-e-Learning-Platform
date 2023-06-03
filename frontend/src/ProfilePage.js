@@ -1,9 +1,10 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useContext } from 'react';
 import { Box, Container, Typography, IconButton, TextField, Button, Grid } from '@mui/material';
 import { ArrowBack } from '@mui/icons-material';
 import { Link } from 'react-router-dom';
 import logoImage from './images/logo.png';
-import { Header, LogoImage } from './common.js';
+import { LogoImage, Header, LogoutButton } from './common.js';
+import { AuthContext } from './AuthContext';
 
 const ProfilePage = () => {
   const [first_name, setFirstName] = useState('');
@@ -15,6 +16,7 @@ const ProfilePage = () => {
   const [successMessage, setSuccessMessage] = useState('');
   const [errorMessage, setErrorMessage] = useState('');
   const [userRole, setUserRole] = useState('');
+  const { logout } = useContext(AuthContext);
 
   useEffect(() => {
     const fetchUserData = async () => {
@@ -45,6 +47,11 @@ const ProfilePage = () => {
 
     fetchUserData();
   }, []);
+
+  const handleLogout = () => {
+    logout();
+    window.location.href = '/';
+  };
 
   const handleEditMode = () => {
     setIsEditMode(true);
@@ -126,7 +133,10 @@ const ProfilePage = () => {
       <Header>
         <a href="/">
           <LogoImage src={logoImage} alt="Logo" />
-        </a>
+          </a>
+        <div style={{ marginLeft: 'auto' }}>
+        <LogoutButton>Logout</LogoutButton>
+        </div>
       </Header>
       <div style={{ marginTop: '64px' }}> {/* Adjust the margin value as needed */}
         <Container maxWidth="sm">
