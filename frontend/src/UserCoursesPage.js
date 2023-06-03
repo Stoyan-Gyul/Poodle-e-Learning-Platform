@@ -1,31 +1,66 @@
-import React, { useEffect, useState } from 'react';
-import { Typography, Box, IconButton, CircularProgress, Paper, Grid, Button } from '@mui/material';
+import React, { useEffect, useState, useContext } from 'react';
+import { Typography, Box, IconButton, CircularProgress, Paper, Grid, Button, Dialog, DialogTitle, DialogContent, DialogActions, Rating } from '@mui/material';
 import { Link } from 'react-router-dom';
 import { ArrowBack } from '@mui/icons-material';
 import logoImage from './images/logo.png';
-import { fetchEnrolledCourses, fetchAllCourses, handleUnsubscribeFromCourse } from './API_requests.js';
+import { fetchEnrolledCourses, fetchAllCourses, handleUnsubscribeFromCourse, handleRateCourse } from './API_requests.js';
 import { Header, LogoImage, LogoutButton } from './common.js';
+import { AuthContext } from './AuthContext';
 import { SvgIcon } from '@mui/material';
+
 
 const UserCoursesPage = () => {
   const [courses, setCourses] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const userRole = localStorage.getItem('role');
-  const [selectedPaper, setSelectedPaper] = useState(null); 
+  const [selectedPaper, setSelectedPaper] = useState(null);
+  const { logout } = useContext(AuthContext);
+  const [openDialog, setOpenDialog] = useState(false);
+  const [rating, setRating] = useState(0);
+  const [selectedCourseId, setSelectedCourseId] = useState(null);
+  const [errorMessage, setErrorMessage] = useState('');
+
+  const handleLogout = () => {
+    logout();
+    window.location.href = '/';
+  };
+
+  const handleOpenDialog = (courseId) => {
+    setSelectedCourseId(courseId);
+    setOpenDialog(true);
+  };
+
+  const handleCloseDialog = () => {
+    setOpenDialog(false);
+  };
+
+  const handleRatingChange = (event, newRating) => {
+    setRating(newRating);
+  };
+
+  const handleRate = async () => {
+    try {
+      const response = await handleRateCourse(selectedCourseId, rating);
+      console.log('Your rating', response);
+      setOpenDialog(false);
+    } catch (error) {
+      console.error(error); // Error message
+      setErrorMessage(error.message);
+    }
+  };
 
   const unsubscribeFromCourse = async (courseId) => {
     try {
       const response = await handleUnsubscribeFromCourse(courseId);
       console.log('Unsubscribe response:', response);
-
-      if (response.status === 200) {
-        setTimeout(() => {
-          window.location.href = '/courses';
-        }, 500);
-      }
+      window.location.reload();
     } catch (error) {
       console.error('Error unsubscribing from course:', error);
     }
+  };
+
+  const handlePaperClick = (courseId) => {
+    setSelectedPaper(courseId);
   };
 
   useEffect(() => {
@@ -48,10 +83,6 @@ const UserCoursesPage = () => {
     fetchData();
   }, [userRole]);
 
-  const handlePaperClick = (courseId) => {
-    setSelectedPaper(courseId);
-  };
-
   const StarIcon = (props) => (
     <SvgIcon {...props}>
       <path
@@ -70,12 +101,38 @@ const UserCoursesPage = () => {
           <LogoImage src={logoImage} alt="Logo" />
         </a>
         <div style={{ marginLeft: 'auto' }}>
-          <LogoutButton>Logout</LogoutButton>
+          <LogoutButton onClick={handleLogout}>Logout</LogoutButton>
         </div>
       </Header>
       <Box sx={{ flexGrow: 1, marginTop: '4rem', textAlign: 'left' }}>
+
+        <Dialog open={openDialog} onClose={handleCloseDialog}>
+          <DialogTitle>Rate the Course</DialogTitle>
+
+          {errorMessage && (
+            <Typography variant="body2" color="error">
+              {errorMessage}
+            </Typography>
+          )}
+          <DialogContent>
+            <Rating
+              name="rating"
+              value={rating}
+              onChange={handleRatingChange}
+              precision={0.5}
+              max={10}
+              size="large"
+            />
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={handleCloseDialog}>Cancel</Button>
+            <Button onClick={handleRate} disabled={rating === 0} variant="contained" color="primary">
+              Rate
+            </Button>
+          </DialogActions>
+        </Dialog>
         <IconButton component={Link} to="/dashboard" sx={{ marginRight: 'auto' }}>
-            <ArrowBack />
+          <ArrowBack />
         </IconButton>
         <Typography variant="h4" component="h1" align="center" gutterBottom>
           My Courses
@@ -136,18 +193,22 @@ const UserCoursesPage = () => {
                       {course.description}
                     </Typography>
                     <div style={{ display: 'flex', alignItems: 'center', marginTop: 'auto' }}>
-                    <StarIcon sx={{ color: 'yellow', marginRight: '0.5rem' }} />
+                      <StarIcon sx={{ color: 'yellow', marginRight: '0.5rem' }} />
                       <Typography variant="body2" gutterBottom>
-                        Rating: {course.course_rating}
+                        Rating: {course.course_rating}/10
                       </Typography>
                     </div>
-                  </div>
-                  <div style={{ marginTop: '1rem', textAlign: 'center' }}>
-                    {userRole === 'student' ? (
-                      <Button variant="contained" color="secondary" onClick={() => unsubscribeFromCourse(course.id)}>
-                        Unsubscribe
-                      </Button>
-                    ) : (
+                    {userRole === 'student' && (
+                      <div style={{ marginTop: 'auto', display: 'flex', justifyContent: 'space-between' }}>
+                        <Button variant="contained" color="primary" onClick={() => unsubscribeFromCourse(course.id)}>
+                          Unsubscribe
+                        </Button>
+                        <Button variant="contained" color="primary" onClick={() => handleOpenDialog(course.id)}>
+                          Rate
+                        </Button>
+                      </div>
+                    )}
+                    {userRole === 'teacher' && (
                       <div style={{ marginTop: '1rem', textAlign: 'center' }}>
                         <Box sx={{ display: 'flex', justifyContent: 'space-between', marginTop: '1rem' }}>
                           <Button variant="contained" color="primary" component={Link} to={`/edit-course/${course.id}`}>
@@ -171,5 +232,3 @@ const UserCoursesPage = () => {
 };
 
 export default UserCoursesPage;
-
-
