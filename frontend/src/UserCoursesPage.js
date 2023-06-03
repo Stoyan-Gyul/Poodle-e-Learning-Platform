@@ -148,9 +148,16 @@ const UserCoursesPage = () => {
                         Unsubscribe
                       </Button>
                     ) : (
-                      <Button variant="contained" color="primary" component={Link} to={`/edit-course/${course.id}`}>
-                        Edit
-                      </Button>
+                      <div style={{ marginTop: '1rem', textAlign: 'center' }}>
+                        <Box sx={{ display: 'flex', justifyContent: 'space-between', marginTop: '1rem' }}>
+                          <Button variant="contained" color="primary" component={Link} to={`/edit-course/${course.id}`}>
+                            Edit
+                          </Button>
+                          <Button variant="contained" color="primary" component={Link} to={`/courses/${course.id}/report`}>
+                            Run Report
+                          </Button>
+                        </Box>
+                      </div>
                     )}
                   </div>
                 </Paper>
