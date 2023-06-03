@@ -1,8 +1,11 @@
 import axios from 'axios';
 
-const authToken = localStorage.getItem('authToken');
-const user_id = localStorage.getItem('user_id')
-const role = localStorage.getItem('role')
+export const getLocalStorageData = () => {
+  const authToken = localStorage.getItem('authToken');
+  const user_id = localStorage.getItem('user_id');
+  const role = localStorage.getItem('role');
+  return { authToken, user_id, role };
+};
 
 export const apiLogin = async (email, password) => {
   // Make the POST request to your backend API
@@ -21,11 +24,6 @@ export const apiLogin = async (email, password) => {
   } else {
     throw new Error('Login failed');
   }
-};
-
-export const handleLogout = () => {
-  // Remove the token from local storage
-  localStorage.removeItem('token');
 };
 
 export const signup = async (userData) => {
@@ -84,7 +82,7 @@ export const viewUserData = async (token) => {
 
 
 export const handleUnsubscribeFromCourse = async (courseId) => {
-    
+  const { authToken, user_id } = getLocalStorageData();
     try {
       const response = await fetch(`http://localhost:8000/users/${user_id}/courses/${courseId}/unsubscribe`, {
         method: 'PUT',
@@ -97,7 +95,7 @@ export const handleUnsubscribeFromCourse = async (courseId) => {
         throw new Error('Failed to unsubscribe from the course');
       }
       
-      return response.json();
+      return await response.json();
     } catch (error) {
       console.log('Error unsubscribing from the course:', error);
       throw error;
@@ -105,7 +103,7 @@ export const handleUnsubscribeFromCourse = async (courseId) => {
   };
 
 export const handleSubscribeToCourse = async (courseId) => {
-
+  const { authToken, user_id } = getLocalStorageData();
   try {
     const response = await fetch(`http://localhost:8000/users/${user_id}/courses/${courseId}/subscribe`, {
       method: 'PUT',
@@ -127,6 +125,7 @@ export const handleSubscribeToCourse = async (courseId) => {
   };
 
 export const fetchCourseData = async (courseId) => {
+  const { authToken } = getLocalStorageData();
   try {
     const response = await fetch(`http://localhost:8000/courses/${courseId}`, {
       headers: {
@@ -146,7 +145,7 @@ export const fetchCourseData = async (courseId) => {
 };
   
 export const fetchEnrolledCourses = async () => {
-
+  const { authToken } = getLocalStorageData();
   try {
     const response = await fetch('http://localhost:8000/courses/enrolled_courses', {
       headers: {
@@ -173,10 +172,13 @@ export const fetchEnrolledCourses = async () => {
 
 export const fetchAllCourses = async () => {
   try {
+    const { authToken } = getLocalStorageData();
+
     const headers = {
       'Content-Type': 'application/json',
     };
 
+    console.log('fetchAllCourses token - ' + authToken);
     if (authToken) {
       headers.Authorization = `Bearer ${authToken}`;
     }
@@ -199,6 +201,7 @@ export const fetchAllCourses = async () => {
 
 
 export const createCourse = async (courseData) => {
+  const { authToken } = getLocalStorageData();
   try {
     const response = await fetch(`http://localhost:8000/courses`, {
       method: 'POST',
@@ -222,6 +225,7 @@ export const createCourse = async (courseData) => {
 };
 
 export const uploadPicToCourse = async (courseId, file) => {
+  const { authToken } = getLocalStorageData();
   try {
     const formData = new FormData();
     formData.append('pic', file);
@@ -245,6 +249,7 @@ export const uploadPicToCourse = async (courseId, file) => {
 };
 
 export const fetchPendingApprovalsForStudents = async (teacherId) => {
+  const { authToken } = getLocalStorageData();
   try {
     const response = await fetch(`http://localhost:8000/users/pending_approval/students/${teacherId}`, {
       method: 'GET',
@@ -265,6 +270,7 @@ export const fetchPendingApprovalsForStudents = async (teacherId) => {
 };
   
 export const handleApproveEnrollment = async(studentId, courseId) => {
+  const { authToken } = getLocalStorageData();
   const authorization = `Bearer ${authToken}`; 
 
     try {
@@ -285,8 +291,7 @@ export const handleApproveEnrollment = async(studentId, courseId) => {
 };
 
 export const fetchReportByCourseId = async(courseId) => {
-  
-
+  const { authToken } = getLocalStorageData();
   try {
     const response = await fetch(`http://localhost:8000/courses/${courseId}/reports`, {
       method: 'GET',
@@ -310,6 +315,34 @@ export const fetchReportByCourseId = async(courseId) => {
     throw error;
   }
 }
+
+export const handleRateCourse = async (courseId, rating) => {
+  const { authToken } = getLocalStorageData();
+
+  try {
+    const response = await fetch(`http://localhost:8000/courses/${courseId}/ratings`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${authToken}`
+      },
+      body: JSON.stringify({ rating }),
+    });
+
+    if (response.ok) {
+      const data = await response.json();
+      return data.message; // Success message
+    } else if (response.status === 409) {
+      throw new Error('You have already rated this course.');
+    } else {
+      throw new Error('Failed to rate the course.');
+    }
+  } catch (error) {
+    console.error('Error rating the course:', error);
+    throw error;
+  }
+};
+
 
 
 
