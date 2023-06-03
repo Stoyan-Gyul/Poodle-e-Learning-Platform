@@ -1,15 +1,15 @@
 import React, { useState, useEffect } from 'react';
-import { Box, Button, Paper, InputAdornment, TextField } from '@mui/material/';
+import { Box, Button, Paper, SvgIcon, TextField } from '@mui/material/';
 import { Link } from 'react-router-dom';
 import { styled } from '@mui/system';
 import { Header, LogoImage } from './common.js';
 import { fetchAllCourses } from './API_requests.js';
 import logoImage from './images/logo.png';
+import { SearchOutlined } from '@mui/icons-material';
 
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
 import SearchIcon from '@mui/icons-material/Search';
-
 
 const Title = styled('h1')({
   fontSize: '5rem',
@@ -28,7 +28,6 @@ const SubTitle = styled('h2')({
   '-webkit-background-clip': 'text',
   '-moz-background-clip': 'text',
   margin: '1rem 0 3rem',
-
 });
 
 const SearchContainer = styled('div')(({ theme }) => ({
@@ -39,12 +38,20 @@ const SearchContainer = styled('div')(({ theme }) => ({
     backgroundColor: theme.palette.common.white,
   },
   marginLeft: 0,
-  width: '100%',
+  width: '600px', // Adjust the width as needed
   border: `1px solid ${theme.palette.divider}`,
 }));
 
+const SearchInput = styled(TextField)(({ theme }) => ({
+  color: 'inherit',
+  width: '100%',
+  padding: theme.spacing(1.5, 2, 1.5, 0), // Adjust the padding as needed
+  paddingLeft: `calc(1em + ${theme.spacing(3)})`,
+  transition: theme.transitions.create('width'),
+}));
+
 const SearchIconContainer = styled('div')(({ theme }) => ({
-  padding: theme.spacing(0, 2),
+  padding: theme.spacing(0, 1.5),
   height: '100%',
   position: 'absolute',
   pointerEvents: 'none',
@@ -53,13 +60,16 @@ const SearchIconContainer = styled('div')(({ theme }) => ({
   justifyContent: 'center',
 }));
 
-const SearchInput = styled(TextField)(({ theme }) => ({
-  color: 'inherit',
-  width: '100%',
-  padding: theme.spacing(1, 1, 1, 0),
-  paddingLeft: `calc(1em + ${theme.spacing(4)})`,
-  transition: theme.transitions.create('width'),
-}));
+const StarIcon = (props) => (
+  <SvgIcon {...props}>
+    <path
+      d="M12 0L15.09 7.14218L22 8.46534L17 14.0779L17.9 21.0578L12 17.8765L6.1 21.0578L7 14.0779L2 8.46534L8.91 7.14218L12 0Z"
+      fill="currentColor"
+      stroke="black"
+      strokeWidth="1"
+    />
+  </SvgIcon>
+);
 
 const CourseCard = ({ course }) => {
   return (
@@ -72,30 +82,41 @@ const CourseCard = ({ course }) => {
         display: 'flex',
         flexDirection: 'column',
         justifyContent: 'space-between',
-        height: 400,
+        flex: '1 0 auto', // Add this line
       }}
     >
       <h3>{course.title}</h3>
       <p>{course.description}</p>
-      <p>Expertise Area: {course.expertise_area}</p>
+      <p>Specialization: {course.expertise_area}</p>
+      <div style={{ display: 'flex', alignItems: 'center' }}>
+        <StarIcon sx={{ color: 'yellow', marginRight: '0.5rem' }} />
+        <p>Rating: {course.course_rating}</p>
+      </div>
     </Paper>
   );
 };
 
 const HomePage = () => {
   const [courses, setCourses] = useState([]);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [filteredCourses, setFilteredCourses] = useState([]);
+
   const [error, setError] = useState('');
   const [startIndex, setStartIndex] = useState(0);
-  const [searchTerm, setSearchTerm] = useState('');
 
-  const handleSearchChange = (event) => {
-    setSearchTerm(event.target.value);
+  const handleSearch = (event) => {
+    const searchTerm = event.target.value.toLowerCase();
+    console.log(event.target.value)
+    setSearchQuery(searchTerm);
   };
+
+
+
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const coursesData = await fetchAllCourses();
-        setCourses(coursesData);
+        const fetchedCourses = await fetchAllCourses();
+        setCourses(fetchedCourses);
       } catch (error) {
         console.error('Error fetching courses:', error);
         setError('Failed to fetch courses');
@@ -105,6 +126,22 @@ const HomePage = () => {
     fetchData();
   }, []);
 
+  useEffect(() => {
+    const filterCourses = () => {
+      const filtered = courses.filter((course) => {
+        const { expertise_area, course_rating } = course;
+        const searchTerm = searchQuery.toLowerCase();
+        return (
+          expertise_area.toLowerCase().includes(searchTerm) ||
+          course_rating.toString().includes(searchTerm)
+        );
+      });
+      setFilteredCourses(filtered);
+    };
+
+    filterCourses();
+  }, [searchQuery, courses]);
+
   const handleNext = () => {
     setStartIndex((prevIndex) => prevIndex + 4);
   };
@@ -113,13 +150,7 @@ const HomePage = () => {
     setStartIndex((prevIndex) => Math.max(0, prevIndex - 4));
   };
 
-  const visibleCourses = courses
-  .filter(
-    (course) =>
-      course.expertise_area.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      course.ourse_rating.toString().includes(searchTerm)
-  )
-  .slice(startIndex, startIndex + 4);
+  const visibleCourses = filteredCourses.slice(startIndex, startIndex + 4);
 
   return (
     <>
@@ -158,25 +189,15 @@ const HomePage = () => {
         </nav>
         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginTop: '2rem' }}>
           <SubTitle>Check out some of our free courses below:</SubTitle>
-      <div>
-        <TextField
-          type="text"
-          value={searchTerm}
-          onChange={handleSearchChange}
-          placeholder="Search by specialization or rating"
-          InputProps={{
-            startAdornment: (
-              <InputAdornment position="start">
-                <SearchIcon />
-              </InputAdornment>
-            ),
-            style: { fontSize: '2rem' },
-          }}
-          fullWidth
-          style={{ marginBottom: '1rem' }}
-        />
-      </div>
-          <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '1rem' }}>
+          <Box mt={4} pr={4}>
+            <SearchContainer>
+              <SearchIconContainer>
+                <SearchOutlined />
+              </SearchIconContainer>
+              <SearchInput placeholder="Search..." value={searchQuery} onChange={handleSearch} />
+            </SearchContainer>
+          </Box>
+          <Box mt={4} display="flex" justifyContent="center" alignItems="center" gap="1rem">
             <ArrowBackIcon
               color="primary"
               fontSize="large"
@@ -184,23 +205,26 @@ const HomePage = () => {
               onClick={handlePrevious}
               style={{ cursor: 'pointer' }}
             />
-            {error ? (
-              <p>Error fetching courses: {error}</p>
-            ) : (
-              visibleCourses.map((course) => <CourseCard key={course.id} course={course} />)
-            )}
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '1rem' }}>
+              {error ? (
+                <p>Error fetching courses: {error}</p>
+              ) : (
+                visibleCourses.map((course) => <CourseCard key={course.id} course={course} />)
+              )}
+            </div>
             <ArrowForwardIcon
               color="primary"
               fontSize="large"
-              disabled={startIndex + 4 >= courses.length}
+              disabled={startIndex + 4 >= filteredCourses.length}
               onClick={handleNext}
               style={{ cursor: 'pointer' }}
             />
-          </div>
+          </Box>
         </div>
       </Box>
     </>
   );
-};
-
+  
+  
+              }; 
 export default HomePage;
