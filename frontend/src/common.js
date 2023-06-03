@@ -20,3 +20,17 @@ export  const LogoImage = styled('img')({
     height: '50px',
     borderRadius: '50%',
   });
+
+export const LogoutButton = styled('button')({
+    marginLeft: 'auto',
+    marginRight: '1rem',
+    padding: '0.5rem 1rem',
+    backgroundColor: '#fff',
+    color: '#7d68a1',
+    border: '1px solid #7d68a1',
+    borderRadius: '5px',
+    cursor: 'pointer',
+    fontWeight: 'bold',
+  });
+
+  
