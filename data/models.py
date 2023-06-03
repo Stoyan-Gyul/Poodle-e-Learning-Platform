@@ -75,11 +75,11 @@ class Course(BaseModel):
     owner_id: int | None
     is_active: constr(regex=Regex.ACTIVE_HIDDEN)
     is_premium: constr(regex=Regex.PREMIUM_PUBLIC)
-    tag_ids: list[int] = []
-    objective_ids: list[int] = []
+    expertise_area: str | None
+    objective:str | None
 
     @classmethod
-    def from_query_result(cls, id, title, description, home_page_pic, owner_id, is_active, is_premium, tag_ids, objective_ids):
+    def from_query_result(cls, id, title, description, home_page_pic, owner_id, is_active, is_premium, expertise_area, objective):
         return cls(
             id=id,
             title=title,
@@ -88,8 +88,8 @@ class Course(BaseModel):
             owner_id=owner_id,
             is_active=CourseStatus.ACTIVE if is_active else CourseStatus.HIDDEN,
             is_premium=CourseType.PREMIUM if is_premium else CourseType.PUBLIC,
-            tag_ids = tag_ids,
-            objective_ids = objective_ids
+            expertise_area=expertise_area,
+            objective=objective
             )
 
 
@@ -170,15 +170,21 @@ class Report(BaseModel):
     status: constr(regex=Regex.UNSUBSCRIBED_SUBSCRIBED)
     rating: condecimal(decimal_places=1, ge=1, le=10) | None
     progress: condecimal(decimal_places=0, ge=0, le=100) | None
+    first_name: str | None
+    last_name: str | None
+    title: str | None
 
     @classmethod
-    def from_query_result(cls, user_id, course_id, status, rating, progress):
+    def from_query_result(cls, user_id, course_id, status, rating, progress, first_name, last_name, title):
         return cls(
             user_id=user_id,
             course_id=course_id,
             status=StatusLevelMaps.INT_TO_STR[status],
             rating=rating,
-            progress=progress if progress is not None else 0
+            progress=progress if progress is not None else 0,
+            first_name=first_name,
+            last_name=last_name,
+            title=title
             )
 
 # class TeacherAdds(BaseModel):
