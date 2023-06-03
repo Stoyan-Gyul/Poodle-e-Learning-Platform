@@ -168,12 +168,15 @@ def get_all_reports(user_id: int):
     return (Report.from_query_result(*row) for row in data)
 
 def get_reports_by_id(course_id: int):
-    sql = '''SELECT users_id, courses_id, status, rating, progress 
-            FROM users_have_courses 
-            WHERE courses_id = ?'''
+    sql = '''
+    SELECT uhc.users_id, uhc.courses_id, uhc.status, uhc.rating, uhc.progress, u.first_name, u.last_name, c.title
+    FROM users_have_courses AS uhc
+    JOIN users AS u ON u.id = uhc.users_id
+    JOIN courses AS c ON c.id = uhc.courses_id
+    WHERE uhc.courses_id = ?
+    '''
     sql_params = (course_id,)
     data = read_query(sql, sql_params)
-
     return (Report.from_query_result(*row) for row in data)
 
 def get_course_by_id(course_id: int)-> Course | None:
