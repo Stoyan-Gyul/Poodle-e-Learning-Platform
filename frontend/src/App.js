@@ -21,22 +21,22 @@ const App = () => {
   return (
     <ThemeProvider theme={theme}>
       <Router>
-        <AuthProvider>
         <UserProvider>
-          <Routes>
-            <Route path="/" element={<HomePage />} />
-            <Route path="/login" element={<LoginPage />} />
-            <Route path="/signup" element={<SignupPage />} />
-            <Route path="/dashboard" element={<DashboardPage />} />
-            <Route path="/profile" element={<ProfilePage/>} />
-            <Route path="/courses" element={<UserCoursesPage/>} />
-            <Route path="/create-course" element={<CreateCoursePage/>} />
-            <Route path="/edit-course/:courseId" element={<EditCoursePage/>} />
-            <Route path="/courses/:courseId/report" element={<CourseReportPage/>} />
-            <Route path="/pending-approvals" element={<PendingStudentsPage/>} />
-          </Routes>
-          </UserProvider>
-        </AuthProvider>
+          <AuthProvider>
+            <Routes>
+              <Route path="/" element={<HomePage />} />
+              <Route path="/login" element={<LoginPage />} />
+              <Route path="/signup" element={<SignupPage />} />
+              <Route path="/dashboard" element={<DashboardPage />} />
+              <Route path="/profile" element={<ProfilePage />} />
+              <Route path="/courses" element={<UserCoursesPage />} />
+              <Route path="/create-course" element={<CreateCoursePage />} />
+              <Route path="/edit-course/:courseId" element={<EditCoursePage />} />
+              <Route path="/courses/:courseId/report" element={<CourseReportPage />} />
+              <Route path="/pending-approvals" element={<PendingStudentsPage />} />
+            </Routes>
+          </AuthProvider>
+        </UserProvider>
       </Router>
     </ThemeProvider>
   );
