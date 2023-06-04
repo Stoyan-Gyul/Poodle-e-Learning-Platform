@@ -13,7 +13,7 @@ class BadRequest(JSONResponse):
 
 
 class Unauthorized(JSONResponse):
-    def __init__(self, content=''):
+    def __init__(self, content={}):
         super().__init__(status_code=status.HTTP_401_UNAUTHORIZED, content=content)
 
 

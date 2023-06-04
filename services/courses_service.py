@@ -1,7 +1,16 @@
 
 from data.database import read_query, insert_query, update_query
-from data.models import Report, Course, Section, CourseUpdate, Objective, Tag, User
-from data.models import ViewPublicCourse, ViewStudentCourse, ViewTeacherCourse, ViewAdminCourse, UserRating
+from data.common.models.course_response import CourseResponse
+from data.common.models.course_update import CourseUpdate
+from data.common.models.course import Course
+from data.common.models.objective import Objective
+from data.common.models.report import Report
+from data.common.models.section import Section
+from data.common.models.tag import Tag
+from data.common.models.user_rating import UserRating
+from data.common.models.user import User
+from data.common.models.view_courses import ViewPublicCourse, ViewStudentCourse, ViewTeacherCourse, ViewAdminCourse
+from data.common.constants import CourseStatus, CourseType
 from fastapi import UploadFile
 import base64
 import smtplib
@@ -155,7 +164,8 @@ def course_rating(rating: int , course_id: int, student_id: int)-> bool:
                 return None
     except:
         return None # student is not enrolled in this course
-    
+
+
 def get_all_reports(user_id: int):
     sql = '''SELECT u.users_id, u.courses_id, u.status, u.rating, u.progress
             FROM users_have_courses u
@@ -166,6 +176,7 @@ def get_all_reports(user_id: int):
     data = read_query(sql, sql_params)
 
     return (Report.from_query_result(*row) for row in data)
+
 
 def get_reports_by_id(course_id: int):
     sql = '''
@@ -179,32 +190,25 @@ def get_reports_by_id(course_id: int):
     data = read_query(sql, sql_params)
     return (Report.from_query_result(*row) for row in data)
 
-def get_course_by_id(course_id: int)-> Course | None:
-    ''' Get the course by id or return None if no exist'''
 
+def get_course_by_id(course_id: int)-> Course | None:
+    ''' Get the course by id or return None if no such course exists'''
     sql = '''
-            SELECT c.id, c.title, c.description, c.home_page_pic, c.owner_id, c.is_active, c.is_premium, t.expertise_area, o.description
-            FROM courses AS c
-            JOIN courses_have_tags AS ct ON c.id = ct.courses_id
-            JOIN tags AS t ON t.id = ct.tags_id
-            JOIN courses_have_objectives as co ON c.id = co.courses_id
-            JOIN objectives as o ON o.id = co.objectives_id
-            WHERE c.id = ?'''
+            SELECT id, title, description, home_page_pic, owner_id, is_active, is_premium, course_rating
+            FROM courses
+            WHERE id = ?'''
     sql_params = (course_id,)
     data = read_query(sql, sql_params)
 
-    # if data is None:
-    if not data:
-        return None
-    else:
-        course = Course.from_query_result(id=data[0][0], title=data[0][1], description=data[0][2], home_page_pic=data[0][3], owner_id=data[0][4], is_active=data[0][5], is_premium=data[0][6], expertise_area=data[0][7], objective=data[0][8])
+    course = next((Course.from_query_result(*row) for row in data), None)
+    if course: 
         if course.home_page_pic is not None:
             course.home_page_pic = base64.b64encode(course.home_page_pic).decode('utf-8')
 
-        return course
+    return course
 
 
-def get_tags(ids: list[int]):
+def get_tags(ids: list[int]) -> list[Tag]:
     ids_joined = ','.join(str(id) for id in ids)
     data = read_query(f'''
             SELECT id, expertise_area
@@ -214,12 +218,36 @@ def get_tags(ids: list[int]):
     return [Tag.from_query_result(*row) for row in data]
 
 
-def get_objectives(ids: list[int]):
+def get_course_tags(course_id: int) -> list[Tag]:
+    data = read_query(
+        '''SELECT t.id, t.expertise_area
+                FROM tags t
+                WHERE t.id in (SELECT tags_id
+                                FROM courses_have_tags
+                                WHERE courses_id = ?)''',
+        (course_id,))
+
+    return [Tag.from_query_result(*row) for row in data]
+
+
+def get_objectives(ids: list[int]) -> list[Objective]:
     ids_joined = ','.join(str(id) for id in ids)
     data = read_query(f'''
             SELECT id, description
             FROM objectives 
             WHERE id IN ({ids_joined})''')
+
+    return [Objective.from_query_result(*row) for row in data]
+
+
+def get_course_objectives(course_id: int) -> list[Objective]:
+    data = read_query(
+        '''SELECT o.id, o.description
+                FROM objectives o
+                WHERE o.id in (SELECT objectives_id
+                                FROM courses_have_objectives
+                                WHERE courses_id = ?)''',
+        (course_id,))
 
     return [Objective.from_query_result(*row) for row in data]
 
@@ -245,8 +273,8 @@ def create_course(course: Course, owner: User):
                   course.description, 
                   course.home_page_pic, 
                   owner.id, 
-                  1 if course.is_active == 'active' else 0, 
-                  1 if course.is_premium == 'premium' else 0
+                  1 if course.is_active == CourseStatus.ACTIVE else 0, 
+                  1 if course.is_premium == CourseType.PREMIUM else 0
                  )
     generated_id = insert_query(sql, sql_params)
 
@@ -257,6 +285,7 @@ def create_course(course: Course, owner: User):
     insert_objectives_in_course(course.id, course.objective_ids)
 
     return course
+
 
 def update_course(course_update: CourseUpdate, course: Course):
     sql = ('''
@@ -286,6 +315,7 @@ def update_course(course_update: CourseUpdate, course: Course):
 
     return course
 
+
 def upload_pic(course_id: int, pic: UploadFile):
 
     if pic is None or course_id is None:
@@ -311,7 +341,7 @@ def get_section_by_id(section_id: int):
     return next((Section.from_query_result(*row) for row in data), None)
 
 
-def get_sections_by_course(course_id: int):
+def get_course_sections(course_id: int):
     data = read_query(
         '''SELECT id, title, content, description, external_link, courses_id
             FROM sections 
@@ -348,6 +378,7 @@ def update_section(old: Section, new: Section):
         (merged.title, merged.content, merged.description, merged.external_link, merged.courses_id, merged.id))
 
     return merged
+
 
 def view_admin_courses( title: str = None,
                            tag: str  = None,
@@ -576,3 +607,18 @@ def send_email_to_student_for_hidden_course(student_email: int, student_first_na
         server.sendmail(message["From"], message["To"], message.as_string())
 
         return True
+
+
+def create_response_object(course: Course, tags: list[Tag], objectives: list[Objective], sections: list[Section]):
+    return CourseResponse(
+        id=course.id,
+        title=course.title,
+        description=course.description,
+        home_page_pic=course.home_page_pic,
+        owner_id=course.owner_id,
+        is_active=course.is_active,
+        is_premium=course.is_premium,
+        tags=tags,
+        objectives=objectives,
+        sections=sections
+    )

@@ -1,7 +1,6 @@
-from data.models import User
+from data.common.models.user import User
 from services.users_service import find_by_id, validate_token
 from fastapi import HTTPException
-from fastapi.responses import JSONResponse
 from fastapi import status
 from data.database import read_query
 

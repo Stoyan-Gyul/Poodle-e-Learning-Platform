@@ -1,7 +1,10 @@
 from fastapi import APIRouter, HTTPException, status, Header, Body, UploadFile
 from pydantic import BaseModel
 from fastapi.responses import JSONResponse
-from data.models import  ViewStudentCourse, Course, CourseResponseModel, CourseUpdate, Section
+from data.common.models.view_courses import ViewStudentCourse
+from data.common.models.course import Course
+from data.common.models.course_update import CourseUpdate
+from data.common.models.section import Section
 from services import  courses_service
 from data.common.responses import InternalServerError, NotFound, Forbidden, BadRequest, Conflict
 from data.common.auth import get_user_or_raise_401, is_user_approved_by_admin
@@ -95,10 +98,12 @@ def get_course(course_id: int, authorization: str = Header()):
     course = courses_service.get_course_by_id(course_id)
     if course is None:
         return NotFound({'detail': f'Course {course_id} does not exist!'})
-    else: 
-        return CourseResponseModel(
-            course=course, 
-            sections=courses_service.get_sections_by_course(course_id))
+
+    tags = courses_service.get_course_tags(course.id)
+    objectives = courses_service.get_course_objectives(course.id)
+    sections = courses_service.get_course_sections(course.id)
+
+    return courses_service.create_response_object(course, tags, objectives, sections)
 
 
 @course_router.get('/{course_id}/reports', tags=['Courses'])

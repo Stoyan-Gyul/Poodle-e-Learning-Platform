@@ -1,8 +1,8 @@
-from data.models import User, UpdateData, ViewUserCourse
-from pydantic import BaseModel
+from data.common.models.view_courses import ViewUserCourse
+from data.common.models.update_data import UpdateData
+from data.common.models.user import User
 from data.database import read_query, insert_query, update_query
 import bcrypt
-from fastapi import HTTPException, status
 from datetime import datetime, timedelta
 import jwt
 import secrets
