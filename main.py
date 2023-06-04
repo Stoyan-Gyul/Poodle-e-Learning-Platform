@@ -1,7 +1,7 @@
 import uvicorn
 from fastapi import FastAPI
 from routers.users import user_router
-from routers.courses import course_router
+from routers.courses.admin_functions import course_router
 from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
 
