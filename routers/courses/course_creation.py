@@ -1,4 +1,4 @@
-'''Contains the functions related to creating and updating courses.'''
+'''Contains the functions related to creating and updating courses with the exception of sections.'''
 
 from fastapi import APIRouter, status, Header, UploadFile
 from data.common.auth import get_user_or_raise_401, is_user_approved_by_admin

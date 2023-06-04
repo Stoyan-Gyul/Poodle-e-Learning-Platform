@@ -1,4 +1,4 @@
-'''Contains the functions related to course reports with the exception of sections.'''
+'''Contains the functions related to course reports.'''
 
 from fastapi import APIRouter, Header
 from data.common.auth import get_user_or_raise_401, is_user_approved_by_admin
