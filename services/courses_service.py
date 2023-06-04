@@ -618,6 +618,7 @@ def create_response_object(course: Course, tags: list[Tag], objectives: list[Obj
         owner_id=course.owner_id,
         is_active=course.is_active,
         is_premium=course.is_premium,
+        rating=course.rating,
         tags=tags,
         objectives=objectives,
         sections=sections
