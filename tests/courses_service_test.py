@@ -2,7 +2,11 @@ from unittest import TestCase
 from services import courses_service
 from unittest import mock
 from unittest.mock import MagicMock, patch, ANY
-from data.models import ViewPublicCourse, ViewStudentCourse, ViewTeacherCourse, Report, Course, CourseUpdate, Section
+from data.common.models.view_courses import ViewPublicCourse, ViewStudentCourse, ViewTeacherCourse
+from data.common.models.report import Report
+from data.common.models.course import Course
+from data.common.models.course_update import CourseUpdate
+from data.common.models.section import Section
 class CoursesService_Should(TestCase):
     
     @patch('services.courses_service.read_query', autospec=True)

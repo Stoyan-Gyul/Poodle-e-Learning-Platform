@@ -5,7 +5,8 @@ from unittest.mock import MagicMock, patch, ANY
 
 import jwt
 
-from data.models import User, UpdateData
+from data.common.models.user import User
+from data.common.models.update_data import UpdateData
 from services.users_service import Teacher
 from services import users_service
 
