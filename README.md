@@ -1,13 +1,26 @@
 # Poodle e-Learning Platform
 
-![Alt text](Schema_Model.png)
+![Alt text](Schema_Model_230530.png)
 
 ## Getting started
 
-To make it easy for you to get started with GitLab, here's a list of recommended next steps.
+The API of the project is in production on https://hydraulic-manifold.bg
+ENJOY!
 
-Already a pro? Just edit this README.md and make it your own. Want to make it easy? [Use the template at the bottom](#editing-this-readme)!
+The deployment of the frontend in under construction. Please, be patient! 
 
+
+
+
+
+
+
+
+
+
+
+
+--------------------------------------------------------------
 ## Add your files
 
 - [ ] [Create](https://docs.gitlab.com/ee/user/project/repository/web_editor.html#create-a-file) or [upload](https://docs.gitlab.com/ee/user/project/repository/web_editor.html#upload-a-file) files

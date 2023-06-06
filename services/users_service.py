@@ -1,8 +1,8 @@
-from data.models import User, UpdateData, ViewUserCourse
-from pydantic import BaseModel
+from data.common.models.view_courses import ViewUserCourse
+from data.common.models.update_data import UpdateData
+from data.common.models.user import User
 from data.database import read_query, insert_query, update_query
 import bcrypt
-from fastapi import HTTPException, status
 from datetime import datetime, timedelta
 import jwt
 import secrets
@@ -180,24 +180,29 @@ def update_user(user: User, update_info: UpdateData) -> bool | None:
         last_name=update_info.last_name or user.last_name,
         role=user.role)
     
+    update_completed = False
     if update_info.phone:
-
         update_query('''UPDATE teachers SET
                     phone_number = ? 
                     WHERE users_id = ?''',
                     (update_info.phone, merged.id))
+        update_completed = True
         
     if update_info.linked_in_account:
-
         update_query('''UPDATE teachers SET
                     linked_in_account = ? 
                     WHERE users_id = ?''',
                     (update_info.linked_in_account, merged.id))
-        
-    return update_query('''UPDATE users SET
+        update_completed = True
+
+    if user.password != merged.password or user.first_name != merged.first_name or user.last_name != merged.last_name:
+        update_query('''UPDATE users SET
                     password = ?, first_name = ?, last_name = ?, role = ?
                     WHERE id = ?''',
                     (merged.password, merged.first_name, merged.last_name, merged.role, merged.id))
+        update_completed = True
+    
+    return update_completed
 
 def send_verification_email(email: str, verification_link: str):
     smtp_host = "smtp.office365.com"
