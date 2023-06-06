@@ -11,6 +11,8 @@ import CreateCoursePage from './CreateNewCourse';
 import PendingStudentsPage from './PendingStudentsPage';
 import EditCoursePage from './EditCoursePage';
 import CourseReportPage from './CourseReportPage';
+import SectionsPage from './SectionsPage';
+import CreateNewSectionPage from './CreateNewSectionPage';
 import { AuthProvider } from './AuthContext';
 import { UserProvider } from './UserContext';
 
@@ -34,6 +36,8 @@ const App = () => {
               <Route path="/edit-course/:courseId" element={<EditCoursePage />} />
               <Route path="/courses/:courseId/report" element={<CourseReportPage />} />
               <Route path="/pending-approvals" element={<PendingStudentsPage />} />
+              <Route path="/:courseId/sections" element={<SectionsPage />} />
+              <Route path="/:courseId/new-section" element={<CreateNewSectionPage />} />
             </Routes>
           </AuthProvider>
         </UserProvider>
