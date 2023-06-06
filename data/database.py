@@ -1,5 +1,6 @@
 from mariadb import connect
 from mariadb.connections import Connection
+# import mysql.connector
 
 
 def _get_connection() -> Connection:
@@ -35,4 +36,17 @@ def update_query(sql: str, sql_params=()) -> bool:
 
         return cursor.rowcount>0
 
+# def get_mysql():
+#     return mysql.connector.connect(user='root',
+#         password='root',
+#         host='localhost',
+#         port=3306,
+#         database='e-learning'
+#     )
 
+# def read_query1(sql: str, sql_params=()):
+#     with get_mysql() as conn:
+#         cursor = conn.cursor()
+#         cursor.execute(sql, sql_params)
+
+#         return list(cursor)
