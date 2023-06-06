@@ -1,46 +1,57 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Box, Button, Container, IconButton, TextField, FormControl, InputLabel, Select, MenuItem, Typography,} from '@mui/material';
+import { Box, Button, Container, IconButton, TextField, FormControl, InputLabel, Select, MenuItem, Typography, } from '@mui/material';
 import { ArrowBack } from '@mui/icons-material';
 import logoImage from './images/logo.png';
 import { Header, LogoImage } from './common.js';
 import { createCourse, uploadPicToCourse } from './API_requests';
+import TagInput from './widgets/TagInput';
 
 const CreateCoursePage = () => {
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [status, setStatus] = useState('active');
   const [visibility, setVisibility] = useState('public');
-  const [expertiseArea, setExpertiseArea] = useState('');
-  const [objective, setObjective] = useState('');
+  
   const [picFile, setPicFile] = useState(null);
   const [error, setError] = useState('');
   const [successMessage, setSuccessMessage] = useState('');
+  const [area, setArea] = useState([]);
+  const [objectives, setObjectives] = useState([]);
+
+  const handleAreaChange = (tags) => {
+    setArea(tags);
+  };
+
+  const handleObjChange = (tags) => {
+    setObjectives(tags);
+  };
 
   const handleCreateCourse = async () => {
     // Check if all fields are filled in
-    if (!title || !description || !expertiseArea || !objective) {
+    if (!title || !description || !area || !objectives) {
       setError('Please fill in all required fields.');
       return;
     }
-  
+    console.log('area:', area);
+    console.log('objectives:', objectives);
     try {
-      const owner_id = 58;
+  
       const courseData = {
         title,
         description,
-        owner_id,
+        owner_id: localStorage.getItem('user_id'),
         is_active: status,
         is_premium: visibility,
-        expertise_area: expertiseArea,
-        objective,
+        tags: area,
+        objectives: objectives,
       };
-  
+
       const response = await createCourse(courseData);
-    
+
       const courseId = response.id;
       await uploadPicToCourse(courseId, picFile);
-  
+
       // Course creation successful
       console.log('Course created successfully!');
 
@@ -51,7 +62,7 @@ const CreateCoursePage = () => {
       console.error('Error occurred while creating the course:', error);
     }
   };
-  
+
 
   const handlePicFileChange = (event) => {
     const file = event.target.files[0];
@@ -109,27 +120,11 @@ const CreateCoursePage = () => {
                 <MenuItem value="premium">Premium</MenuItem>
               </Select>
             </FormControl>
-            <TextField
-              label="Expertise Area"
-              type="text"
-              required
-              value={expertiseArea}
-              onChange={(e) => setExpertiseArea(e.target.value)}
-              InputLabelProps={{
-                shrink: true,
-              }}
-            />
-            <TextField
-              label="Objective"
-              multiline
-              rows={4}
-              required
-              value={objective}
-              onChange={(e) => setObjective(e.target.value)}
-              InputLabelProps={{
-                shrink: true,
-              }}
-            />
+
+            <TagInput label="Tags" onTagsChange={handleAreaChange} />
+
+            <TagInput label="Objectives" onTagsChange={handleObjChange} />
+            
             <input type="file" accept="image/*" onChange={handlePicFileChange} />
             <Button variant="contained" color="primary" size="large" fullWidth onClick={handleCreateCourse}>
               Create Course
@@ -162,4 +157,4 @@ const CreateCoursePage = () => {
 
 };
 
-  export default CreateCoursePage; 
+export default CreateCoursePage; 

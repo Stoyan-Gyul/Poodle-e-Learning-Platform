@@ -54,8 +54,8 @@ export const signup = async (userData) => {
 };
 
 export const viewUserData = async (token) => {
-  try { 
-    const authorization = `Bearer ${token}`; 
+  try {
+    const authorization = `Bearer ${token}`;
 
     const response = await fetch('http://localhost:8000/users/', {
       method: 'GET',
@@ -83,24 +83,24 @@ export const viewUserData = async (token) => {
 
 export const handleUnsubscribeFromCourse = async (courseId) => {
   const { authToken, user_id } = getLocalStorageData();
-    try {
-      const response = await fetch(`http://localhost:8000/users/${user_id}/courses/${courseId}/unsubscribe`, {
-        method: 'PUT',
-        headers: {
-          Authorization: `Bearer ${authToken}`,
-        },
-      });
-    
-      if (!response.ok) {
-        throw new Error('Failed to unsubscribe from the course');
-      }
-      
-      return await response.json();
-    } catch (error) {
-      console.log('Error unsubscribing from the course:', error);
-      throw error;
+  try {
+    const response = await fetch(`http://localhost:8000/users/${user_id}/courses/${courseId}/unsubscribe`, {
+      method: 'PUT',
+      headers: {
+        Authorization: `Bearer ${authToken}`,
+      },
+    });
+
+    if (!response.ok) {
+      throw new Error('Failed to unsubscribe from the course');
     }
-  };
+
+    return await response.json();
+  } catch (error) {
+    console.log('Error unsubscribing from the course:', error);
+    throw error;
+  }
+};
 
 export const handleSubscribeToCourse = async (courseId) => {
   const { authToken, user_id } = getLocalStorageData();
@@ -111,18 +111,18 @@ export const handleSubscribeToCourse = async (courseId) => {
         Authorization: `Bearer ${authToken}`,
       },
     });
-  
+
     if (!response.ok) {
       throw new Error('Failed to Subscribe to the course');
     }
-    
+
     return response.json();
   } catch (error) {
     console.log('Error subscribing to the course:', error);
     throw error;
   }
 
-  };
+};
 
 export const fetchCourseData = async (courseId) => {
   const { authToken } = getLocalStorageData();
@@ -132,18 +132,18 @@ export const fetchCourseData = async (courseId) => {
         Authorization: `Bearer ${authToken}`,
       },
     });
-  
+
     if (!response.ok) {
       throw new Error(`Failed to fetch course data for course ${courseId}`);
     }
-  
+
     return response.json();
   } catch (error) {
     console.error('Error fetching course data:', error);
     throw error;
   }
 };
-  
+
 export const fetchEnrolledCourses = async () => {
   const { authToken } = getLocalStorageData();
   try {
@@ -258,7 +258,7 @@ export const fetchPendingApprovalsForStudents = async (teacherId) => {
         Authorization: `Bearer ${authToken}`,
       },
     });
-    
+
     if (!response.ok) {
       throw new Error('Failed to fetch data');
     }
@@ -268,29 +268,29 @@ export const fetchPendingApprovalsForStudents = async (teacherId) => {
     throw new Error(error);
   }
 };
-  
-export const handleApproveEnrollment = async(studentId, courseId) => {
-  const { authToken } = getLocalStorageData();
-  const authorization = `Bearer ${authToken}`; 
 
-    try {
-      const response = await fetch(`http://localhost:8000/users/${studentId}/teacher_approval/${courseId}`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: authorization
-        },
-      });
-      
-      if (!response.ok) {
-        throw new Error('Failed to approve enrollment');
-      }
-    } catch (error) {
-      throw new Error(error.message);
+export const handleApproveEnrollment = async (studentId, courseId) => {
+  const { authToken } = getLocalStorageData();
+  const authorization = `Bearer ${authToken}`;
+
+  try {
+    const response = await fetch(`http://localhost:8000/users/${studentId}/teacher_approval/${courseId}`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: authorization
+      },
+    });
+
+    if (!response.ok) {
+      throw new Error('Failed to approve enrollment');
     }
+  } catch (error) {
+    throw new Error(error.message);
+  }
 };
 
-export const fetchReportByCourseId = async(courseId) => {
+export const fetchReportByCourseId = async (courseId) => {
   const { authToken } = getLocalStorageData();
   try {
     const response = await fetch(`http://localhost:8000/courses/${courseId}/reports`, {
@@ -343,13 +343,77 @@ export const handleRateCourse = async (courseId, rating) => {
   }
 };
 
+export const handleUpdateCourse = async (courseId, formData) => {
+  const { authToken } = getLocalStorageData();
+  try {
+    const response = await fetch(`http://localhost:8000/courses/${courseId}`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${authToken}`
+      },
+      body: JSON.stringify(formData),
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.detail || 'Failed to update the course.');
+    }
+
+    return response.json();
+  } catch (error) {
+    throw new Error(error.message || 'Failed to update the course.');
+  }
+};
 
 
+export const fetchAllSectionsForCourse = async (courseId) => {
+  const { authToken } = getLocalStorageData();
+  try {
+    const response = await fetch(`http://localhost:8000/courses/${courseId}/sections`, {
+      method: 'GET',
+      headers: {
+        Authorization: `Bearer ${authToken}`,
+      },
+    });
+    if (response.ok) {
+      const data = await response.json();
+      return data;
+    } else {
+      throw new Error('Error fetching sections for the course');
+    }
+  } catch (error) {
+    console.error('Error fetching sections for the course:', error);
+    throw error;
+  }
+};
 
 
+export const createSection = async (courseId, sectionData) => {
+  const { authToken } = getLocalStorageData();
+  try {
+    const response = await fetch(`http://localhost:8000/courses/${courseId}`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${authToken}`,
+      },
+      body: JSON.stringify(sectionData),
+    });
 
+    if (response.status === 201) {
+      // Section created successfully
+      return { success: true, message: 'Section created successfully' };
+    }
 
+    const responseData = await response.json();
 
+    return responseData;
+  } catch (error) {
+    console.error('Error creating course:', error);
+    throw error;
+  }
+};
 
 
 

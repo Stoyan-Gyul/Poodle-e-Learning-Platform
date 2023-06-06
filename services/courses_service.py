@@ -22,125 +22,181 @@ def view_public_courses(rating: float = None,
                         tag: str  = None) -> list[ViewPublicCourse] :
     ''' View only title, description and tag of public course and search them by rating and tag'''
 
-    sql='''SELECT c.id, c.title,  c.description, c.course_rating, t.expertise_area 
-           FROM courses as c 
-           JOIN courses_have_tags as ct 
-           ON c.id=ct.courses_id 
-           JOIN tags as t 
-           ON t.id=ct.tags_id 
-           WHERE is_premium = 0'''
-    where_clauses=[]
-    if rating:
-        where_clauses.append(f"c.course_rating >= {rating}")
-    if tag:
-        where_clauses.append(f"t.expertise_area like '%{tag}%'")
+    sql='''SELECT c.id, c.title,  c.description, c.course_rating
+           FROM courses as c
+           WHERE c.is_premium = 0 and c.is_active = 1'''
+    courses_data=read_query(sql, (id,))
+    courses = []
+    for c in courses_data:
+        course_id = c[0]
+
+        sql_tags_list = '''
+            SELECT t.expertise_area
+            FROM courses_have_tags AS ct
+            JOIN tags AS t ON t.id = ct.tags_id
+            WHERE ct.courses_id = ?
+        '''
+            
+        sql_tags_params = (course_id,)
+        tags_data = read_query(sql_tags_list, sql_tags_params)
+        tags_data = [tag[0] for tag in tags_data]  # Flatten the list of tags
+
+        course = ViewPublicCourse.from_query_result(id=c[0], title=c[1], description=c[2], course_rating=c[3],
+                                                     tags=tags_data)
+        courses.append(course)
     
-    if where_clauses:
-        sql+= ' AND ' + ' AND '.join(where_clauses)
+    return courses
     
-    return (ViewPublicCourse.from_query_result(*obj) for obj in read_query(sql))
 
 def view_enrolled_courses(id: int, 
                           title: str = None,
                           tag: str  = None) -> list[ViewStudentCourse]:
-    '''View public and enrolled courses of logged student and search them by title and tag'''
+    '''View enrolled courses of a logged student and search them by title and tag'''
 
-    sql='''SELECT c.id, c.title, c.description, c.course_rating, c.home_page_pic, t.expertise_area, o.description, uc.progress 
+    sql='''SELECT c.id, c.title, c.description, c.course_rating, c.home_page_pic
            FROM courses AS c
-           JOIN courses_have_tags AS ct ON c.id = ct.courses_id
-           JOIN tags AS t ON t.id = ct.tags_id
-		   JOIN courses_have_objectives as co ON c.id=co.courses_id
-		   JOIN objectives as o ON o.id=co.objectives_id
            JOIN users_have_courses AS uc ON c.id = uc.courses_id
            WHERE c.is_active = 1 AND uc.status != 2 AND uc.users_id = ?'''
     
-    where_clauses=[]
-    if title:
-        where_clauses.append(f"c.title like '%{title}%'")
-    if tag:
-        where_clauses.append(f"t.expertise_area like '%{tag}%'")
-    
-    if where_clauses:
-        sql+= ' AND ' + ' AND '.join(where_clauses)
 
-    data=read_query(sql, (id,))
-
+    courses_data=read_query(sql, (id,))
     courses = []
-    for obj in data:
-        course = ViewStudentCourse.from_query_result(*obj)
+    for c in courses_data:
+        course_id = c[0]
+
+        sql_tags_list = '''
+            SELECT t.expertise_area
+            FROM courses_have_tags AS ct
+            JOIN tags AS t ON t.id = ct.tags_id
+            WHERE ct.courses_id = ?
+        '''
+            
+        sql_tags_params = (course_id,)
+        tags_data = read_query(sql_tags_list, sql_tags_params)
+        tags_data = [tag[0] for tag in tags_data]  # Flatten the list of tags
+
+        sql_obj_list = '''
+            SELECT o.description
+            FROM courses_have_objectives AS co
+            JOIN objectives AS o ON o.id = co.objectives_id
+            WHERE co.courses_id = ?
+        '''
+            
+        sql_obj_params = (course_id,)
+        obj_data = read_query(sql_obj_list, sql_obj_params)
+        obj_data = [objective[0] for objective in obj_data]  # Flatten the list of objectives
+
+        course = ViewStudentCourse.from_query_result(id=c[0], title=c[1], description=c[2], course_rating=c[3],
+                                                     home_page_pic=c[4], tags=tags_data, objectives=obj_data)
         if course.home_page_pic is not None:
             course.home_page_pic = base64.b64encode(course.home_page_pic).decode('utf-8')
         courses.append(course)
-
+    
     return courses
 
-def view_students_courses( user_id: int,  title: str = None,
-                           tag: str  = None) -> list[ViewStudentCourse]:
+    # where_clauses=[]
+    # if title:
+    #     where_clauses.append(f"c.title like '%{title}%'")
+    # if tag:
+    #     where_clauses.append(f"t.expertise_area like '%{tag}%'")
+    
+    # if where_clauses:
+    #     sql+= ' AND ' + ' AND '.join(where_clauses)
+
+def view_students_courses(user_id: int, title: str = None, tag: str = None) -> list[ViewStudentCourse]:
     '''View all public and premium courses available for students and search them by title and tag'''
 
-    sql='''SELECT c.id, c.title, c.description, c.course_rating, c.home_page_pic, t.expertise_area, o.description as objectiv 
-           FROM courses AS c
-           JOIN courses_have_tags AS ct ON c.id = ct.courses_id
-           JOIN tags AS t ON t.id = ct.tags_id
-		   JOIN courses_have_objectives as co ON c.id=co.courses_id
-		   JOIN objectives as o ON o.id=co.objectives_id
-           LEFT JOIN `e-learning`.users_have_courses AS uhc ON c.id = uhc.courses_id AND uhc.users_id = ?
-           WHERE c.is_active = 1 AND (uhc.users_id IS NULL OR uhc.status = 2)
-           '''
-    sql_params = (user_id,)
-
-    where_clauses=[]
-    if title:
-        where_clauses.append(f"c.title like '%{title}%'")
-    if tag:
-        where_clauses.append(f"t.expertise_area like '%{tag}%'")
+    sql = '''
+        SELECT c.id, c.title, c.description, c.course_rating, c.home_page_pic
+        FROM courses AS c
+        LEFT JOIN users_have_courses AS uhc ON c.id = uhc.courses_id AND uhc.users_id = ?
+        WHERE c.is_active = 1 AND (uhc.users_id IS NULL OR uhc.status = 2)
+    '''
     
-    if where_clauses:
-        sql+= ' AND ' + ' AND '.join(where_clauses)
-
-    data=read_query(sql, sql_params)
+    courses_data = read_query(sql, (user_id,))
 
     courses = []
-    for obj in data:
-        course = ViewStudentCourse.from_query_result(*obj)
+    for c in courses_data:
+        course_id = c[0]
+
+        sql_tags_list = '''
+            SELECT t.expertise_area
+            FROM courses_have_tags AS ct
+            JOIN tags AS t ON t.id = ct.tags_id
+            WHERE ct.courses_id = ?
+        '''
+            
+        sql_tags_params = (course_id,)
+        tags_data = read_query(sql_tags_list, sql_tags_params)
+        tags_data = [tag[0] for tag in tags_data]  # Flatten the list of tags
+
+        sql_obj_list = '''
+            SELECT o.description
+            FROM courses_have_objectives AS co
+            JOIN objectives AS o ON o.id = co.objectives_id
+            WHERE co.courses_id = ?
+        '''
+            
+        sql_obj_params = (course_id,)
+        obj_data = read_query(sql_obj_list, sql_obj_params)
+        obj_data = [objective[0] for objective in obj_data]  # Flatten the list of objectives
+
+        course = ViewStudentCourse.from_query_result(id=c[0], title=c[1], description=c[2], course_rating=c[3],
+                                                     home_page_pic=c[4], tags=tags_data, objectives=obj_data)
         if course.home_page_pic is not None:
             course.home_page_pic = base64.b64encode(course.home_page_pic).decode('utf-8')
         courses.append(course)
-
+    
     return courses
 
-def view_teacher_courses(id: int, 
-                          title: str = None,
-                          tag: str  = None) -> list[ViewTeacherCourse]:
+def view_teacher_courses(id: int, title: str = None, tag: str = None) -> list[ViewTeacherCourse]:
     '''View all public and premium courses of logged teacher and search them by title and tag'''
-    
-    sql='''SELECT c.id, c.title, c.description, c.course_rating, c.home_page_pic, c.is_active, c.is_premium, t.expertise_area, o.description as objectiv 
-           FROM courses AS c
-           JOIN courses_have_tags AS ct ON c.id = ct.courses_id
-           JOIN tags AS t ON t.id = ct.tags_id
-		   JOIN courses_have_objectives as co ON c.id=co.courses_id
-		   JOIN objectives as o ON o.id=co.objectives_id
-           WHERE c.owner_id = ?'''
-    
-    where_clauses=[]
-    if title:
-        where_clauses.append(f"c.title like '%{title}%'")
-    if tag:
-        where_clauses.append(f"t.expertise_area like '%{tag}%'")
-    
-    if where_clauses:
-        sql+= ' AND ' + ' AND '.join(where_clauses)
 
-    data=read_query(sql, (id,))
+    sql = '''
+        SELECT c.id, c.title, c.description, c.course_rating, c.home_page_pic, c.is_active, c.is_premium
+        FROM courses AS c
+        WHERE c.owner_id = ?
+    '''
+
+    course_data = read_query(sql, (id,))
 
     courses = []
-    for obj in data:
-        course = ViewTeacherCourse.from_query_result(*obj)
+    for c in course_data:
+        course_id = c[0]
+
+        sql_tags_list = '''
+            SELECT t.expertise_area
+            FROM courses AS c
+            JOIN courses_have_tags AS ct ON c.id = ct.courses_id
+            JOIN tags AS t ON t.id = ct.tags_id
+            WHERE c.owner_id = ? AND c.id = ?
+        '''
+
+        sql_tags_params = (id, course_id)
+        tags_data = read_query(sql_tags_list, sql_tags_params)
+        tags_data = [tag[0] for tag in tags_data]  # Flatten the list of tags
+
+        sql_obj_list = '''
+            SELECT o.description
+            FROM courses AS c
+            JOIN courses_have_objectives AS co ON c.id = co.courses_id
+            JOIN objectives AS o ON o.id = co.objectives_id
+            WHERE c.owner_id = ? AND c.id = ?
+        '''
+
+        sql_obj_params = (id, course_id)
+        obj_data = read_query(sql_obj_list, sql_obj_params)
+        obj_data = [objective[0] for objective in obj_data]  # Flatten the list of objectives
+
+        course = ViewTeacherCourse.from_query_result(id=c[0], title=c[1], description=c[2], course_rating=c[3],
+                                                     home_page_pic=c[4], is_active=c[5], is_premium=c[6],
+                                                     tags=tags_data, objectives=obj_data)
         if course.home_page_pic is not None:
             course.home_page_pic = base64.b64encode(course.home_page_pic).decode('utf-8')
         courses.append(course)
 
     return courses
+
 
 def course_rating(rating: int , course_id: int, student_id: int)-> bool:
     ''' Student can rate his enrolled course only one time'''
@@ -194,16 +250,43 @@ def get_reports_by_id(course_id: int):
 def get_course_by_id(course_id: int)-> Course | None:
     ''' Get the course by id or return None if no such course exists'''
     sql = '''
-            SELECT id, title, description, home_page_pic, owner_id, is_active, is_premium, course_rating
-            FROM courses
-            WHERE id = ?'''
+            SELECT c.id, c.title, c.description, c.home_page_pic, c.course_rating, c.owner_id, c.is_active, c.is_premium
+            FROM courses AS c
+            WHERE c.id = ?'''
     sql_params = (course_id,)
     data = read_query(sql, sql_params)
 
-    course = next((Course.from_query_result(*row) for row in data), None)
-    if course: 
+    if not data:
+        return None
+    else:
+
+        sql_tags_list = '''
+            SELECT t.expertise_area
+            FROM courses_have_tags AS ct
+            JOIN tags AS t ON t.id = ct.tags_id
+            WHERE courses_id = ?
+        '''
+
+        sql_tags_params = (course_id,)
+        tags_data = read_query(sql_tags_list, sql_tags_params)
+        tags_data = [tag[0] for tag in tags_data]  # Flatten the list of tags
+
+        sql_obj_list = '''
+            SELECT o.description
+            FROM courses_have_objectives AS co
+            JOIN objectives AS o ON o.id = co.objectives_id
+            WHERE courses_id = ?
+        '''
+
+        sql_obj_params = (course_id,)
+        obj_data = read_query(sql_obj_list, sql_obj_params)
+        obj_data = [objective[0] for objective in obj_data]  # Flatten the list of objectives
+
+        course = Course.from_query_result(id=data[0][0], title=data[0][1], description=data[0][2], home_page_pic = data[0][3], course_rating=data[0][4],
+                                                    owner_id=data[0][5], is_active=data[0][6], is_premium=data[0][7],
+                                                    tags=tags_data, objectives=obj_data)
         if course.home_page_pic is not None:
-            course.home_page_pic = base64.b64encode(course.home_page_pic).decode('utf-8')
+                course.home_page_pic = base64.b64encode(course.home_page_pic).decode('utf-8')
 
     return course
 
@@ -239,50 +322,90 @@ def get_objectives(ids: list[int]) -> list[Objective]:
 
     return [Objective.from_query_result(*row) for row in data]
 
+def tag_exists(tag):
+    sql = "SELECT id FROM tags WHERE expertise_area = ?"
+    sql_params = (tag,)
 
-def get_course_objectives(course_id: int) -> list[Objective]:
-    data = read_query(
-        '''SELECT o.id, o.description
-                FROM objectives o
-                WHERE o.id in (SELECT objectives_id
-                                FROM courses_have_objectives
-                                WHERE courses_id = ?)''',
-        (course_id,))
+    result = read_query(sql, sql_params)
 
-    return [Objective.from_query_result(*row) for row in data]
+    if result:
+        return result[0]  # Return the tag_id if tag exists
+    else:
+        return None
 
+def create_new_tag(tag: str):
+    sql = "INSERT INTO tags (expertise_area) VALUES (?)"
+    sql_params = (tag,)
 
-def insert_tags_in_course(course_id: int, tag_ids: list[int]):
-    relations = ','.join(
-        f'({course_id},{tag_id})' for tag_id in tag_ids)
-    insert_query(
-        f'INSERT INTO courses_have_tags(courses_id, tags_id) VALUES {relations}')
+    return insert_query(sql, sql_params) # Return the newly created tag_id
 
+def create_course_tag(course_id: int, tag_id: int):
+    sql = '''INSERT INTO courses_have_tags(courses_id, tags_id) VALUES (?, ?)'''
+    sql_params = (course_id, tag_id)
 
-def insert_objectives_in_course(course_id: int, objective_ids: list[int]):
-    relations = ','.join(
-        f'({course_id},{objective_id})' for objective_id in objective_ids)
-    insert_query(
-        f'INSERT INTO courses_have_objectives(courses_id, objectives_id) VALUES {relations}')
+    return insert_query(sql, sql_params)   
 
+def insert_tags_in_course(course_id: int, tags: list[str]):
+    
+    for tag in tags:
+        if tag_exists(tag):
+            tag_id = tag_exists(tag)[0]
+            create_course_tag(course_id, tag_id)
+        else:
+            newly_create_tag_id = create_new_tag(tag)
+            create_course_tag(course_id, newly_create_tag_id)
 
-def create_course(course: Course, owner: User):
+def objective_exists(objective):
+    sql = "SELECT id FROM objectives WHERE description = ?"
+    sql_params = (objective,)
+
+    result = read_query(sql, sql_params)
+
+    if result:
+        return result[0]  # Return the objecive_id if objective exists
+    else:
+        return None
+
+def create_new_objective(objective: str):
+    sql = "INSERT INTO objectives (description) VALUES (?)"
+    sql_params = (objective,)
+
+    return insert_query(sql, sql_params) # Return the newly created objective_id
+
+def create_course_objective(course_id: int, objective_id: int):
+    sql = "INSERT INTO courses_have_objectives (courses_id, objectives_id) VALUES (?, ?)"
+    sql_params = (course_id, objective_id)
+
+    return insert_query(sql, sql_params)   
+
+def insert_objectives_in_course(course_id: int, objectives: list[str]):
+
+    for obj in objectives:
+
+        if objective_exists(obj):
+            obj_id = objective_exists(obj)[0]
+            create_course_objective(course_id, obj_id)
+        else:
+            newly_create_obj_id = create_new_objective(obj)
+            create_course_objective(course_id, newly_create_obj_id)
+
+def create_course(course: Course):
     sql = '''INSERT into courses(title, description, home_page_pic, owner_id, is_active, is_premium)
             VALUES (?, ?, ?, ?, ?, ?)'''
     sql_params = (course.title, 
                   course.description, 
                   course.home_page_pic, 
-                  owner.id, 
-                  1 if course.is_active == CourseStatus.ACTIVE else 0, 
-                  1 if course.is_premium == CourseType.PREMIUM else 0
+                  course.owner_id,
+                  1 if course.is_active == 'active' else 0, 
+                  1 if course.is_premium == 'premium' else 0
                  )
     generated_id = insert_query(sql, sql_params)
 
     course.id = generated_id
-    course.owner_id = owner.id
 
-    insert_tags_in_course(course.id, course.tag_ids)
-    insert_objectives_in_course(course.id, course.objective_ids)
+
+    insert_tags_in_course(course.id, course.tags)
+    insert_objectives_in_course(course.id, course.objectives)
 
     return course
 
@@ -291,15 +414,13 @@ def update_course(course_update: CourseUpdate, course: Course):
     sql = ('''
             UPDATE courses
             SET title = ?, 
-                description = ?, 
-                home_page_pic = ?, 
+                description = ?,  
                 is_active = ?, 
                 is_premium = ?
             WHERE id = ?
             ''')
     sql_params = (course_update.title, 
-                  course_update.description, 
-                  course_update.home_page_pic, 
+                  course_update.description,  
                   1 if course_update.is_active == 'active' else 0, 
                   1 if course_update.is_premium == 'premium' else 0, 
                   course.id
@@ -309,7 +430,6 @@ def update_course(course_update: CourseUpdate, course: Course):
     if result > 0:
         course.title = course_update.title
         course.description = course_update.description
-        course.home_page_pic = course_update.home_page_pic
         course.is_active = course_update.is_active
         course.is_premium = course_update.is_premium
 
@@ -330,7 +450,6 @@ def course_exists(id: int):
         read_query(
             'SELECT * FROM courses WHERE id = ?',
             (id,)))
-
 
 def get_section_by_id(section_id: int):
     data = read_query(
@@ -459,6 +578,12 @@ def view_section(course_id: int, section_id: int, user_id: int)->Section | None:
     if validate_section(course_id, user_id, section_id):
         return Section.from_query_result(*data[0])
     
+def view_all_sections_for_a_course(course_id: int):
+    sql = '''SELECT * FROM sections WHERE courses_id=?'''
+    sql_params = (course_id,)
+    data=read_query(sql, sql_params)
+
+    return [Section.from_query_result(*obj) for obj in data]
 
 def is_section_viewed(section_id: int, user_id: int)-> bool:
     '''Verify if student viewed the section'''

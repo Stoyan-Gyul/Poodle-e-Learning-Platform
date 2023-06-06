@@ -72,9 +72,6 @@ def subscribe_to_course(user_id: int, course_id: int, authorization: str = Heade
     '''Student subscribes to course'''
     if authorization is None:
         raise Exception403Forbidden()
-    
-    if courses_service.is_student_enrolled_in_course(course_id, user_id): #check if student enrolled in course
-        return Conflict409('This student is ALREADY enrolled in this course.')
 
     user = get_user_or_raise_401(authorization)
 
@@ -106,7 +103,7 @@ def subscribe_to_course(user_id: int, course_id: int, authorization: str = Heade
 
         verification_link =f"http://localhost:8000/users/{user_id}/teacher_approval/{course_id}"
 
-        users_service.send_student_enrolled_in_course_email_to_teacher(teacher_email, verification_link, teacher_first_name, teahcer_last_name, class_name)
+        #users_service.send_student_enrolled_in_course_email_to_teacher(teacher_email, verification_link, teacher_first_name, teahcer_last_name, class_name)
     
         return OK200("You have enrolled in this course. Your enrollment is pending approval by the teacher.")
 

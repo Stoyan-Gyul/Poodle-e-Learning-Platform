@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Body, Header, UploadFile, status
+from fastapi import APIRouter, Body, Header, UploadFile, status, HTTPException
 from data.common.auth import get_user_or_raise_401, is_user_approved_by_admin
 from data.common.models.course import Course
 from data.common.models.course_update import CourseUpdate
@@ -7,6 +7,7 @@ from data.common.models.view_courses import ViewStudentCourse
 from services import  courses_service
 from data.common.responses import OK200, BadRequest400, Forbidden403, NotFound404, Conflict409, InternalServerError500
 from data.common.exceptions import Exception403Forbidden
+from fastapi.responses import JSONResponse
 
 course_router = APIRouter(prefix="/courses")
 
@@ -63,22 +64,37 @@ def admin_removes_course(course_id: int, authorization: str = Header()):
             return InternalServerError500('Something went wrong. The course has been hidden, but notifications were not sent.')
     return Conflict409(f'Course {course_id} is already hidden!')
 
+@course_router.get('/enrolled_courses', tags=['Courses'], response_model=list[ViewStudentCourse])
+def view_enrolled_courses(title: str | None = None,
+                          tag: str | None = None, 
+                          authorization: str = Header()) -> list[ViewStudentCourse]:
+    ''' View enrolled public and premium courses by students only'''
+    if authorization is None:
+        raise HTTPException(status_code=403)
 
+    user = get_user_or_raise_401(authorization)
+    id=user.id
+    # Verify if role is approved
+    if not is_user_approved_by_admin(user.id):
+        return JSONResponse(status_code=409, content={'detail': 'Your role is still not approved.'})
+
+    if user.is_student():
+        return courses_service.view_enrolled_courses(id, title, tag)
+
+    else:
+        return JSONResponse(status_code=409,content={'detail': 'Only students can view their enrolled courses!'} )
+    
 @course_router.get('/{course_id}', tags=['Courses'])
 def get_course(course_id: int, authorization: str = Header()):
     '''Retrieve course details.'''
 
     get_user_or_raise_401(authorization)
 
-    course = courses_service.get_course_by_id(course_id)
-    if course is None:
-        return NotFound404(f'Course {course_id} does not exist!')
-
-    tags = courses_service.get_course_tags(course.id)
-    objectives = courses_service.get_course_objectives(course.id)
-    sections = courses_service.get_course_sections(course.id)
-
-    return courses_service.create_response_object(course, tags, objectives, sections)
+    return courses_service.get_course_by_id(course_id)
+    # if course is None:
+    #     return NotFound({'detail': f'Course {course_id} does not exist!'})
+    # else: 
+    #     course
 
 
 @course_router.get('/{course_id}/sections/{section_id}', tags=['Courses'])
@@ -107,28 +123,20 @@ def view_section(course_id: int,section_id: int, authorization: str = Header()):
 
 
 @course_router.post('/', status_code=status.HTTP_201_CREATED, tags=['Courses'])
-def create_course(course: Course, authorization: str = Header(None)) -> Course:
-    '''Creates a new course.'''
+def create_course(course: Course, authorization: str = Header(None)):
+    #user = get_user_or_raise_401(authorization)
 
-    user = get_user_or_raise_401(authorization)
-    if not is_user_approved_by_admin(user.id):
-        return Conflict409('Your role is still not approved.')
-    if not user.is_teacher():
-        return Forbidden403('Only a teacher can create courses.')
+    # if not is_user_approved_by_admin(user.id):
+    #     return Conflict({'detail': 'Your role is still not approved.'})
+    # if not user.is_teacher():
+    #     return Forbidden({'detail': 'Only a teacher can create courses.'})
 
-    if course.tag_ids == []:
-        return BadRequest400('Must contain at least one tag')
-    if course.objective_ids == []:
-        return BadRequest400('Must contain at least one objective')
+    # if course.tags == []:
+    #     return BadRequest({'detail': 'Must contain at least one tag'})
+    # if course.objectives == []:
+    #     return BadRequest({'detail': 'Must contain at least one objective'})
 
-    tags = courses_service.get_tags(course.tag_ids)
-    if len(tags) < len(course.tag_ids):
-        return BadRequest400('Must contain existing tags')
-    objectives = courses_service.get_objectives(course.objective_ids)
-    if len(objectives) < len(course.objective_ids):
-        return BadRequest400('Must contain existing objectives')
-
-    created_course = courses_service.create_course(course, user)
+    created_course = courses_service.create_course(course)
 
     return created_course
 
@@ -250,6 +258,21 @@ def course_rating(course_id: int, rating: int=Body(embed=True, ge=0, le=10), aut
     
     return Conflict409('You are not allowed to rate this course!')
 
+@course_router.get('/{course_id}/sections', tags=['Courses'])
+def view_all_sections_for_a_course(course_id: int, authorization: str = Header(None)):
+    ''' View section of a course'''
+
+    if authorization is None:
+        raise HTTPException(status_code=403) 
+
+    user = get_user_or_raise_401(authorization)
+
+    user_id=user.id
+    # Verify if role is approved
+    if not is_user_approved_by_admin(user_id):
+        return JSONResponse(status_code=409, content={'detail': 'Your role is still not approved.'})
+    
+    return courses_service.view_all_sections_for_a_course(course_id)
 
 @course_router.get('/reports', tags=['Courses'])
 def get_reports_for_all_owned_courses(authorization: str = Header()):
@@ -285,25 +308,8 @@ def get_reports_by_course_id(course_id: int, authorization: str = Header()):
     return result
 
 
-@course_router.get('/enrolled_courses', tags=['Courses'], response_model=list[ViewStudentCourse])
-def view_enrolled_courses(title: str | None = None,
-                          tag: str | None = None, 
-                          authorization: str =Header(None)) -> list[ViewStudentCourse]:
-    ''' View enrolled public and premium courses by students only'''
-    if authorization is None:
-        raise Exception403Forbidden()
 
-    user = get_user_or_raise_401(authorization)
-    id=user.id
-    # Verify if role is approved
-    if not is_user_approved_by_admin(user.id):
-        return Conflict409('Your role is still not approved.')
-
-    if user.is_student():
-        return courses_service.view_enrolled_courses(id, title, tag)
-
-    else:
-        return Conflict409('Only students can view their enrolled courses!')
+    
 
 
 @course_router.get('/', tags=['Courses'])
