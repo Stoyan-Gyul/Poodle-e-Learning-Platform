@@ -36,6 +36,11 @@ def update_query(sql: str, sql_params=()) -> bool:
 
         return cursor.rowcount>0
 
+
+
+
+
+
 # def get_mysql():
 #     return mysql.connector.connect(user='root',
 #         password='root',
