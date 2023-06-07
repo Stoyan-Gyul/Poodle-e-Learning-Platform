@@ -6,16 +6,16 @@ class ViewPublicCourse(BaseModel):
     title: str
     description: str
     course_rating: float | None
-    expertise_area: str
+    tags: list[str] | None
 
     @classmethod
-    def from_query_result(cls, id, title, description, course_rating, expertise_area):
+    def from_query_result(cls, id, title, description, course_rating, tags):
         return cls(
             id=id,
             title=title,
             description=description,
             course_rating=course_rating,
-            expertise_area=expertise_area
+            tags=tags
             )
     
 class ViewStudentCourse(BaseModel):
@@ -24,20 +24,20 @@ class ViewStudentCourse(BaseModel):
     description: str
     course_rating: float | None
     home_page_pic: bytes | None
-    expertise_area: str
-    objective: str
+    tags: list[str] | None
+    objectives: list[str] | None
     progress: float | None
 
     @classmethod
-    def from_query_result(cls, id, title, description, course_rating, home_page_pic, expertise_area, objective, progress=None):
+    def from_query_result(cls, id, title, description, course_rating, home_page_pic, tags, objectives, progress=None):
         return cls(
             id=id,
             title=title,
             description=description,
             course_rating=course_rating,
             home_page_pic=home_page_pic,
-            expertise_area=expertise_area,
-            objective=objective,
+            tags=tags,
+            objectives=objectives,
             progress=progress
             )
     
@@ -49,11 +49,11 @@ class ViewTeacherCourse(BaseModel):
     home_page_pic: bytes | None
     is_active: str
     is_premium: str
-    expertise_area: str
-    objective: str
+    tags: list[str] | None
+    objectives: list[str] | None
     
     @classmethod
-    def from_query_result(cls, id, title, description, course_rating, home_page_pic, is_active, is_premium, expertise_area, objective):
+    def from_query_result(cls, id, title, description, course_rating, home_page_pic, is_active, is_premium, tags, objectives):
         return cls(
             id=id,
             title=title,
@@ -62,8 +62,8 @@ class ViewTeacherCourse(BaseModel):
             home_page_pic=home_page_pic,
             is_active=CourseStatus.ACTIVE if is_active else CourseStatus.HIDDEN,
             is_premium=CourseType.PREMIUM if is_premium else CourseType.PUBLIC,
-            expertise_area=expertise_area,
-            objective=objective
+            tags=tags,
+            objectives=objectives
             )
 
 

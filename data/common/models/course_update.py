@@ -4,9 +4,10 @@ from data.common.constants import CourseStatus, CourseType, Regex
 class CourseUpdate(BaseModel):
     title: constr(min_length=1) | None
     description: constr(min_length=1) | None
-    home_page_pic: None
     is_active: constr(regex=Regex.ACTIVE_HIDDEN) | None
     is_premium: constr(regex=Regex.PREMIUM_PUBLIC) | None
+    tags: list[str] | None
+    objects: list[str] | None
 
     @classmethod
     def from_query_result(cls, title, description, home_page_pic, is_active, is_premium):

@@ -9,7 +9,6 @@ import { SearchOutlined } from '@mui/icons-material';
 
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
-import SearchIcon from '@mui/icons-material/Search';
 
 const Title = styled('h1')({
   fontSize: '5rem',
@@ -87,7 +86,7 @@ const CourseCard = ({ course }) => {
     >
       <h3>{course.title}</h3>
       <p>{course.description}</p>
-      <p>Specialization: {course.expertise_area}</p>
+      <p>Tags: {course.tags.join(', ')}</p>
       <div style={{ display: 'flex', alignItems: 'center' }}>
         <StarIcon sx={{ color: 'yellow', marginRight: '0.5rem' }} />
         <p>Rating: {course.course_rating}</p>
@@ -106,11 +105,8 @@ const HomePage = () => {
 
   const handleSearch = (event) => {
     const searchTerm = event.target.value.toLowerCase();
-    console.log(event.target.value)
     setSearchQuery(searchTerm);
   };
-
-
 
   useEffect(() => {
     const fetchData = async () => {
@@ -129,19 +125,22 @@ const HomePage = () => {
   useEffect(() => {
     const filterCourses = () => {
       const filtered = courses.filter((course) => {
-        const { expertise_area, course_rating } = course;
+        const { tags, course_rating } = course;
         const searchTerm = searchQuery.toLowerCase();
-        return (
-          expertise_area.toLowerCase().includes(searchTerm) ||
-          course_rating.toString().includes(searchTerm)
-        );
+  
+        // Check if any tag matches the search query
+        const tagMatches = tags.some((tag) => tag.toLowerCase().includes(searchTerm));
+  
+        // Check if course_rating is not null before calling toString
+        const ratingMatches = course_rating && course_rating.toString().includes(searchTerm);
+  
+        return tagMatches || ratingMatches;
       });
       setFilteredCourses(filtered);
     };
-
+  
     filterCourses();
   }, [searchQuery, courses]);
-
   const handleNext = () => {
     setStartIndex((prevIndex) => prevIndex + 4);
   };
@@ -224,7 +223,6 @@ const HomePage = () => {
       </Box>
     </>
   );
-  
-  
+
               }; 
 export default HomePage;

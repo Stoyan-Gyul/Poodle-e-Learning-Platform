@@ -63,7 +63,6 @@ const subscribeToCourse = async (courseId) => {
   } catch (error) {
     console.error('Error subscribing to course:', error);
   }
-
 };
 
 const CourseList = ({ courses }) => {
@@ -146,14 +145,27 @@ const CourseList = ({ courses }) => {
               </div>
             </div>
             <div style={{ marginTop: '1rem', textAlign: 'center' }}>
-                    {userRole === 'student' ? (
-                      <Button variant="contained" color="primary" onClick={() => subscribeToCourse(course.id)}>
-                        Subscribe
-                      </Button>
-                    ) : (
-                      <Button variant="contained" color="primary" component={Link} to={`/edit-course/${course.id}`}>
-                        Edit
-                      </Button>
+            {userRole === 'student' && (
+                      <div style={{ marginTop: 'auto', display: 'flex', justifyContent: 'space-between' }}>
+                        <Button variant="contained" color="primary" onClick={() => subscribeToCourse(course.id)}>
+                          Subscribe
+                        </Button>
+                        <Button variant="contained" color="primary" component={Link} to={`/${course.id}/sections`}>
+                          View
+                        </Button>
+                      </div>
+                    )}
+                    {userRole === 'teacher' && (
+                      <div style={{ marginTop: '1rem', textAlign: 'center' }}>
+                        <Box sx={{ display: 'flex', justifyContent: 'space-between', marginTop: '1rem' }}>
+                          <Button variant="contained" color="primary" component={Link} to={`/edit-course/${course.id}`}>
+                            Edit
+                          </Button>
+                          <Button variant="contained" color="primary" component={Link} to={`/${course.id}/sections`}>
+                            View
+                          </Button>
+                        </Box>
+                      </div>
                     )}
                   </div>
             </Paper>
@@ -226,12 +238,18 @@ const Dashboard = () => {
   useEffect(() => {
     const filterCourses = () => {
       const filtered = courses.filter((course) => {
-        const { title, expertise_area } = course;
+        const { title, tags } = course;
         const searchTerm = searchQuery.toLowerCase();
-        return title.toLowerCase().includes(searchTerm) || expertise_area.toLowerCase().includes(searchTerm);
+        const titleMatches = title.toLowerCase().includes(searchTerm);
+    
+        // Check if any of the tags match the search term
+        const tagsMatches = tags.some((tag) => tag.toLowerCase().includes(searchTerm));
+    
+        return titleMatches || tagsMatches;
       });
       setFilteredCourses(filtered);
     };
+    
 
     filterCourses();
   }, [searchQuery, courses]);
