@@ -1,11 +1,11 @@
 # Poodle e-Learning Platform
 
-![Alt text](Schema_Model_230530.png)
 
+![Alt text](data_base/Schema_Model.png)
 ## Getting started
 
 The API of the project is in production on https://hydraulic-manifold.bg
-ENJOY!
+
 
 The deployment of the frontend in under construction. Please, be patient! 
 
