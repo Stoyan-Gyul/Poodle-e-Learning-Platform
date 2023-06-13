@@ -60,7 +60,7 @@ The following information is stored for:
 
 The above information is stored in a relational database MariaDB 10.11.2.
 
-[Alt text](data_base/Schema_Model.png)
+[DataBase Schema_Model](data_base/Schema_Model.png)
 
 The SQL script E-learning_schema.sql is in data_base directory.
 
