@@ -65,6 +65,8 @@ The above information is stored in a relational database MariaDB 10.11.2.
 The SQL script E-learning_schema.sql is in data_base directory.
 
 For testing purposes, fake data in DATA-E-learning_schema.sql is provided in the same directory.
+In the main directory, a Postman collection is added for additional testing.
+
 ## Support
 Support is not provided.
 
