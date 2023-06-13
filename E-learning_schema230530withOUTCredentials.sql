@@ -30,7 +30,6 @@ CREATE TABLE IF NOT EXISTS `e-learning`.`users` (
   PRIMARY KEY (`id`),
   UNIQUE INDEX `email_UNIQUE` (`email` ASC) VISIBLE)
 ENGINE = InnoDB
-AUTO_INCREMENT = 6
 DEFAULT CHARACTER SET = utf8mb4;
 
 
@@ -69,7 +68,6 @@ CREATE TABLE IF NOT EXISTS `e-learning`.`courses` (
     FOREIGN KEY (`owner_id`)
     REFERENCES `e-learning`.`teachers` (`users_id`))
 ENGINE = InnoDB
-AUTO_INCREMENT = 5
 DEFAULT CHARACTER SET = utf8mb4;
 
 
@@ -81,7 +79,6 @@ CREATE TABLE IF NOT EXISTS `e-learning`.`objectives` (
   `description` VARCHAR(100) NULL DEFAULT NULL,
   PRIMARY KEY (`id`))
 ENGINE = InnoDB
-AUTO_INCREMENT = 3
 DEFAULT CHARACTER SET = utf8mb4;
 
 
@@ -112,7 +109,6 @@ CREATE TABLE IF NOT EXISTS `e-learning`.`tags` (
   `expertise_area` VARCHAR(45) NULL DEFAULT NULL,
   PRIMARY KEY (`id`))
 ENGINE = InnoDB
-AUTO_INCREMENT = 2
 DEFAULT CHARACTER SET = utf8mb4;
 
 
@@ -151,7 +147,6 @@ CREATE TABLE IF NOT EXISTS `e-learning`.`sections` (
     FOREIGN KEY (`courses_id`)
     REFERENCES `e-learning`.`courses` (`id`))
 ENGINE = InnoDB
-AUTO_INCREMENT = 6
 DEFAULT CHARACTER SET = utf8mb4;
 
 
