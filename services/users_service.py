@@ -116,6 +116,8 @@ def validate_token(token):
     
 def subscribe_to_course(user_id: int, course_id:int)-> bool:
     ''' Student subscribe to course'''
+    if user_id is None or course_id is None:
+        return None
     select_sql = "SELECT * FROM users_have_courses WHERE users_id = ? AND courses_id = ?"
     select_params = (user_id, course_id)
     existing_record = read_query(select_sql, select_params)
@@ -178,17 +180,20 @@ def update_user(user: User, update_info: UpdateData) -> bool | None:
         password=hashed_password or user.password,
         first_name=update_info.first_name or user.first_name,
         last_name=update_info.last_name or user.last_name,
-        role=user.role)
+        role=user.role, 
+        phone=update_info.phone or user.phone,
+        linked_in_account=update_info.linked_in_account or user.linked_in_account
+        )
     
     update_completed = False
-    if update_info.phone:
+    if user.phone != merged.phone:
         update_query('''UPDATE teachers SET
                     phone_number = ? 
                     WHERE users_id = ?''',
                     (update_info.phone, merged.id))
         update_completed = True
         
-    if update_info.linked_in_account:
+    if user.linked_in_account != merged.linked_in_account:
         update_query('''UPDATE teachers SET
                     linked_in_account = ? 
                     WHERE users_id = ?''',
@@ -251,6 +256,14 @@ def admin_approves_user(user_id: int)->bool:
         return True
     return False
 
+def admin_disapproves_user(user_id: int)->bool:
+    '''Admin disapproves user role'''
+    sql='''UPDATE users SET is_approved = 0 WHERE (`id` = ?);'''
+    data=update_query(sql,(user_id,))
+    if data:
+        return True
+    return False
+
 def get_teacher_info_with_course_id(course_id:int) -> list: 
         if course_id is None:
             return None
@@ -286,14 +299,6 @@ def send_student_enrolled_in_course_email_to_teacher(teacher_email: str, verific
         server.sendmail(message["From"], message["To"], message.as_string())
 
     return "Verification email sent successfully."
-
-def admin_disapproves_user(user_id: int)->bool:
-    '''Admin disapproves user role'''
-    sql='''UPDATE users SET is_approved = 0 WHERE (`id` = ?);'''
-    data=update_query(sql,(user_id,))
-    if data:
-        return True
-    return False
 
 def view_admin(email: str = None, last_name: str = None)->list[User]:
     ''' Admin view all users'''

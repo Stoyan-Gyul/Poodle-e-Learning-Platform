@@ -48,7 +48,6 @@ class UserService_Should(TestCase):
         self.assertEqual(expected_data[0][4], actual_data.last_name)
         self.assertEqual(expected_data[0][5], actual_data.role)
 
-    
     @patch('services.users_service.read_query', autospec=True)
     def test_findById_returnsNone_when_userDoesNotExist(self, mock_read_query):
         mock_read_query.return_value = []
@@ -61,7 +60,6 @@ class UserService_Should(TestCase):
 
         self.assertIsNone(actual_data)
     
-
     @patch('services.users_service.read_query', autospec=True)
     def test_findByEmail_returnsUser_when_userExists(self, mock_read_query):
         expected_data = [(1, 'ani@abv.bg', '$2b$12$Eb0aKvsM/YGeLbsbGEXvU.ztXQ8uNIygejK213iYLVJT1PwuPFIt6', 'ani', 'ivanova', 'user')]
@@ -77,7 +75,6 @@ class UserService_Should(TestCase):
         self.assertEqual(expected_data[0][4], actual_data.last_name)
         self.assertEqual(expected_data[0][5], actual_data.role)
 
-    
     @patch('services.users_service.read_query', autospec=True)
     def test_findByEmail_returnsNone_when_userDoesNotExist(self, mock_read_query):
         mock_read_query.return_value = []
@@ -89,7 +86,6 @@ class UserService_Should(TestCase):
         actual_data = users_service.find_by_id(None)
 
         self.assertIsNone(actual_data)
-    
     
     @patch('services.users_service.insert_query', autospec=True)
     def test_createNewUser_returnsUserID_create_student(self, mock_insert_query):
@@ -111,15 +107,15 @@ class UserService_Should(TestCase):
         self.assertEqual(actual_id, expected_id)
         
         mock_insert_query.assert_any_call(
-            "INSERT INTO users (email, password, role, first_name, last_name, verification_token, is_verified) VALUES (?, ?, ?, ?, ?, ?, ?);",
-            ('test@example.com', mock.ANY, 'user', 'John', 'Doe', 'token', 0)
+            "INSERT INTO users (email, password, role, first_name, last_name, verification_token, is_verified, is_approved) VALUES (?, ?, ?, ?, ?, ?, ?, ?);",
+            ('test@example.com', mock.ANY, 'user', 'John', 'Doe', 'token', 0, 0)
         )
         
         self.assertEqual(mock_insert_query.call_count, 1)
 
         mock_insert_query.assert_called_once_with(
-            "INSERT INTO users (email, password, role, first_name, last_name, verification_token, is_verified) VALUES (?, ?, ?, ?, ?, ?, ?);",
-            ('test@example.com', mock.ANY, 'user', 'John', 'Doe', 'token', 0)
+            "INSERT INTO users (email, password, role, first_name, last_name, verification_token, is_verified, is_approved) VALUES (?, ?, ?, ?, ?, ?, ?, ?);",
+            ('test@example.com', mock.ANY, 'user', 'John', 'Doe', 'token', 0, 0)
         )
     
     @patch('services.users_service.insert_query', autospec=True)
@@ -133,8 +129,8 @@ class UserService_Should(TestCase):
         self.assertEqual(actual_id, expected_id)
         
         mock_insert_query.assert_any_call(
-            "INSERT INTO users (email, password, role, first_name, last_name, verification_token, is_verified) VALUES (?, ?, ?, ?, ?, ?, ?);",
-            ('test@example.com', mock.ANY, 'user', 'John', 'Doe', 'token', 0)
+            "INSERT INTO users (email, password, role, first_name, last_name, verification_token, is_verified, is_approved) VALUES (?, ?, ?, ?, ?, ?, ?, ?);",
+            ('test@example.com', mock.ANY, 'user', 'John', 'Doe', 'token', 0, 0)
         )
         
         mock_insert_query.assert_any_call(
@@ -155,19 +151,8 @@ class UserService_Should(TestCase):
         
         self.assertIsNone(result)  
 
-
     @patch('services.users_service.bcrypt.checkpw', autospec=True)
     def test_try_login_with_valid_credentials_returns_user(self, mock_checkpw):
-    
-        # user = User(
-        #     email='test@example.com',
-        #     password='password',
-        #     role='user',
-        #     first_name='John',
-        #     last_name='Doe',
-        #     verification_token='token',
-        # )
-        
         mock_checkpw.return_value = True
         
         actual_user = users_service.try_login(USER, 'password')
@@ -181,14 +166,6 @@ class UserService_Should(TestCase):
 
     @patch('services.users_service.bcrypt.checkpw', autospec=True)
     def test_tryLogin_with_invalid_credentials_returns_none(self, mock_checkpw):
-        # user = User(
-        #     email='test@example.com',
-        #     password='password',
-        #     role='user',
-        #     first_name='John',
-        #     last_name='Doe',
-        #     verification_token='token',
-        # )
         
         mock_checkpw.return_value = False
         
@@ -208,15 +185,6 @@ class UserService_Should(TestCase):
         self.assertIsNone(result) 
 
     def test_try_login_with_none_password_returns_none(self):
-
-        # user = User(
-        #     email='test@example.com',
-        #     password='password',
-        #     role='user',
-        #     first_name='John',
-        #     last_name='Doe',
-        #     verification_token='token',
-        # )
         
         result = users_service.try_login(USER, None)
         
@@ -256,7 +224,6 @@ class UserService_Should(TestCase):
         result = users_service.generate_token(None)
 
         self.assertIsNone(result)
-
 
     @patch('services.users_service.jwt.decode', autospec=True)
     def test_validate_token_with_valid_token(self, mock_decode):
@@ -362,6 +329,63 @@ class UserService_Should(TestCase):
 
         mock_update_query.assert_not_called()
     
+    @patch('services.users_service.read_query')
+    def test_view_teacher_returnTeacher_when_teacher_addsExists(self, mock_read_query):
+        mock_read_query.return_value=[('08882412', 'https://www.linkedin.com/aliceparker/')]
+        
+        result=users_service.view_teacher(USER)
+        self.assertIsInstance(result,User)
+
+    @patch('services.users_service.read_query')
+    def test_view_teacher_returnUser_if_No_teacher_adds(self, mock_read_query):
+        mock_read_query.return_value=[]
+        
+        result=users_service.view_teacher(USER)
+        self.assertIsInstance(result,User)
+
+    def test_update_user_returnNone_ifNo_user(self):
+        user=None
+        
+        result=users_service.update_user(user,NEW_DATA)
+        self.assertIsNone(result)
+
+    def test_update_user_returnNone_ifNo_updateData(self):
+        new_data=None
+        
+        result=users_service.update_user(USER,new_data)
+        self.assertIsNone(result)
+
+    @patch('services.users_service.update_query')
+    def test_update_user_returnFalse_if_data_not_updated(self, mock_update_query):
+        mock_update_query.return_value=False
+        
+        user = User(
+            email='test@example.com',
+            password='password',
+            role='user',
+            first_name='John',
+            last_name='Doe',
+            verification_token='token',
+            phone='1234567890',
+            linked_in_account='linkedin'
+        )
+    
+        same_data = UpdateData(
+            first_name='John',
+            last_name='Doe',
+            phone='1234567890',
+            linked_in_account='linkedin')
+        
+        result=users_service.update_user(user, same_data)
+        self.assertEqual(False, result)
+
+    @patch('services.users_service.update_query')
+    def test_update_user_returnTrue_if_data_updated(self, mock_update_query):
+        mock_update_query.return_value=True
+        
+        result=users_service.update_user(USER,NEW_DATA)
+        self.assertEqual(True, result)
+
     @patch('services.users_service.smtplib.SMTP', autospec=True)
     def test_send_verification_email(self, mock_smtp):
         
@@ -411,47 +435,6 @@ class UserService_Should(TestCase):
         mock_read_query.assert_not_called()
         mock_update_query.assert_not_called()
 
-
-    @patch('services.users_service.read_query')
-    def test_view_teacher_returnTeacher_when_teacher_addsExists(self, mock_read_query):
-        mock_read_query.return_value=[('08882412', 'https://www.linkedin.com/aliceparker/')]
-        
-        result=users_service.view_teacher(USER)
-        self.assertIsInstance(result,User)
-
-    @patch('services.users_service.read_query')
-    def test_view_teacher_returnUser_if_No_teacher_adds(self, mock_read_query):
-        mock_read_query.return_value=[]
-        
-        result=users_service.view_teacher(USER)
-        self.assertIsInstance(result,User)
-
-    def test_update_user_returnNone_ifNo_user(self):
-        user=None
-        
-        result=users_service.update_user(user,NEW_DATA)
-        self.assertIsNone(result)
-
-    def test_update_user_returnNone_ifNo_updateData(self):
-        new_data=None
-        
-        result=users_service.update_user(USER,new_data)
-        self.assertIsNone(result)
-
-    @patch('services.users_service.update_query')
-    def test_update_user_returnFalse_if_data_not_updated(self, mock_update_query):
-        mock_update_query.return_value=False
-        
-        result=users_service.update_user(USER,NEW_DATA)
-        self.assertEqual(False, result)
-
-    @patch('services.users_service.update_query')
-    def test_update_user_returnTrue_if_data_updated(self, mock_update_query):
-        mock_update_query.return_value=True
-        
-        result=users_service.update_user(USER,NEW_DATA)
-        self.assertEqual(True, result)
-    
     @patch('services.users_service.update_query')
     def test_admin_approves_user_returnTrue_iftransactionOK(self, mock_update_query):
         mock_update_query.return_value=True
@@ -475,65 +458,6 @@ class UserService_Should(TestCase):
         mock_update_query.return_value=False
         result=users_service.admin_approves_user(2)
         self.assertEqual(False, result)
-
-    @patch('services.users_service.update_query')
-    def test_approve_enrollment_returnTrue_iftransactionOK(self, mock_update_query):
-        mock_update_query.return_value=True
-        result=users_service.approve_enrollment(2,1)
-        self.assertEqual(True, result)
-
-    @patch('services.users_service.update_query')
-    def test_approve_enrollment_returnFalse_iftransaction_notOK(self, mock_update_query):
-        mock_update_query.return_value=False
-        result=users_service.approve_enrollment(2,1)
-        self.assertEqual(False, result)
-
-    @patch('services.users_service.update_query')
-    def test_approve_enrollment_returnNone_ifstudentidNone(self, mock_update_query):
-        mock_update_query.return_value=False
-        result=users_service.approve_enrollment(None,1)
-        self.assertIsNone(result)
-
-    @patch('services.users_service.update_query')
-    def test_approve_enrollment_returnNone_ifcourseidNone(self, mock_update_query):
-        mock_update_query.return_value=False
-        result=users_service.approve_enrollment(2,None)
-        self.assertIsNone(result)
-
-    @patch('services.users_service.read_query')
-    def test_view_admin_return_listOfUsers(self, mock_read_query):
-        mock_read_query.return_value=[(1, 'alice@abv.bg', '$2b$12$Xag4rXZGOJrNkwRb32N6s.nscNQFlIfJSYhJXgHrFebVGgjj8Ve9K', 'alice', 'Parker100', 'teacher', '0888345600', 'www.linkedin.com/aliceparker100', None, 0, 1),
-                                      (2, 'steven@abv.bg', '$2b$12$ooercgclJ9NziweYJC8nSunM8LJ43PE0EvxTv8cul/7kdNTolGqMm', 'Steven', 'Parker100', 'student', None, None, None, 0, 1),
-                                      (3, 'steven1@abv.bg', '$2b$12$yUT0WH0qklpI15Y7jXqyVe3.j6DCJVo4HsjrYBdIoLTB684/YLBTu', 'Steven1', 'Parker1', 'student', None, None, None, 1, 1),
-                                      (4, 'steven2@abv.bg', '$2b$12$3cUVOilSyrfMNZ5LjPUKT.68P/OY7qVYL/VrVM6mpWUTx192xza8K', 'steven2', 'parker2', 'student', None, None, 'e399f595-5312-4ba1-bb74-64c46dc5bcd2', 1, 0),
-                                      (5, 'admin@abv.bg', '$2b$12$at3uULHSgb2zV6nrIJLP7uuSITMvZbMw68gA54Lfpy9OvV7saevaO', 'admin', 'adminov', 'admin', None, None, '77dc7699-4e3f-448a-9133-fb676d8b373b', 0, 1)]
-        
-        result=list(users_service.view_admin())
-        self.assertEqual(5,len(result))
-        self.assertIsInstance(result[0], User)
-
-    @patch('services.users_service.read_query')
-    def test_view_admin_return_EmptyListOfNoUsers(self, mock_read_query):
-        mock_read_query.return_value=[]
-        
-        result=list(users_service.view_admin())
-        self.assertEqual(0,len(result))
-
-    @patch('services.users_service.read_query')
-    def test_view_all_pending_approval_student_return_listOfViewUserCourse(self, mock_read_query):
-        mock_read_query.return_value=[(2, 'Steven', 'Parker100', 2, 'OOP'),
-                                      (3, 'Steven1', 'Parker1', 2, 'OOP'),
-                                      (2, 'Steven', 'Parker100', 4, 'General Python'),
-                                      (3, 'Steven1', 'Parker1', 4, 'General Python')]
-        result=list(users_service.view_all_pending_approval_students(1))
-        self.assertEqual(4,len(result))
-        self.assertIsInstance(result[0], ViewUserCourse)
-
-    @patch('services.users_service.read_query')
-    def test_view_all_pending_approval_student_return_EmptyListifNoUsersInCourses(self, mock_read_query):
-        mock_read_query.return_value=[]
-        result=list(users_service.view_all_pending_approval_students(1))
-        self.assertEqual(0,len(result))
 
     @patch('services.users_service.read_query')
     def test_get_teacher_info_with_course_id_return_list(self, mock_read_query):
@@ -561,7 +485,66 @@ class UserService_Should(TestCase):
                                                                               'parker',
                                                                               'python')
         self.assertEqual(result, "Verification email sent successfully.")
+
+    @patch('services.users_service.read_query')
+    def test_view_admin_return_listOfUsers(self, mock_read_query):
+        mock_read_query.return_value=[(1, 'alice@abv.bg', '$2b$12$Xag4rXZGOJrNkwRb32N6s.nscNQFlIfJSYhJXgHrFebVGgjj8Ve9K', 'alice', 'Parker100', 'teacher', '0888345600', 'www.linkedin.com/aliceparker100', None, 0, 1),
+                                      (2, 'steven@abv.bg', '$2b$12$ooercgclJ9NziweYJC8nSunM8LJ43PE0EvxTv8cul/7kdNTolGqMm', 'Steven', 'Parker100', 'student', None, None, None, 0, 1),
+                                      (3, 'steven1@abv.bg', '$2b$12$yUT0WH0qklpI15Y7jXqyVe3.j6DCJVo4HsjrYBdIoLTB684/YLBTu', 'Steven1', 'Parker1', 'student', None, None, None, 1, 1),
+                                      (4, 'steven2@abv.bg', '$2b$12$3cUVOilSyrfMNZ5LjPUKT.68P/OY7qVYL/VrVM6mpWUTx192xza8K', 'steven2', 'parker2', 'student', None, None, 'e399f595-5312-4ba1-bb74-64c46dc5bcd2', 1, 0),
+                                      (5, 'admin@abv.bg', '$2b$12$at3uULHSgb2zV6nrIJLP7uuSITMvZbMw68gA54Lfpy9OvV7saevaO', 'admin', 'adminov', 'admin', None, None, '77dc7699-4e3f-448a-9133-fb676d8b373b', 0, 1)]
         
+        result=list(users_service.view_admin())
+        self.assertEqual(5,len(result))
+        self.assertIsInstance(result[0], User)
+
+    @patch('services.users_service.read_query')
+    def test_view_admin_return_EmptyListOfNoUsers(self, mock_read_query):
+        mock_read_query.return_value=[]
+        
+        result=list(users_service.view_admin())
+        self.assertEqual(0,len(result))
+
+    @patch('services.users_service.update_query')
+    def test_approve_enrollment_returnTrue_iftransactionOK(self, mock_update_query):
+        mock_update_query.return_value=True
+        result=users_service.approve_enrollment(2,1)
+        self.assertEqual(True, result)
+
+    @patch('services.users_service.update_query')
+    def test_approve_enrollment_returnFalse_iftransaction_notOK(self, mock_update_query):
+        mock_update_query.return_value=False
+        result=users_service.approve_enrollment(2,1)
+        self.assertEqual(False, result)
+
+    @patch('services.users_service.update_query')
+    def test_approve_enrollment_returnNone_ifstudentidNone(self, mock_update_query):
+        mock_update_query.return_value=False
+        result=users_service.approve_enrollment(None,1)
+        self.assertIsNone(result)
+
+    @patch('services.users_service.update_query')
+    def test_approve_enrollment_returnNone_ifcourseidNone(self, mock_update_query):
+        mock_update_query.return_value=False
+        result=users_service.approve_enrollment(2,None)
+        self.assertIsNone(result)
+
+    @patch('services.users_service.read_query')
+    def test_view_all_pending_approval_student_return_listOfViewUserCourse(self, mock_read_query):
+        mock_read_query.return_value=[(2, 'Steven', 'Parker100', 2, 'OOP'),
+                                      (3, 'Steven1', 'Parker1', 2, 'OOP'),
+                                      (2, 'Steven', 'Parker100', 4, 'General Python'),
+                                      (3, 'Steven1', 'Parker1', 4, 'General Python')]
+        result=list(users_service.view_all_pending_approval_students(1))
+        self.assertEqual(4,len(result))
+        self.assertIsInstance(result[0], ViewUserCourse)
+
+    @patch('services.users_service.read_query')
+    def test_view_all_pending_approval_student_return_EmptyListifNoUsersInCourses(self, mock_read_query):
+        mock_read_query.return_value=[]
+        result=list(users_service.view_all_pending_approval_students(1))
+        self.assertEqual(0,len(result))
+
     
     
     
