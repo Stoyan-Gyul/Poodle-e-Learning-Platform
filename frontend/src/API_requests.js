@@ -170,6 +170,32 @@ export const fetchEnrolledCourses = async () => {
   }
 };
 
+export const fetchPendingCourses = async () => {
+  const { authToken } = getLocalStorageData();
+  try {
+    const response = await fetch('http://localhost:8000/courses/pending_courses', {
+      headers: {
+        Authorization: `Bearer ${authToken}`,
+      },
+    });
+
+    if (response.status === 401) {
+      throw new Error('Please login to view this information.');
+    }
+
+    const data = await response.json();
+
+    if (Array.isArray(data)) {
+      return data;
+    } else {
+      return [];
+    }
+  } catch (error) {
+    console.log('Error fetching pending approval courses:', error);
+    throw error;
+  }
+};
+
 export const fetchAllCourses = async () => {
   try {
     const { authToken } = getLocalStorageData();

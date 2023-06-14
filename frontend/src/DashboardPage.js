@@ -9,6 +9,7 @@ import { fetchAllCourses, handleSubscribeToCourse } from './API_requests'; // Im
 import PendingActionsIcon from '@mui/icons-material/PendingActions';
 import { AuthContext } from './AuthContext';
 import LogoutIcon from '@mui/icons-material/Logout';
+import HourglassEmptyIcon from '@mui/icons-material/HourglassEmpty';
 
 const LogoIcon = styled(Avatar)(({ theme }) => ({
   width: theme.spacing(8),
@@ -319,6 +320,27 @@ const Dashboard = () => {
                 My Courses
               </MenuItem>
             </Box>
+            {userRole === 'student' && (
+              <Box mb={2}>
+                <MenuItem
+                  component={Link}
+                  to="/pending-courses"
+                  sx={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    paddingLeft: '20px',
+                    '&:hover': {
+                      backgroundColor: '#1976d2',
+                    },
+                  }}
+                >
+                  <IconButton>
+                    <HourglassEmptyIcon />
+                  </IconButton>
+                  Pending Courses
+                </MenuItem>
+              </Box>
+            )}
             {userRole === 'teacher' && (
               <Box mb={2}>
                 <MenuItem
@@ -360,25 +382,25 @@ const Dashboard = () => {
                 </MenuItem>
               </Box>
             )}
-            <Box mb={2}>
-              <MenuItem
-                onClick={handleLogout}
-                sx={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  paddingLeft: '20px',
-                  '&:hover': {
-                    backgroundColor: '#1976d2',
-                  },
-                }}
-              >
-                <IconButton>
-                  <LogoutIcon />
-                </IconButton>
-                Logout
-              </MenuItem>
+              <Box mb={2}>
+                <MenuItem
+                  onClick={handleLogout}
+                  sx={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    paddingLeft: '20px',
+                    '&:hover': {
+                      backgroundColor: '#1976d2',
+                    },
+                  }}
+                >
+                  <IconButton>
+                    <LogoutIcon />
+                  </IconButton>
+                  Logout
+                </MenuItem>
+              </Box>
             </Box>
-          </Box>
         </Grid>
   
         {/* Vertical Line */}

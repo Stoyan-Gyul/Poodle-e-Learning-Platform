@@ -8,6 +8,7 @@ import DashboardPage from './DashboardPage';
 import ProfilePage from './ProfilePage';
 import UserCoursesPage from './UserCoursesPage';
 import CreateCoursePage from './CreateNewCourse';
+import PendingCoursesPage from './PendingCoursesPage';
 import PendingStudentsPage from './PendingStudentsPage';
 import EditCoursePage from './EditCoursePage';
 import CourseReportPage from './CourseReportPage';
@@ -35,6 +36,7 @@ const App = () => {
               <Route path="/create-course" element={<CreateCoursePage />} />
               <Route path="/edit-course/:courseId" element={<EditCoursePage />} />
               <Route path="/courses/:courseId/report" element={<CourseReportPage />} />
+              <Route path="/pending-courses" element={<PendingCoursesPage />} />
               <Route path="/pending-approvals" element={<PendingStudentsPage />} />
               <Route path="/:courseId/sections" element={<SectionsPage />} />
               <Route path="/:courseId/new-section" element={<CreateNewSectionPage />} />
