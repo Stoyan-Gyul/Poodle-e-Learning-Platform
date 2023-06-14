@@ -81,4 +81,4 @@ THANKS to our trainers and mentor for the provided support.
 Open Source License.
 
 ## Project status
-The project is delivered.
+The project is in progress.
