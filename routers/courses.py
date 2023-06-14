@@ -83,7 +83,20 @@ def view_enrolled_courses(title: str | None = None,
 
     else:
         return JSONResponse(status_code=409,content={'detail': 'Only students can view their enrolled courses!'} )
+
+@course_router.get('/pending_courses')
+def get_courses_student_is_waiting_approval_for(authorization: str = Header()):
+    '''Returns a list of all courses that the student is NOT approved for'''
+
+    user = get_user_or_raise_401(authorization)
+    # Verify if role is approved
+    if not is_user_approved_by_admin(user.id):
+        return Conflict409('Your role is still not approved.')
     
+    courses = courses_service.view_student_pending_approval_by_teacher_courses(user.id)
+
+    return courses
+
 @course_router.get('/{course_id}', tags=['Courses'])
 def get_course(course_id: int, authorization: str = Header()):
     '''Retrieve course details.'''
@@ -306,10 +319,6 @@ def get_reports_by_course_id(course_id: int, authorization: str = Header()):
     result = courses_service.get_reports_by_id(course_id)
 
     return result
-
-
-
-    
 
 
 @course_router.get('/', tags=['Courses'])

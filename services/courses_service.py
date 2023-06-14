@@ -47,7 +47,6 @@ def view_public_courses(rating: float = None,
     
     return courses
     
-
 def view_enrolled_courses(id: int, 
                           title: str = None,
                           tag: str  = None) -> list[ViewStudentCourse]:
@@ -56,7 +55,7 @@ def view_enrolled_courses(id: int,
     sql='''SELECT c.id, c.title, c.description, c.course_rating, c.home_page_pic
            FROM courses AS c
            JOIN users_have_courses AS uc ON c.id = uc.courses_id
-           WHERE c.is_active = 1 AND uc.status != 2 AND uc.users_id = ?'''
+           WHERE c.is_active = 1 AND uc.status = 1 AND uc.users_id = ?'''
     
 
     courses_data=read_query(sql, (id,))
@@ -197,7 +196,6 @@ def view_teacher_courses(id: int, title: str = None, tag: str = None) -> list[Vi
 
     return courses
 
-
 def course_rating(rating: int , course_id: int, student_id: int)-> bool:
     ''' Student can rate his enrolled course only one time'''
     try:
@@ -221,7 +219,6 @@ def course_rating(rating: int , course_id: int, student_id: int)-> bool:
     except:
         return None # student is not enrolled in this course
 
-
 def get_all_reports(user_id: int):
     sql = '''SELECT u.users_id, u.courses_id, u.status, u.rating, u.progress
             FROM users_have_courses u
@@ -232,7 +229,6 @@ def get_all_reports(user_id: int):
     data = read_query(sql, sql_params)
 
     return (Report.from_query_result(*row) for row in data)
-
 
 def get_reports_by_id(course_id: int):
     sql = '''
@@ -245,7 +241,6 @@ def get_reports_by_id(course_id: int):
     sql_params = (course_id,)
     data = read_query(sql, sql_params)
     return (Report.from_query_result(*row) for row in data)
-
 
 def get_course_by_id(course_id: int)-> Course | None:
     ''' Get the course by id or return None if no such course exists'''
@@ -290,7 +285,6 @@ def get_course_by_id(course_id: int)-> Course | None:
 
     return course
 
-
 def get_tags(ids: list[int]) -> list[Tag]:
     ids_joined = ','.join(str(id) for id in ids)
     data = read_query(f'''
@@ -299,7 +293,6 @@ def get_tags(ids: list[int]) -> list[Tag]:
             WHERE id IN ({ids_joined})''')
 
     return [Tag.from_query_result(*row) for row in data]
-
 
 def get_course_tags(course_id: int) -> list[Tag]:
     data = read_query(
@@ -311,7 +304,6 @@ def get_course_tags(course_id: int) -> list[Tag]:
         (course_id,))
 
     return [Tag.from_query_result(*row) for row in data]
-
 
 def get_objectives(ids: list[int]) -> list[Objective]:
     ids_joined = ','.join(str(id) for id in ids)
@@ -329,7 +321,7 @@ def tag_exists(tag):
     result = read_query(sql, sql_params)
 
     if result:
-        return result[0]  # Return the tag_id if tag exists
+        return result[0]
     else:
         return None
 
@@ -409,7 +401,6 @@ def create_course(course: Course):
 
     return course
 
-
 def update_course(course_update: CourseUpdate, course: Course):
     sql = ('''
             UPDATE courses
@@ -435,7 +426,6 @@ def update_course(course_update: CourseUpdate, course: Course):
 
     return course
 
-
 def upload_pic(course_id: int, pic: UploadFile):
 
     if pic is None or course_id is None:
@@ -459,7 +449,6 @@ def get_section_by_id(section_id: int):
     
     return next((Section.from_query_result(*row) for row in data), None)
 
-
 def get_course_sections(course_id: int):
     data = read_query(
         '''SELECT id, title, content, description, external_link, courses_id
@@ -467,7 +456,6 @@ def get_course_sections(course_id: int):
             WHERE courses_id = ?''', (course_id,))
 
     return (Section.from_query_result(*row) for row in data)
-
 
 def create_section(course_id: int, section: Section):
     sql = '''INSERT into sections(title, content, description, external_link, courses_id)
@@ -478,7 +466,6 @@ def create_section(course_id: int, section: Section):
     section.id = generated_id
 
     return section
-
 
 def update_section(old: Section, new: Section):
     merged = Section(
@@ -497,7 +484,6 @@ def update_section(old: Section, new: Section):
         (merged.title, merged.content, merged.description, merged.external_link, merged.courses_id, merged.id))
 
     return merged
-
 
 def view_admin_courses( title: str = None,
                            tag: str  = None,
@@ -538,7 +524,6 @@ def view_admin_courses( title: str = None,
 
     return courses
 
-
 def is_student_enrolled_in_course(course_id: int, student_id: int)->bool:
     '''Verify if student is enrolled in course'''
 
@@ -546,7 +531,6 @@ def is_student_enrolled_in_course(course_id: int, student_id: int)->bool:
         read_query(
             'SELECT * FROM users_have_courses WHERE courses_id=?  AND users_id=?',
             (course_id, student_id)))
-
 
 def admin_removes_student_from_course(course_id: int,student_id: int)-> bool:
     ''' Admin removes student from course'''
@@ -560,13 +544,11 @@ def admin_removes_student_from_course(course_id: int,student_id: int)-> bool:
         return True
     return False
 
-
 def has_course_section(course_id: int, section_id: int)->bool:
     ''' Verify if course has this section'''
 
     sql='''SELECT 1 FROM sections WHERE courses_id=? AND id=?'''
     return any(read_query(sql, (course_id,section_id)))
-
 
 def view_section(course_id: int, section_id: int, user_id: int)->Section | None:
     '''View section by user AND increase the progress of student if for first time'''
@@ -591,7 +573,6 @@ def is_section_viewed(section_id: int, user_id: int)-> bool:
     sql='''SELECT 1 FROM users_has_sections WHERE sections_id=? AND users_id=?'''
     return any(read_query(sql, (section_id, user_id)))
 
-
 def validate_section(course_id: int, user_id:int, section_id: int)-> bool:
     ''' Increase student progress'''
 
@@ -609,14 +590,12 @@ def validate_section(course_id: int, user_id:int, section_id: int)-> bool:
             return True
     return False
 
-
 def number_sections_per_course(course_id: int)-> int:
     ''' Calculates the number of sections in the course'''
 
     sql='''SELECT count(id) FROM sections WHERE courses_id=?'''
     data=read_query(sql, (course_id,))
     return data[0][0]
-
 
 def number_views_per_student(course_id: int, user_id: int)-> int:
     ''' Calculates the number sections view per course by student'''
@@ -626,7 +605,6 @@ def number_views_per_student(course_id: int, user_id: int)-> int:
            WHERE users_id=? AND sections_id in (SELECT id FROM sections WHERE courses_id=?)'''
     data=read_query(sql, (user_id, course_id))
     return data[0][0]
-
 
 def _course_rating_change_transaction(course_id: int)-> bool:
     ''' Calculate and change new course rating'''
@@ -651,7 +629,6 @@ def _course_rating_change_transaction(course_id: int)-> bool:
             return False # transaction not successful
     return False
 
-
 def number_premium_courses_par_student(user_id: int)-> int:
     '''Get number of premium courses a student is enrolled in'''
 
@@ -660,7 +637,6 @@ def number_premium_courses_par_student(user_id: int)-> int:
            WHERE users_id=? AND courses_id in (SELECT id FROM courses WHERE is_premium=1)'''
     
     return read_query(sql, (user_id,))[0][0]
-
 
 def is_course_premium(course_id: int)-> bool:
     '''Verify if course is premium'''
@@ -748,3 +724,47 @@ def create_response_object(course: Course, tags: list[Tag], objectives: list[Obj
         objectives=objectives,
         sections=sections
     )
+
+
+def view_student_pending_approval_by_teacher_courses(student_id: int):
+
+    sql='''SELECT c.id, c.title, c.description, c.course_rating, c.home_page_pic
+           FROM courses AS c
+           JOIN users_have_courses AS uc ON c.id = uc.courses_id
+           WHERE c.is_active = 1 AND uc.status = 0 AND uc.users_id = ?'''
+    
+
+    courses_data=read_query(sql, (student_id,))
+    courses = []
+    for c in courses_data:
+        course_id = c[0]
+
+        sql_tags_list = '''
+            SELECT t.expertise_area
+            FROM courses_have_tags AS ct
+            JOIN tags AS t ON t.id = ct.tags_id
+            WHERE ct.courses_id = ?
+        '''
+            
+        sql_tags_params = (course_id,)
+        tags_data = read_query(sql_tags_list, sql_tags_params)
+        tags_data = [tag[0] for tag in tags_data]  # Flatten the list of tags
+
+        sql_obj_list = '''
+            SELECT o.description
+            FROM courses_have_objectives AS co
+            JOIN objectives AS o ON o.id = co.objectives_id
+            WHERE co.courses_id = ?
+        '''
+            
+        sql_obj_params = (course_id,)
+        obj_data = read_query(sql_obj_list, sql_obj_params)
+        obj_data = [objective[0] for objective in obj_data]  # Flatten the list of objectives
+
+        course = ViewStudentCourse.from_query_result(id=c[0], title=c[1], description=c[2], course_rating=c[3],
+                                                     home_page_pic=c[4], tags=tags_data, objectives=obj_data)
+        if course.home_page_pic is not None:
+            course.home_page_pic = base64.b64encode(course.home_page_pic).decode('utf-8')
+        courses.append(course)
+    
+    return courses
