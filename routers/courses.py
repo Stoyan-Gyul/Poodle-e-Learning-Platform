@@ -104,10 +104,10 @@ def get_course(course_id: int, authorization: str = Header()):
     get_user_or_raise_401(authorization)
 
     return courses_service.get_course_by_id(course_id)
-    # if course is None:
-    #     return NotFound({'detail': f'Course {course_id} does not exist!'})
-    # else: 
-    #     course
+    if course is None:
+        return NotFound({'detail': f'Course {course_id} does not exist!'})
+    else: 
+        course
 
 
 @course_router.get('/{course_id}/sections/{section_id}', tags=['Courses'])
@@ -137,17 +137,17 @@ def view_section(course_id: int,section_id: int, authorization: str = Header()):
 
 @course_router.post('/', status_code=status.HTTP_201_CREATED, tags=['Courses'])
 def create_course(course: Course, authorization: str = Header(None)):
-    #user = get_user_or_raise_401(authorization)
+    user = get_user_or_raise_401(authorization)
 
-    # if not is_user_approved_by_admin(user.id):
-    #     return Conflict({'detail': 'Your role is still not approved.'})
-    # if not user.is_teacher():
-    #     return Forbidden({'detail': 'Only a teacher can create courses.'})
+    if not is_user_approved_by_admin(user.id):
+        return Conflict({'detail': 'Your role is still not approved.'})
+    if not user.is_teacher():
+        return Forbidden({'detail': 'Only a teacher can create courses.'})
 
-    # if course.tags == []:
-    #     return BadRequest({'detail': 'Must contain at least one tag'})
-    # if course.objectives == []:
-    #     return BadRequest({'detail': 'Must contain at least one objective'})
+    if course.tags == []:
+        return BadRequest({'detail': 'Must contain at least one tag'})
+    if course.objectives == []:
+        return BadRequest({'detail': 'Must contain at least one objective'})
 
     created_course = courses_service.create_course(course)
 
